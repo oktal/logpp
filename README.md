@@ -1,5 +1,7 @@
 # Logpp
 
+![CI](https://github.com/oktal/logpp/workflows/CI/badge.svg)
+
 ## About the Project
 
 Logpp is a C++ logging library that emphasizes on performance and [structured logging](https://stackify.com/what-is-structured-logging-and-why-developers-need-it/)
