@@ -31,13 +31,13 @@ namespace logpp
     };
 
     template<typename KeyStr, typename T>
-    StructuredDataWrapper<KeyStr, T> structure(KeyStr key, T& value)
+    StructuredDataWrapper<KeyStr, T> structure(KeyStr key, T&& value)
     {
         return { key, value };
     }
 
     template<size_t N, typename T>
-    StructuredDataWrapper<StringLiteral, T> structure(const char (&key)[N], T& value)
+    StructuredDataWrapper<StringLiteral, T> structure(const char (&key)[N], T&& value)
     {
         return { StringLiteral { key }, value };
     }
@@ -86,15 +86,15 @@ namespace logpp
             return std::make_tuple(write(buffer, args)...);
         }
 
-        template<typename> struct EventWrapper;
+        template<typename> struct StructuredEvent;
 
         #pragma pack(push, 1)
         template<typename... Args>
-        struct EventWrapper<std::tuple<Args...>>
+        struct StructuredEvent<std::tuple<Args...>>
         {
             using Offsets = std::tuple<Args...>;
 
-            EventWrapper(Offsets offsets)
+            StructuredEvent(Offsets offsets)
                 : offsets{offsets}
             {}
 
@@ -121,7 +121,7 @@ namespace logpp
         #pragma pack(pop)
 
         template<typename Offsets>
-        EventWrapper<Offsets> wrapEvent(Offsets offsets)
+        StructuredEvent<Offsets> structuredEvent(Offsets offsets)
         {
             return { offsets };
         }
@@ -162,7 +162,7 @@ namespace logpp
             auto textOffset = buffer.write(text);
             auto offsets = details::writeAll(buffer, std::forward<Args>(args)...);
 
-            auto event = details::wrapEvent(offsets);
+            auto event = details::structuredEvent(offsets);
             buffer.writeEvent(event);
 
             m_sink->format(name(), level, buffer, textOffset);
