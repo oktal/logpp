@@ -2,6 +2,11 @@
 
 namespace logpp
 {
+    StringOffset LogBufferBase::write(std::string_view str)
+    {
+        return writeString(str.data(), str.size());
+    }
+
     StringOffset LogBufferBase::write(const std::string& str)
     {
         return writeString(str.data(), str.size());

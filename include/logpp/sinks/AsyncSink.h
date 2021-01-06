@@ -44,11 +44,10 @@ namespace logpp::sink
         {
             static Entry create(LogLevel level, StringOffset textOffset, const EventLogBuffer& buffer)
             {
-                return Entry{level, std::chrono::system_clock::now(), textOffset, buffer};
+                return Entry{level, textOffset, buffer};
             }
 
             LogLevel level;
-            std::chrono::system_clock::time_point timePoint;
             StringOffset textOffset;
             EventLogBuffer logBuffer;
         };

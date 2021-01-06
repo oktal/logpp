@@ -1,6 +1,7 @@
 #pragma once
 
 #include "logpp/core/Offset.h"
+#include "logpp/core/Clock.h"
 
 #include <string_view>
 

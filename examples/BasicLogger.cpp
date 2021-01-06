@@ -3,6 +3,10 @@
 
 #include <iostream>
 
+namespace logpp
+{
+}
+
 class Authorizer
 {
 public:
@@ -33,6 +37,11 @@ public:
             event.userName = buffer.write(userName);
             event.password = buffer.write(password);
         });
+
+        m_logger->info("User authorized",
+            logpp::structure("username", userName),
+            logpp::structure("password", password)
+        );
 
         return true;
     }

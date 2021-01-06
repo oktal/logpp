@@ -3,6 +3,7 @@
 #include "logpp/core/EventLogBuffer.h"
 #include "logpp/core/LogLevel.h"
 #include "logpp/core/Offset.h"
+#include "logpp/core/Clock.h"
 
 namespace logpp::sink
 {

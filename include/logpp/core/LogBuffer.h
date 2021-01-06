@@ -27,6 +27,8 @@ namespace logpp
             return writeString(str, N - 1);
         }
 
+        StringOffset write(std::string_view str);
+
         StringOffset write(const std::string& str);
         StringOffset write(const char* str);
 

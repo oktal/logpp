@@ -2,6 +2,7 @@
 
 #include "logpp/core/LogBufferView.h"
 
+#include <cstring>
 #include <functional>
 
 namespace logpp
@@ -42,6 +43,13 @@ namespace logpp
         struct String
         {};
 
+        struct StringLiteral
+        {};
+
+        template<typename T>
+        struct Ptr
+        {};
+
         struct Function
         {};
     }
@@ -74,7 +82,50 @@ namespace logpp
             return buffer.readAs< uint16_t >(offset);
         }
 
+    private:
+        uint16_t offset;
+    };
 
+    template<>
+    struct Offset<tag::StringLiteral>
+    {
+        Offset()
+            : ptr{0}
+        {}
+
+        explicit Offset(const char* ptr)
+            : ptr{ptr}
+        {}
+
+        std::string_view get(LogBufferView) const
+        {
+            return std::string_view(ptr);
+        }
+
+        size_t size() const
+        {
+            return std::strlen(ptr);
+        }
+
+    private:
+        const char* ptr;
+    };
+
+    template<typename T>
+    struct Offset<tag::Ptr<T>>
+    {
+        Offset()
+            : offset {0}
+        {}
+
+        explicit Offset(uint16_t offset)
+            : offset{offset}
+        {}
+
+        T* get(LogBufferView buffer)
+        {
+            return buffer.overlayAs<T>(offset);
+        }
     private:
         uint16_t offset;
     };
@@ -101,6 +152,9 @@ namespace logpp
         uint16_t offset;
     };
 
+    template<typename T>
+    using PtrOffset = Offset<tag::Ptr<T>>;
     using StringOffset = Offset< tag::String >;
+    using StringLiteralOffset = Offset<tag::StringLiteral>;
     using FunctionOffset = Offset< tag::Function >;
 }

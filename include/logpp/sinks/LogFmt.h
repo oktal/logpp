@@ -21,11 +21,43 @@ namespace logpp::sink
             fmt::memory_buffer formatBuf;
             Writer writer { formatBuf };
 
+            auto time = buffer.time();
+            auto cTime = Clock::to_time_t(time);
+            auto utcTime = std::gmtime(&cTime);
+
+            auto getFractionTime = [](TimePoint tp) -> std::pair<std::chrono::milliseconds, std::chrono::microseconds>
+            {
+                auto epochTp = tp.time_since_epoch();
+
+                epochTp -= std::chrono::duration_cast<std::chrono::seconds>(epochTp);
+                auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(epochTp);
+
+                epochTp -= std::chrono::duration_cast<std::chrono::milliseconds>(epochTp);
+                auto us = std::chrono::duration_cast<std::chrono::microseconds>(epochTp);
+
+                return { ms, us };
+            };
+
+            auto [ms, us] = getFractionTime(time);
+
+            writer.writeFmt(
+                "ts={:04}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}{:03}",
+                utcTime->tm_year + 1900,
+                utcTime->tm_mon + 1,
+                utcTime->tm_mday,
+                utcTime->tm_hour,
+                utcTime->tm_min,
+                utcTime->tm_sec,
+                ms.count(),
+                us.count()
+            );
+
             writer.write("level", levelString(level));
             writer.write("msg", view, text);
             buffer.format(writer);
 
             m_os.write(formatBuf.data(), formatBuf.size());
+            m_os.put('\n');
         }
 
     private:
@@ -94,10 +126,6 @@ namespace logpp::sink
                     writeFmt("{}={}", key, value);
             }
 
-        private:
-            fmt::memory_buffer& m_formatBuf;
-            size_t m_count = 0;
-
             template<typename... Args>
             void writeFmt(const char* formatStr, Args&& ...args)
             {
@@ -107,6 +135,10 @@ namespace logpp::sink
                 fmt::format_to(m_formatBuf, formatStr, std::forward<Args>(args)...);
                 ++m_count;
             }
+        private:
+            fmt::memory_buffer& m_formatBuf;
+            size_t m_count = 0;
+
         };
         std::ostream& m_os;
     };
