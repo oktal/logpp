@@ -14,7 +14,7 @@ namespace logpp::sink
             : m_os(os)
         {}
 
-        void format(LogLevel level, EventLogBuffer buffer, StringOffset text) override
+        void format(std::string_view name, LogLevel level, EventLogBuffer buffer, StringOffset text) override
         {
             LogBufferView view { buffer };
 
@@ -53,6 +53,7 @@ namespace logpp::sink
             );
 
             writer.write("level", levelString(level));
+            writer.write("logger", name);
             writer.write("msg", view, text);
             buffer.format(writer);
 

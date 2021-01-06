@@ -24,9 +24,9 @@ namespace logpp::sink
             });
         }
 
-        void format(LogLevel level, EventLogBuffer buffer, StringOffset text)
+        void format(std::string_view name, LogLevel level, EventLogBuffer buffer, StringOffset text)
         {
-            m_queue->push(Entry::create(level, text, buffer));
+            m_queue->push(Entry::create(name, level, text, buffer));
         }
 
         void start()
@@ -42,11 +42,12 @@ namespace logpp::sink
     private:
         struct Entry
         {
-            static Entry create(LogLevel level, StringOffset textOffset, const EventLogBuffer& buffer)
+            static Entry create(std::string_view name, LogLevel level, StringOffset textOffset, const EventLogBuffer& buffer)
             {
-                return Entry{level, textOffset, buffer};
+                return Entry{name, level, textOffset, buffer};
             }
 
+            std::string_view name;
             LogLevel level;
             StringOffset textOffset;
             EventLogBuffer logBuffer;
@@ -58,7 +59,7 @@ namespace logpp::sink
 
         void handleEntry(const Entry& entry)
         {
-            m_innerSink->format(entry.level, entry.logBuffer, entry.textOffset);
+            m_innerSink->format(entry.name, entry.level, entry.logBuffer, entry.textOffset);
         }
     };
 }

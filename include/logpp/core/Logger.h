@@ -136,11 +136,13 @@ namespace logpp
             , m_sink(std::move(sink))
         {}
 
-        template<typename Str, typename LogFunc>
-        void logE(Str text, LogLevel level, LogFunc logFunction)
+        template<
+            typename Str,
+            typename LogFunc,
+            typename Event = typename LogFunctionTraits<LogFunc>::Event
+        >
+        void log(Str text, LogLevel level, LogFunc logFunction)
         {
-            using Event = typename LogFunctionTraits<LogFunc>::Event;
-
             Event event;
 
             EventLogBuffer buffer;
@@ -149,7 +151,7 @@ namespace logpp
             logFunction(buffer, event);
             buffer.writeEvent(event);
 
-            m_sink->format(level, buffer, textOffset);
+            m_sink->format(name(), level, buffer, textOffset);
         }
 
         template<typename Str, typename... Args>
@@ -163,31 +165,24 @@ namespace logpp
             auto event = details::wrapEvent(offsets);
             buffer.writeEvent(event);
 
-            m_sink->format(level, buffer, textOffset);
-        }
-
-        template<typename Str, typename LogFunc>
-        void debugE(Str text, LogFunc logFunction)
-        {
-            log(text, LogLevel::Debug, logFunction);
+            m_sink->format(name(), level, buffer, textOffset);
         }
 
         template<typename Str, typename... Args>
         void debug(Str text, Args&&... args)
         {
-            logE(text, LogLevel::Debug, std::forward<Args>(args)...);
-        }
-
-        template<typename Str, typename LogFunc>
-        void infoE(Str text, LogFunc logFunction)
-        {
-            logE(text, LogLevel::Info, logFunction);
+            log(text, LogLevel::Debug, std::forward<Args>(args)...);
         }
 
         template<typename Str, typename... Args>
         void info(Str text, Args&&... args)
         {
             log(text, LogLevel::Info, std::forward<Args>(args)...);
+        }
+
+        std::string_view name() const
+        {
+            return m_name;
         }
 
     private:
