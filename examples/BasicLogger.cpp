@@ -36,6 +36,7 @@ public:
         m_logger->debug("Authorizing user", [&](logpp::LogBufferBase& buffer, AuthorizeLogEvent& event) {
             event.userName = buffer.write(userName);
             event.password = buffer.write(password);
+            event.attempts = buffer.write(uint8_t(1));
         });
 
         m_logger->info("User authorized",
