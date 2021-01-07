@@ -9,6 +9,6 @@ namespace logpp::sink
     class Sink
     {
     public:
-        virtual void format(std::string_view name, LogLevel level, EventLogBuffer buffer, StringOffset text) = 0;
+        virtual void format(std::string_view name, LogLevel level, EventLogBuffer buffer) = 0;
     };
 }

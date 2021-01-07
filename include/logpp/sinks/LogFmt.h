@@ -14,12 +14,9 @@ namespace logpp::sink
             : m_os(os)
         {}
 
-        void format(std::string_view name, LogLevel level, EventLogBuffer buffer, StringOffset text) override
+        void format(std::string_view name, LogLevel level, EventLogBuffer buffer) override
         {
-            LogBufferView view { buffer };
-
             fmt::memory_buffer formatBuf;
-            Writer writer { formatBuf };
 
             auto time = buffer.time();
             auto cTime = Clock::to_time_t(time);
@@ -40,7 +37,9 @@ namespace logpp::sink
 
             auto [ms, us] = getFractionTime(time);
 
-            writer.writeFmt(
+            Visitor visitor(formatBuf);
+
+            visitor.writeFmt(
                 "ts={:04}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}{:03}",
                 utcTime->tm_year + 1900,
                 utcTime->tm_mon + 1,
@@ -52,71 +51,77 @@ namespace logpp::sink
                 us.count()
             );
 
-            writer.write("level", levelString(level));
-            writer.write("logger", name);
-            writer.write("msg", view, text);
-            buffer.format(writer);
+            visitor.write("level", levelString(level));
+            visitor.write("logger", name);
+            visitor.write("msg", buffer.text());
+
+            buffer.visit(visitor);
 
             m_os.write(formatBuf.data(), formatBuf.size());
             m_os.put('\n');
         }
 
     private:
-        class Writer : public LogWriter
+        class Visitor : public LogVisitor
         {
         public:
-            Writer(fmt::memory_buffer& buffer)
+            Visitor(fmt::memory_buffer& buffer)
                 : m_formatBuf(buffer)
             {}
 
-            void write(std::string_view key, LogBufferView view, StringOffset text) override
+            void visit(std::string_view key, std::string_view value) override
             {
-                write(key, text.get(view));
+                write(key, value);
             }
 
-            void write(std::string_view key, LogBufferView view, Offset<uint8_t> offset) override
+            void visit(std::string_view key, uint8_t value) override
             {
-                writeFmt("{}={}", key, offset.get(view));
+                writeFmt("{}={}", key, value);
             }
 
-            void write(std::string_view key, LogBufferView view, Offset<uint16_t> offset) override
+            void visit(std::string_view key, uint16_t value) override
             {
-                writeFmt("{}={}", key, offset.get(view));
+                writeFmt("{}={}", key, value);
             }
 
-            void write(std::string_view key, LogBufferView view, Offset<uint32_t> offset) override
+            void visit(std::string_view key, uint32_t value) override
             {
-                writeFmt("{}={}", key, offset.get(view));
+                writeFmt("{}={}", key, value);
             }
 
-            void write(std::string_view key, LogBufferView view, Offset<uint64_t> offset) override
+            void visit(std::string_view key, uint64_t value) override
             {
-                writeFmt("{}={}", key, offset.get(view));
+                writeFmt("{}={}", key, value);
             }
 
-            void write(std::string_view key, LogBufferView view, Offset<int8_t> offset) override
+            void visit(std::string_view key, int8_t value) override
             {
-                writeFmt("{}={}", key, offset.get(view));
+                writeFmt("{}={}", key, value);
             }
 
-            void write(std::string_view key, LogBufferView view, Offset<int16_t> offset) override
+            void visit(std::string_view key, int16_t value) override
             {
-                writeFmt("{}={}", key, offset.get(view));
+                writeFmt("{}={}", key, value);
             }
 
-            void write(std::string_view key, LogBufferView view, Offset<int32_t> offset) override
+            void visit(std::string_view key, int32_t value) override
             {
-                writeFmt("{}={}", key, offset.get(view));
+                writeFmt("{}={}", key, value);
             }
 
-            void write(std::string_view key, LogBufferView view, Offset<int64_t> offset) override
+            void visit(std::string_view key, int64_t value) override
             {
-                writeFmt("{}={}", key, offset.get(view));
+                writeFmt("{}={}", key, value);
             }
 
-            void write(std::string_view key, LogBufferView view, Offset<double> offset)
+            void visit(std::string_view key, float value)
             {
-                writeFmt("{}={}", key, offset.get(view));
+                writeFmt("{}={}", key, value);
+            }
+
+            void visit(std::string_view key, double value)
+            {
+                writeFmt("{}={}", key, value);
             }
 
             void write(std::string_view key, std::string_view value)
@@ -141,6 +146,7 @@ namespace logpp::sink
             size_t m_count = 0;
 
         };
+
         std::ostream& m_os;
     };
 }

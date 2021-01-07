@@ -11,11 +11,10 @@ namespace logpp::sink
             : m_stream(stdout)
         {}
 
-        void format(std::string_view name, LogLevel level, EventLogBuffer buffer, StringOffset text)
+        void format(std::string_view name, LogLevel level, EventLogBuffer buffer)
         {
-            LogBufferView view { buffer };
-            auto message = text.get(view);
-            ::fwrite(message.data(), 1, message.size(), m_stream);
+            auto text = buffer.text();
+            ::fwrite(text.data(), 1, text.size(), m_stream);
         }
 
     private:

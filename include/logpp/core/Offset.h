@@ -27,17 +27,6 @@ namespace logpp
         uint16_t offset;
     };
 
-
-    #define INTEGER_OFFSET_TYPES \
-        INTEGER_OFFSET(uint8_t)  \
-        INTEGER_OFFSET(uint16_t) \
-        INTEGER_OFFSET(uint32_t) \
-        INTEGER_OFFSET(uint64_t) \
-        INTEGER_OFFSET(int8_t)   \
-        INTEGER_OFFSET(int16_t)  \
-        INTEGER_OFFSET(int32_t)  \
-        INTEGER_OFFSET(int64_t)  \
-
     namespace tag
     {
         struct String

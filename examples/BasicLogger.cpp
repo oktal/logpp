@@ -1,5 +1,8 @@
 #include "logpp/logpp.h"
 
+#include "logpp/core/Logger.h"
+#include "logpp/sinks/LogFmt.h"
+
 bool authorizeUser(const std::string& userName, const std::string& password)
 {
     logpp::debug("Authorizing user",

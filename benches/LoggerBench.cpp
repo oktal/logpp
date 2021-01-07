@@ -13,7 +13,7 @@
 class NoopSink : public logpp::sink::Sink
 {
 public:
-    void format(std::string_view name, logpp::LogLevel level, logpp::EventLogBuffer buffer, logpp::StringOffset text) override
+    void format(std::string_view name, logpp::LogLevel level, logpp::EventLogBuffer buffer) override
     {}
 };
 
