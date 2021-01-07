@@ -10,3 +10,4 @@ function(logpp_test test_name)
 endfunction()
 
 logpp_test(LogBufferTests)
+logpp_test(LoggerRegistryTests)

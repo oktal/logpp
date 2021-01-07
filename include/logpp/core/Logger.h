@@ -65,7 +65,7 @@ namespace logpp
             return buffer.write(key);
         }
 
-        auto writeKey(LogBufferBase& buffer, StringLiteral key)
+        inline auto writeKey(LogBufferBase&, StringLiteral key)
         {
             return StringLiteralOffset { key.value };
         }
@@ -164,6 +164,11 @@ namespace logpp
         std::string_view name() const
         {
             return m_name;
+        }
+
+        LogLevel level() const
+        {
+            return m_level;
         }
 
     private:

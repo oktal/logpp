@@ -1,40 +1,19 @@
-#include "logpp/core/LoggerFactory.h"
-#include "logpp/sinks/LogFmt.h"
+#include "logpp/logpp.h"
 
-#include <iostream>
-
-class Authorizer
+bool authorizeUser(const std::string& userName, const std::string& password)
 {
-public:
-    Authorizer()
-    {
-        auto logFmt = std::make_shared<logpp::sink::LogFmt>(std::cout);
+    logpp::debug("Authorizing user",
+        logpp::data("username", userName),
+        logpp::data("password", password)
+    );
 
-        m_logger = logpp::LoggerFactory::getLogger<Authorizer>(logFmt);
-    }
+    return true;
+}
 
-    bool authorize(const std::string& userName, const std::string& password)
-    {
-        m_logger->debug("Authorizing user",
-            logpp::data("username", userName),
-            logpp::data("password", password),
-            logpp::data("attempts", 1)
-        );
-
-        m_logger->info("User authorized",
-            logpp::data("username", userName),
-            logpp::data("password", password)
-        );
-
-        return true;
-    }
-
-private:
-    std::shared_ptr<logpp::Logger> m_logger;
-};
-
-int main()
+int main(int argc, const char *argv[])
 {
-    Authorizer authorizer;
-    authorizer.authorize("admin", "admin");
+    if (argc < 3)
+        return 0;
+
+    authorizeUser(argv[1], argv[2]);
 }

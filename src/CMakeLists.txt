@@ -2,6 +2,7 @@ set(SOURCE_FILES
     AsyncQueuePoller.cpp
     LogBuffer.cpp
     LogBufferView.cpp
+    LoggerRegistry.cpp
     SpinWait.cpp
 )
 
