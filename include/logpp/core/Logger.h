@@ -30,13 +30,13 @@ namespace logpp
     };
 
     template<typename KeyStr, typename T>
-    StructuredDataWrapper<KeyStr, T> structure(KeyStr key, T&& value)
+    StructuredDataWrapper<KeyStr, T> data(KeyStr key, T&& value)
     {
         return { key, value };
     }
 
     template<size_t N, typename T>
-    StructuredDataWrapper<StringLiteral, T> structure(const char (&key)[N], T&& value)
+    StructuredDataWrapper<StringLiteral, T> data(const char (&key)[N], T&& value)
     {
         return { StringLiteral { key }, value };
     }

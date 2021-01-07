@@ -16,14 +16,14 @@ public:
     bool authorize(const std::string& userName, const std::string& password)
     {
         m_logger->debug("Authorizing user",
-            logpp::structure("username", userName),
-            logpp::structure("password", password),
-            logpp::structure("attempts", 1)
+            logpp::data("username", userName),
+            logpp::data("password", password),
+            logpp::data("attempts", 1)
         );
 
         m_logger->info("User authorized",
-            logpp::structure("username", userName),
-            logpp::structure("password", password)
+            logpp::data("username", userName),
+            logpp::data("password", password)
         );
 
         return true;

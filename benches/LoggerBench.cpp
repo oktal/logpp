@@ -44,7 +44,7 @@ static void BM_BenchLoggerNoopSink_NoCopy_1(benchmark::State& state)
 
     for (auto _: state)
     {
-        logger->debug("Looping", logpp::structure("Iteration", count));
+        logger->debug("Looping", logpp::data("Iteration", count));
         ++count;
     }
 }
@@ -56,7 +56,7 @@ static void BM_BenchLoggerNoopSink_Copy_1(benchmark::State& state)
 
     for (auto _: state)
     {
-        logger->debug(std::string_view("Looping"), logpp::structure("Iteration", count));
+        logger->debug(std::string_view("Looping"), logpp::data("Iteration", count));
         ++count;
     }
 }
@@ -73,7 +73,7 @@ static void BM_BenchLoggerNoopAsyncSink_NoCopy_1(benchmark::State& state)
 
     for (auto _: state)
     {
-        logger->debug("Looping", logpp::structure("Iteration", i));
+        logger->debug("Looping", logpp::data("Iteration", i));
         ++i;
     }
 
@@ -88,8 +88,8 @@ static void BM_BenchLoggerNoopSink_NoCopy_2(benchmark::State& state)
     for (auto _: state)
     {
         logger->debug("Looping",
-            logpp::structure("Int", i),
-            logpp::structure("Double", double(i))
+            logpp::data("Int", i),
+            logpp::data("Double", double(i))
         );
 
         ++i;
@@ -106,9 +106,9 @@ static void BM_BenchLoggerNoopSink_NoCopy_3(benchmark::State& state)
     for (auto _: state)
     {
         logger->debug("Looping",
-            logpp::structure("Int", i),
-            logpp::structure("Double", double(i)),
-            logpp::structure("BenchmarkName", name)
+            logpp::data("Int", i),
+            logpp::data("Double", double(i)),
+            logpp::data("BenchmarkName", name)
         );
 
         ++i;
@@ -127,10 +127,10 @@ static void BM_BenchLoggerNoopSink_NoCopy_LargeLogBuffer(benchmark::State& state
     for (auto _: state)
     {
         logger->debug("Looping",
-            logpp::structure("Str1", str1),
-            logpp::structure("Str2", str2),
-            logpp::structure("Str3", str3),
-            logpp::structure("Str4", str4)
+            logpp::data("Str1", str1),
+            logpp::data("Str2", str2),
+            logpp::data("Str3", str3),
+            logpp::data("Str4", str4)
         );
     }
 }
