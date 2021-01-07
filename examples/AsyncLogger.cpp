@@ -8,24 +8,12 @@
 #include <iostream>
 #include <thread>
 
-struct BidEvent
-{
-    logpp::Offset<uint64_t> id;
-    logpp::Offset<double> price;
-
-    void format(logpp::LogBufferView buffer, logpp::LogWriter& writer) const
-    {
-        writer.write("id", buffer, id);
-        writer.write("price", buffer, price);
-    }
-};
-
 void doBid(std::shared_ptr<logpp::Logger> logger, uint64_t id, double price)
 {
-    logger->debug("Submitting bid", [&](logpp::LogBufferBase& buffer, BidEvent& event) {
-        event.id = buffer.write(id);
-        event.price = buffer.write(price);
-    });
+    logger->debug("Submitting bid",
+        logpp::structure("id", id),
+        logpp::structure("price", price)
+    );
 }
 
 int main()

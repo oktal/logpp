@@ -2,7 +2,6 @@
 
 #include "logpp/core/LogLevel.h"
 #include "logpp/sinks/Sink.h"
-#include "logpp/core/Traits.h"
 
 namespace logpp
 {
@@ -135,24 +134,6 @@ namespace logpp
             , m_level(level)
             , m_sink(std::move(sink))
         {}
-
-        template<
-            typename Str,
-            typename LogFunc,
-            typename Event = typename LogFunctionTraits<LogFunc>::Event
-        >
-        void log(Str text, LogLevel level, LogFunc logFunction)
-        {
-            Event event;
-
-            EventLogBuffer buffer;
-
-            auto textOffset = buffer.write(text);
-            logFunction(buffer, event);
-            buffer.writeEvent(event);
-
-            m_sink->format(name(), level, buffer, textOffset);
-        }
 
         template<typename Str, typename... Args>
         void log(Str text, LogLevel level, Args&&... args)

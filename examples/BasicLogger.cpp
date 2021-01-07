@@ -3,27 +3,9 @@
 
 #include <iostream>
 
-namespace logpp
-{
-}
-
 class Authorizer
 {
 public:
-    struct AuthorizeLogEvent
-    {
-        logpp::StringOffset userName;
-        logpp::StringOffset password;
-        logpp::Offset<uint8_t> attempts;
-
-        void format(logpp::LogBufferView buffer, logpp::LogWriter& writer) const
-        {
-            writer.write("username", buffer, userName);
-            writer.write("password", buffer, password);
-            writer.write("attempts", buffer, attempts);
-        }
-    };
-
     Authorizer()
     {
         auto logFmt = std::make_shared<logpp::sink::LogFmt>(std::cout);
@@ -33,11 +15,11 @@ public:
 
     bool authorize(const std::string& userName, const std::string& password)
     {
-        m_logger->debug("Authorizing user", [&](logpp::LogBufferBase& buffer, AuthorizeLogEvent& event) {
-            event.userName = buffer.write(userName);
-            event.password = buffer.write(password);
-            event.attempts = buffer.write(uint8_t(1));
-        });
+        m_logger->debug("Authorizing user",
+            logpp::structure("username", userName),
+            logpp::structure("password", password),
+            logpp::structure("attempts", 1)
+        );
 
         m_logger->info("User authorized",
             logpp::structure("username", userName),
