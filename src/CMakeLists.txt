@@ -3,6 +3,7 @@ set(SOURCE_FILES
     LogBuffer.cpp
     LogBufferView.cpp
     LoggerRegistry.cpp
+    LogFmt.cpp
     SpinWait.cpp
 )
 

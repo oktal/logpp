@@ -1,5 +1,6 @@
 #pragma once
 
+#include "logpp/core/FormatArgs.h"
 #include "logpp/core/LogLevel.h"
 #include "logpp/core/LogVisitor.h"
 
@@ -34,6 +35,12 @@ namespace logpp
         return { StringLiteral { key }, value };
     }
 
+    template<typename... Args>
+    FormatArgsHolder<std::decay_t<Args>...> format(std::string_view formatStr, Args&& ...args)
+    {
+        return { formatStr, std::make_tuple(std::forward<Args>(args)...)};
+    }
+
     class Logger
     {
     public:
@@ -44,7 +51,7 @@ namespace logpp
         {}
 
         template<typename Str, typename... Args>
-        void log(Str text, LogLevel level, Args&&... args)
+        void log(const Str& text, LogLevel level, Args&&... args)
         {
             EventLogBuffer buffer;
 

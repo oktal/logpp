@@ -49,6 +49,18 @@ static void BM_BenchLoggerNoopSink_NoCopy_1(benchmark::State& state)
     }
 }
 
+static void BM_BenchLoggerNoopSink_NoCopy_Format_1(benchmark::State& state)
+{
+    auto logger = logpp::LoggerFactory::getLogger("BM_BenchLoggerNoopSink_NoCopy_1", std::make_shared<NoopSink>());
+    uint64_t count = 0;
+
+    for (auto _: state)
+    {
+        logger->debug(logpp::format("Looping iteraator number {}", count), logpp::data("Iteration", count));
+        ++count;
+    }
+}
+
 static void BM_BenchLoggerNoopSink_Copy_1(benchmark::State& state)
 {
     auto logger = logpp::LoggerFactory::getLogger("BM_BenchLoggerNoopSink_Copy_1", std::make_shared<NoopSink>());
@@ -136,6 +148,7 @@ static void BM_BenchLoggerNoopSink_NoCopy_LargeLogBuffer(benchmark::State& state
 }
 
 BENCHMARK(BM_BenchLoggerNoopSink_NoCopy_1);
+BENCHMARK(BM_BenchLoggerNoopSink_NoCopy_Format_1);
 BENCHMARK(BM_BenchLoggerNoopSink_Copy_1);
 BENCHMARK(BM_BenchLoggerNoopSink_NoCopy_2);
 BENCHMARK(BM_BenchLoggerNoopSink_NoCopy_3);

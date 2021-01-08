@@ -13,8 +13,10 @@ namespace logpp::sink
 
         void format(std::string_view name, LogLevel level, EventLogBuffer buffer)
         {
-            auto text = buffer.text();
-            ::fwrite(text.data(), 1, text.size(), m_stream);
+            fmt::memory_buffer formatBuf;
+            buffer.formatText(formatBuf);
+
+            ::fwrite(formatBuf.data(), 1, formatBuf.size(), m_stream);
         }
 
     private:
