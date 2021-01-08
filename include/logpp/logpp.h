@@ -40,4 +40,22 @@ namespace logpp
     {
         log(LogLevel::Debug, text, std::forward<Args>(args)...);
     }
+
+    template<typename Str, typename... Args>
+    void info(const Str& text, Args&&... args)
+    {
+        log(LogLevel::Info, text, std::forward<Args>(args)...);
+    }
+
+    template<typename Str, typename... Args>
+    void warn(const Str& text, Args&&... args)
+    {
+        log(LogLevel::Warning, text, std::forward<Args>(args)...);
+    }
+
+    template<typename Str, typename... Args>
+    void error(const Str& text, Args&&... args)
+    {
+        log(LogLevel::Error, text, std::forward<Args>(args)...);
+    }
 }

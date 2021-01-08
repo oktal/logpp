@@ -39,6 +39,9 @@ bool authorizeUser(const std::string& userName, const std::string& password)
 
 bool grantUser(const std::string& userName, AccessRight access)
 {
+    if (userName == "admin")
+        logpp::warn("Attempting to grant access to admin user");
+
     logpp::debug(logpp::format("Granting access to user {}", userName),
         logpp::data("access_right", accessRightString(access))
     );
@@ -52,5 +55,12 @@ int main(int argc, const char *argv[])
         return 0;
     
     if (authorizeUser(argv[1], argv[2]))
-        grantUser(argv[1], AccessRight::Read);
+    {
+        if (grantUser(argv[1], AccessRight::Read))
+        {
+            logpp::info("User had been granted",
+                logpp::data("access_right", accessRightString(AccessRight::Read))
+            );
+        }
+    }
 }

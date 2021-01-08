@@ -11,12 +11,18 @@
 namespace logpp
 {
     PatternFormatter::PatternFormatter()
-        : PatternFormatter("%+")
-    {}
+    {
+        setPattern("%+");
+    }
 
     PatternFormatter::PatternFormatter(std::string pattern)
-        : m_pattern(std::move(pattern))
     {
+        setPattern(std::move(pattern));
+    }
+
+    void PatternFormatter::setPattern(std::string pattern)
+    {
+        m_pattern = std::move(pattern);
         parsePattern(m_pattern);
     }
 
@@ -44,12 +50,12 @@ namespace logpp
             if (*it == '%')
             {
                 if (!literalStr.empty())
-                    m_formatters.push_back(std::make_unique<LiteralFormatter>(std::move(literalStr)));
+                    m_formatters.push_back(std::make_shared<LiteralFormatter>(std::move(literalStr)));
 
                 ++it;
                 if (it != end)
                 {
-                    std::unique_ptr<FlagFormatter> formatter;
+                    std::shared_ptr<FlagFormatter> formatter;
                     std::tie(it, formatter) = parseFlag(it);
                     m_formatters.push_back(std::move(formatter));
                 }
@@ -62,20 +68,20 @@ namespace logpp
         }
 
         if (!literalStr.empty())
-            m_formatters.push_back(std::make_unique<LiteralFormatter>(std::move(literalStr)));
+            m_formatters.push_back(std::make_shared<LiteralFormatter>(std::move(literalStr)));
     }
 
-    std::pair<std::string::const_iterator, std::unique_ptr<FlagFormatter>>
+    std::pair<std::string::const_iterator, std::shared_ptr<FlagFormatter>>
     PatternFormatter::parseFlag(std::string::const_iterator it)
     {
-        std::unique_ptr<FlagFormatter> formatter;
+        std::shared_ptr<FlagFormatter> formatter;
         switch (*it)
         {
             // Full format
             case '+':
             {
                 ++it;
-                formatter = std::make_unique<FullFormatter>();
+                formatter = std::make_shared<FullFormatter>();
                 break;
             }
 
@@ -87,21 +93,21 @@ namespace logpp
             case 'Y':
             {
                 ++it;
-                formatter = std::make_unique<YearFormatter>();
+                formatter = std::make_shared<YearFormatter>();
                 break;
             }
             // Writes month as a decimal number (range [01,12]) 
             case 'm':
             {
                 ++it;
-                formatter = std::make_unique<MonthDecimalFormatter>();
+                formatter = std::make_shared<MonthDecimalFormatter>();
                 break;
             }
             // writes day of the month as a decimal number (range [01,31])
             case 'd':
             {
                 ++it;
-                formatter = std::make_unique<DayDecimalFormatter>();
+                formatter = std::make_shared<DayDecimalFormatter>();
                 break;
             }
 
@@ -113,21 +119,21 @@ namespace logpp
             case 'H':
             {
                 ++it;
-                formatter = std::make_unique<HoursFormatter>();
+                formatter = std::make_shared<HoursFormatter>();
                 break;
             }
             // Writes minute as a decimal number (range [00,59])
             case 'M':
             {
                 ++it;
-                formatter = std::make_unique<MinutesFormatter>();
+                formatter = std::make_shared<MinutesFormatter>();
                 break;
             }
             // Writes second as a decimal number (range [00,60])
             case 'S':
             {
                 ++it;
-                formatter = std::make_unique<SecondsFormatter>();
+                formatter = std::make_shared<SecondsFormatter>();
                 break;
             }
 
@@ -135,21 +141,21 @@ namespace logpp
             case 'v':
             {
                 ++it;
-                formatter = std::make_unique<TextFormatter>();
+                formatter = std::make_shared<TextFormatter>();
                 break;
             }
             // Level
             case 'l':
             {
                 ++it;
-                formatter = std::make_unique<LevelFormatter>();
+                formatter = std::make_shared<LevelFormatter>();
                 break;
             }
             // Logger name
             case 'n':
             {
                 ++it;
-                formatter = std::make_unique<NameFormatter>();
+                formatter = std::make_shared<NameFormatter>();
                 break;
             }
         }
