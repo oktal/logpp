@@ -48,8 +48,6 @@ bool grantUser(const std::string& userName, AccessRight access)
 
 int main(int argc, const char *argv[])
 {
-    logpp::setDefaultLoggerSinked<logpp::sink::LogFmt>("", logpp::LogLevel::Debug, std::cout);
-
     if (argc < 3)
         return 0;
     

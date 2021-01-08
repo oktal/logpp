@@ -11,20 +11,22 @@ namespace logpp
         Error
     };
 
-    constexpr inline const char* levelString(LogLevel level)
+    constexpr inline std::string_view levelString(LogLevel level)
     {
+        using namespace std::string_view_literals;
+
         switch (level)
         {
             case LogLevel::Trace:
-                return "trace";
+                return "Trace"sv;
             case LogLevel::Debug:
-                return "debug";
+                return "Debug"sv;
             case LogLevel::Info:
-                return "info";
+                return "Info"sv;
             case LogLevel::Warning:
-                return "warn";
+                return "Warn"sv;
             case LogLevel::Error:
-                return "error";
+                return "Error"sv;
         }
 
         return "none";

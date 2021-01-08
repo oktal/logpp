@@ -4,6 +4,7 @@ set(SOURCE_FILES
     LogBufferView.cpp
     LoggerRegistry.cpp
     LogFmt.cpp
+    PatternFormatter.cpp
     SpinWait.cpp
 )
 

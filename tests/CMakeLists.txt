@@ -11,3 +11,4 @@ endfunction()
 
 logpp_test(LogBufferTests)
 logpp_test(LoggerRegistryTests)
+logpp_test(PatternFormatterTests)
