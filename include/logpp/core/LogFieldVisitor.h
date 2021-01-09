@@ -4,7 +4,7 @@
 
 namespace logpp
 {
-    class LogVisitor
+    class LogFieldVisitor
     {
     public:
         virtual void visitStart(size_t count) = 0;

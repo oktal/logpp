@@ -44,7 +44,7 @@ static void BM_BenchLoggerNoopSink_NoCopy_1(benchmark::State& state)
 
     for (auto _: state)
     {
-        logger->debug("Looping", logpp::data("Iteration", count));
+        logger->debug("Looping", logpp::field("Iteration", count));
         ++count;
     }
 }
@@ -56,7 +56,7 @@ static void BM_BenchLoggerNoopSink_NoCopy_Format_1(benchmark::State& state)
 
     for (auto _: state)
     {
-        logger->debug(logpp::format("Looping iteraator number {}", count), logpp::data("Iteration", count));
+        logger->debug(logpp::format("Looping iteraator number {}", count), logpp::field("Iteration", count));
         ++count;
     }
 }
@@ -68,7 +68,7 @@ static void BM_BenchLoggerNoopSink_Copy_1(benchmark::State& state)
 
     for (auto _: state)
     {
-        logger->debug(std::string_view("Looping"), logpp::data("Iteration", count));
+        logger->debug(std::string_view("Looping"), logpp::field("Iteration", count));
         ++count;
     }
 }
@@ -85,7 +85,7 @@ static void BM_BenchLoggerNoopAsyncSink_NoCopy_1(benchmark::State& state)
 
     for (auto _: state)
     {
-        logger->debug("Looping", logpp::data("Iteration", i));
+        logger->debug("Looping", logpp::field("Iteration", i));
         ++i;
     }
 
@@ -100,8 +100,8 @@ static void BM_BenchLoggerNoopSink_NoCopy_2(benchmark::State& state)
     for (auto _: state)
     {
         logger->debug("Looping",
-            logpp::data("Int", i),
-            logpp::data("Double", double(i))
+            logpp::field("Int", i),
+            logpp::field("Double", double(i))
         );
 
         ++i;
@@ -118,9 +118,9 @@ static void BM_BenchLoggerNoopSink_NoCopy_3(benchmark::State& state)
     for (auto _: state)
     {
         logger->debug("Looping",
-            logpp::data("Int", i),
-            logpp::data("Double", double(i)),
-            logpp::data("BenchmarkName", name)
+            logpp::field("Int", i),
+            logpp::field("Double", double(i)),
+            logpp::field("BenchmarkName", name)
         );
 
         ++i;
@@ -139,10 +139,10 @@ static void BM_BenchLoggerNoopSink_NoCopy_LargeLogBuffer(benchmark::State& state
     for (auto _: state)
     {
         logger->debug("Looping",
-            logpp::data("Str1", str1),
-            logpp::data("Str2", str2),
-            logpp::data("Str3", str3),
-            logpp::data("Str4", str4)
+            logpp::field("Str1", str1),
+            logpp::field("Str2", str2),
+            logpp::field("Str3", str3),
+            logpp::field("Str4", str4)
         );
     }
 }

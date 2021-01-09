@@ -1,21 +1,21 @@
 #pragma once
 
 #include "logpp/core/FormatArgs.h"
+#include "logpp/core/LogFieldVisitor.h"
 #include "logpp/core/LogLevel.h"
-#include "logpp/core/LogVisitor.h"
 
 #include "logpp/sinks/Sink.h"
 
 namespace logpp
 {
     template<typename KeyStr, typename T>
-    struct StructuredDataWrapper
+    struct LogField
     {
         using Key = KeyStr;
         using Type = T;
 
-        StructuredDataWrapper(KeyStr key, T& value)
-            : key(key)
+        LogField(KeyStr key, T& value)
+            : key(std::move(key))
             , value(value)
         {}
 
@@ -24,13 +24,13 @@ namespace logpp
     };
 
     template<typename KeyStr, typename T>
-    StructuredDataWrapper<KeyStr, T> data(KeyStr key, T&& value)
+    LogField<KeyStr, T> field(KeyStr key, T&& value)
     {
-        return { key, value };
+        return { std::move(key), value };
     }
 
     template<size_t N, typename T>
-    StructuredDataWrapper<StringLiteral, T> data(const char (&key)[N], T&& value)
+    LogField<StringLiteral, T> field(const char (&key)[N], T&& value)
     {
         return { StringLiteral { key }, value };
     }
@@ -50,14 +50,14 @@ namespace logpp
             , m_sink(std::move(sink))
         {}
 
-        template<typename Str, typename... Args>
-        void log(const Str& text, LogLevel level, Args&&... args)
+        template<typename Str, typename... Fields>
+        void log(const Str& text, LogLevel level, Fields&&... fields)
         {
             EventLogBuffer buffer;
 
             buffer.writeTime(Clock::now());
             buffer.writeText(text);
-            buffer.writeData(std::forward<Args>(args)...);
+            buffer.writeFields(std::forward<Fields>(fields)...);
 
             m_sink->format(name(), level, buffer);
         }

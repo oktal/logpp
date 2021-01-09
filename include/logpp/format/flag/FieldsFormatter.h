@@ -16,7 +16,7 @@ namespace logpp
             Writer writer(out);
             Visitor visitor(writer, m_prefix);
 
-            buffer.visit(visitor);
+            buffer.visitFields(visitor);
         }
 
     private:
@@ -43,7 +43,8 @@ namespace logpp
             template<typename... Args>
             void writeFmt(const char* formatStr, Args&& ...args)
             {
-                m_buf.push_back(' ');
+                if (m_count > 0)
+                    m_buf.push_back(' ');
 
                 fmt::format_to(m_buf, formatStr, std::forward<Args>(args)...);
                 ++m_count;
@@ -64,7 +65,7 @@ namespace logpp
             size_t m_count = 0;
         };
 
-        class Visitor : public LogVisitor
+        class Visitor : public LogFieldVisitor
         {
         public:
             Visitor(Writer& writer, std::string_view prefix)

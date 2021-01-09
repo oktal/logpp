@@ -156,5 +156,5 @@ TEST_F(PatternFormatterTest, should_format_full)
 
     format("MyLogger", LogLevel::Info, buffer);
 
-    ASSERT_EQ(data(), "2021-01-08 15:20:10 [Info] MyLogger - Test result: Pass (0)");
+    ASSERT_EQ(data(), "2021-01-08 15:20:10 [Info] (MyLogger) Test result: Pass (0)");
 }

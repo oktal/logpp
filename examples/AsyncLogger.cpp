@@ -11,8 +11,8 @@
 void doBid(std::shared_ptr<logpp::Logger> logger, uint64_t id, double price)
 {
     logger->debug("Submitting bid",
-        logpp::data("id", id),
-        logpp::data("price", price)
+        logpp::field("id", id),
+        logpp::field("price", price)
     );
 }
 

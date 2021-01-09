@@ -58,7 +58,7 @@ namespace logpp
                 {
                     if (*it == '+')
                     {
-                        auto fullFormatters = parsePattern("%Y-%m-%d %H:%M:%S [%l] %v %f[-]");
+                        auto fullFormatters = parsePattern("%Y-%m-%d %H:%M:%S [%l] (%n) %v%f[ - ]");
                         std::copy(std::begin(fullFormatters), std::end(fullFormatters), std::back_inserter(formatters));
                         ++it;
                     }

@@ -7,7 +7,7 @@ namespace logpp
     LoggerRegistry::LoggerRegistry()
     {
         auto sink = std::make_shared<sink::ColoredOutputConsole>();
-        setDefaultLogger(std::make_shared<Logger>("", LogLevel::Debug, sink));
+        setDefaultLogger(std::make_shared<Logger>("logpp", LogLevel::Debug, sink));
     }
 
     LoggerRegistry& LoggerRegistry::defaultRegistry()

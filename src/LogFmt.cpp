@@ -1,7 +1,7 @@
 #include "logpp/sinks/LogFmt.h"
 
 #include "logpp/core/Clock.h"
-#include "logpp/core/LogVisitor.h"
+#include "logpp/core/LogFieldVisitor.h"
 
 #include <chrono>
 #include <fmt/format.h>
@@ -44,7 +44,7 @@ namespace logpp::sink
         size_t m_count = 0;
     };
 
-    class Visitor : public LogVisitor
+    class Visitor : public LogFieldVisitor
     {
     public:
         Visitor(Writer& writer)
@@ -160,7 +160,7 @@ namespace logpp::sink
         writer.write("msg", std::string_view(formatBuf.data(), formatBuf.size()));
 
         Visitor visitor(writer);
-        buffer.visit(visitor);
+        buffer.visitFields(visitor);
 
         m_os.write(writer.data(), writer.size());
         m_os.put('\n');

@@ -3,7 +3,7 @@
 #include "logpp/core/Clock.h"
 #include "logpp/core/FormatArgs.h"
 #include "logpp/core/LogBuffer.h"
-#include "logpp/core/LogVisitor.h"
+#include "logpp/core/LogFieldVisitor.h"
 #include "logpp/core/StringLiteral.h"
 
 #include <cstddef>
@@ -53,7 +53,7 @@ namespace logpp
             auto keyOffset = writeString(buffer, arg.key);
             auto valueOffset = buffer.write(arg.value);
 
-            return structuredOffset(keyOffset, valueOffset);
+            return fieldOffset(keyOffset, valueOffset);
         }
 
         template< typename... Args >
@@ -74,14 +74,14 @@ namespace logpp
             return writeArgsImpl(buffer, args, std::make_index_sequence<sizeof...(Args)>{});
         }
 
-        template<typename> struct TextEvent;
+        template<typename> struct TextBlock;
 
         template<typename... Args>
-        struct TextEvent<std::tuple<Args...>>
+        struct TextBlock<std::tuple<Args...>>
         {
             using ArgsOffsets = std::tuple<Args...>;
 
-            TextEvent(StringOffset formatStrOffset, ArgsOffsets argsOffsets)
+            TextBlock(StringOffset formatStrOffset, ArgsOffsets argsOffsets)
                 : formatStrOffset { formatStrOffset }
                 , argsOffsets { argsOffsets }
             {}
@@ -110,30 +110,30 @@ namespace logpp
             }
         };
 
-        template<typename> struct StructuredEvent;
+        template<typename> struct FieldsBlock;
 
         #pragma pack(push, 1)
-        template<typename... Args>
-        struct StructuredEvent<std::tuple<Args...>>
+        template<typename... Fields>
+        struct FieldsBlock<std::tuple<Fields...>>
         {
-            using Offsets = std::tuple<Args...>;
+            using Offsets = std::tuple<Fields...>;
 
-            StructuredEvent(Offsets offsets)
+            FieldsBlock(Offsets offsets)
                 : offsets { offsets }
             {}
 
-            void visit(LogBufferView view, LogVisitor& visitor) const
+            void visit(LogBufferView view, LogFieldVisitor& visitor) const
             {
-                visitTuple(offsets, [&](const auto& structuredOffset) {
-                    auto key = structuredOffset.key.get(view);
-                    auto value = structuredOffset.value.get(view);
+                visitTuple(offsets, [&](const auto& fieldOffset) {
+                    auto key = fieldOffset.key.get(view);
+                    auto value = fieldOffset.value.get(view);
                     visitor.visit(key, value);
                 });
             }
 
             constexpr size_t count() const
             {
-                return sizeof...(Args);
+                return sizeof...(Fields);
             }
 
         private:
@@ -142,27 +142,27 @@ namespace logpp
         #pragma pack(pop)
 
         template<typename Offsets>
-        StructuredEvent<Offsets> asStructured(Offsets offsets)
+        FieldsBlock<Offsets> fieldsBlock(Offsets offsets)
         {
             return { offsets };
         }
 
         template<typename ArgsOffsets>
-        TextEvent<ArgsOffsets> asText(StringOffset textOffset, ArgsOffsets argsOffsets)
+        TextBlock<ArgsOffsets> textBlock(StringOffset textOffset, ArgsOffsets argsOffsets)
         {
             return { textOffset, argsOffsets };
         }
     }
 
     template<typename KeyOffset, typename OffsetT>
-    struct StructuredOffset
+    struct FieldOffset
     {
         KeyOffset key;
         OffsetT value;
     };
 
     template<typename KeyOffset, typename OffsetT>
-    StructuredOffset<KeyOffset, OffsetT> structuredOffset(KeyOffset key, OffsetT value)
+    FieldOffset<KeyOffset, OffsetT> fieldOffset(KeyOffset key, OffsetT value)
     {
         return { key, value };
     }
@@ -171,7 +171,7 @@ namespace logpp
     {
     public:
         using TextFormatFunc = void (*)(const LogBufferBase& buffer, uint16_t offsetsIndex, fmt::memory_buffer& formatBuf);
-        using VisitFunc = void (*)(const LogBufferBase& buffer, uint16_t offsetsIndex, LogVisitor& visitor);
+        using FieldsVisitFunc = void (*)(const LogBufferBase& buffer, uint16_t offsetsIndex, LogFieldVisitor& visitor);
 
         static constexpr size_t HeaderOffset = 0;
 
@@ -179,15 +179,17 @@ namespace logpp
         {
             TimePoint timePoint;
 
-            uint16_t textOffsetsIndex;
+            uint16_t textBlockIndex;
             TextFormatFunc formatFunc;
 
-            uint16_t dataOffsetsIndex;
-            VisitFunc visitFunc;
+            uint8_t fieldsCount;
+            uint16_t fieldsBlockIndex;
+            FieldsVisitFunc fieldsVisitFunc;
         };
 
         EventLogBuffer()
         {
+            decodeHeader()->fieldsCount = 0;
             advance(HeaderOffset + sizeof(Header));
         }
 
@@ -201,10 +203,10 @@ namespace logpp
         {
             auto offset = this->write(str);
 
-            auto event = details::asText(offset, std::make_tuple());
-            auto eventOffset = this->encode(event);
+            auto block = details::textBlock(offset, std::make_tuple());
+            auto blockOffset = this->encode(block);
 
-            encodeTextFormater(event, eventOffset);
+            encodeTextBlock(block, blockOffset);
         }
 
         template<typename... Args>
@@ -213,27 +215,28 @@ namespace logpp
             auto formatStrOffset = this->write(holder.formatStr);
             auto argsOffsets = details::writeArgs(*this, holder.args);
 
-            auto event = details::asText(formatStrOffset, argsOffsets);
-            auto eventOffset = this->encode(event);
+            auto block = details::textBlock(formatStrOffset, argsOffsets);
+            auto blockOffset = this->encode(block);
 
-            encodeTextFormater(event, eventOffset);
+            encodeTextBlock(block, blockOffset);
         }
 
-        template<typename... Args>
-        void writeData(Args&&... args)
+        template<typename... Fields>
+        void writeFields(Fields&&... fields)
         {
-            auto offsets = details::writeAll(*this, std::forward<Args>(args)...);
+            auto offsets = details::writeAll(*this, std::forward<Fields>(fields)...);
 
-            auto event = details::asStructured(offsets);
-            auto eventOffset = this->encode(event);
+            auto block = details::fieldsBlock(offsets);
+            auto blockOffset = this->encode(block);
 
-            encodeVisitor(event, eventOffset);
+            encodeFieldsBlock(block, blockOffset);
         }
 
-        void visit(LogVisitor& visitor) const
+        void visitFields(LogFieldVisitor& visitor) const
         {
             const auto* header = decodeHeader();
-            std::invoke(header->visitFunc, *this, header->dataOffsetsIndex, visitor);
+            if (header->fieldsCount > 0)
+                std::invoke(header->fieldsVisitFunc, *this, header->fieldsBlockIndex, visitor);
         }
 
         TimePoint time() const
@@ -244,35 +247,36 @@ namespace logpp
         void formatText(fmt::memory_buffer& buffer) const
         {
             const auto* header = decodeHeader();
-            std::invoke(header->formatFunc, *this, header->textOffsetsIndex, buffer);
+            std::invoke(header->formatFunc, *this, header->textBlockIndex, buffer);
         }
 
     private:
-        template<typename Event>
-        void encodeTextFormater(const Event&, size_t offsetsIndex)
+        template<typename Block>
+        void encodeTextBlock(const Block&, size_t blockIndex)
         {
-            auto* header         = overlayAt<Header>(HeaderOffset);
-            header->textOffsetsIndex = static_cast<uint16_t>(offsetsIndex);
-            header->formatFunc      = [](const LogBufferBase& buffer, uint16_t offsetsIndex, fmt::memory_buffer& formatBuf)
+            auto* header           = overlayAt<Header>(HeaderOffset);
+            header->textBlockIndex = static_cast<uint16_t>(blockIndex);
+            header->formatFunc     = [](const LogBufferBase& buffer, uint16_t blockIndex, fmt::memory_buffer& formatBuf)
             {
-                LogBufferView view{buffer};
-                const Event* event = view.overlayAs<Event>(offsetsIndex);
-                event->formatTo(formatBuf, view);
+                LogBufferView view {buffer};
+                const Block* block = view.overlayAs<Block>(blockIndex);
+                block->formatTo(formatBuf, view);
             };
         }
 
-        template<typename Event>
-        void encodeVisitor(const Event&, size_t offsetsIndex)
+        template<typename Block>
+        void encodeFieldsBlock(const Block& block, size_t blockIndex)
         {
-            auto* header         = overlayAt<Header>(HeaderOffset);
-            header->dataOffsetsIndex = static_cast<uint16_t>(offsetsIndex);
-            header->visitFunc      = [](const LogBufferBase& buffer, uint16_t offsetsIndex, LogVisitor& visitor)
+            auto* header             = overlayAt<Header>(HeaderOffset);
+            header->fieldsCount      = static_cast<uint8_t>(block.count());
+            header->fieldsBlockIndex = static_cast<uint16_t>(blockIndex);
+            header->fieldsVisitFunc  = [](const LogBufferBase& buffer, uint16_t blockIndex, LogFieldVisitor& visitor)
             {
                 LogBufferView view{buffer};
-                const Event* event = view.overlayAs<Event>(offsetsIndex);
+                const Block* block = view.overlayAs<Block>(blockIndex);
 
-                visitor.visitStart(event->count());
-                event->visit(view, visitor);
+                visitor.visitStart(block->count());
+                block->visit(view, visitor);
                 visitor.visitEnd();
             };
         }
