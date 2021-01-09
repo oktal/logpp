@@ -1,7 +1,6 @@
 #include "logpp/sinks/Sink.h"
 
 #include "logpp/format/PatternFormatter.h"
-#include "logpp/format/flag/FullFormatter.h"
 #include "logpp/format/flag/LevelFormatter.h"
 
 #include <cstdio>
@@ -40,7 +39,7 @@ namespace logpp::sink
             return m_colors[static_cast<size_t>(level)];
         }
 
-        void format(std::string_view name, LogLevel level, EventLogBuffer buffer)
+        void format(std::string_view name, LogLevel level, const EventLogBuffer& buffer)
         {
             fmt::memory_buffer formatBuf;
             m_formatter->format(name, level, buffer, formatBuf);
@@ -78,21 +77,7 @@ namespace logpp::sink
                 levelFormatter->setPostFormat([&](LogLevel, fmt::memory_buffer& out) {
                     out.append(Reset.data(), Reset.data() + Reset.size());
                 });
-                return;
             }
-
-            auto fullFormatter = formatter->getFlagFormatter<FullFormatter>();
-            if (fullFormatter)
-            {
-                fullFormatter->setPreLevelFormat([&](LogLevel level, fmt::memory_buffer& out) {
-                    auto color = getColor(level);
-                    fmt::format_to(out, "{}{}", Bold, color);
-                });
-                fullFormatter->setPostLevelFormat([](LogLevel, fmt::memory_buffer& out) {
-                    out.append(Reset.data(), Reset.data() + Reset.size());
-                });
-            }
-
         }
     };
 }

@@ -131,6 +131,11 @@ namespace logpp
                 });
             }
 
+            constexpr size_t count() const
+            {
+                return sizeof...(Args);
+            }
+
         private:
             Offsets offsets;
         };
@@ -265,7 +270,10 @@ namespace logpp
             {
                 LogBufferView view{buffer};
                 const Event* event = view.overlayAs<Event>(offsetsIndex);
+
+                visitor.visitStart(event->count());
                 event->visit(view, visitor);
+                visitor.visitEnd();
             };
         }
 

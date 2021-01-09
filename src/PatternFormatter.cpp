@@ -1,7 +1,7 @@
 #include "logpp/format/PatternFormatter.h"
 
 #include "logpp/format/flag/DateFormatter.h"
-#include "logpp/format/flag/FullFormatter.h"
+#include "logpp/format/flag/FieldsFormatter.h"
 #include "logpp/format/flag/LevelFormatter.h"
 #include "logpp/format/flag/LiteralFormatter.h"
 #include "logpp/format/flag/NameFormatter.h"
@@ -23,7 +23,7 @@ namespace logpp
     void PatternFormatter::setPattern(std::string pattern)
     {
         m_pattern = std::move(pattern);
-        parsePattern(m_pattern);
+        m_formatters = parsePattern(m_pattern);
     }
 
     void PatternFormatter::format(std::string_view name, LogLevel level, const EventLogBuffer& buffer, fmt::memory_buffer& out) const
@@ -38,26 +38,36 @@ namespace logpp
         }
     }
 
-    void PatternFormatter::parsePattern(const std::string& pattern)
+    std::vector<std::shared_ptr<FlagFormatter>> PatternFormatter::parsePattern(const std::string& pattern)
     {
         auto it = pattern.begin(), end = pattern.end();
 
+        std::vector<std::shared_ptr<FlagFormatter>> formatters;
+
         std::string literalStr;
 
-        m_formatters.clear();
         while (it != end)
         {
             if (*it == '%')
             {
                 if (!literalStr.empty())
-                    m_formatters.push_back(std::make_shared<LiteralFormatter>(std::move(literalStr)));
+                    formatters.push_back(std::make_shared<LiteralFormatter>(std::move(literalStr)));
 
                 ++it;
                 if (it != end)
                 {
-                    std::shared_ptr<FlagFormatter> formatter;
-                    std::tie(it, formatter) = parseFlag(it);
-                    m_formatters.push_back(std::move(formatter));
+                    if (*it == '+')
+                    {
+                        auto fullFormatters = parsePattern("%Y-%m-%d %H:%M:%S [%l] %v %f[-]");
+                        std::copy(std::begin(fullFormatters), std::end(fullFormatters), std::back_inserter(formatters));
+                        ++it;
+                    }
+                    else
+                    {
+                        std::shared_ptr<FlagFormatter> formatter;
+                        std::tie(it, formatter) = parseFlag(it);
+                        formatters.push_back(std::move(formatter));
+                    }
                 }
             }
             else
@@ -68,23 +78,18 @@ namespace logpp
         }
 
         if (!literalStr.empty())
-            m_formatters.push_back(std::make_shared<LiteralFormatter>(std::move(literalStr)));
+            formatters.push_back(std::make_shared<LiteralFormatter>(std::move(literalStr)));
+
+        return formatters;
     }
 
     std::pair<std::string::const_iterator, std::shared_ptr<FlagFormatter>>
     PatternFormatter::parseFlag(std::string::const_iterator it)
     {
         std::shared_ptr<FlagFormatter> formatter;
+
         switch (*it)
         {
-            // Full format
-            case '+':
-            {
-                ++it;
-                formatter = std::make_shared<FullFormatter>();
-                break;
-            }
-
             // -----------------------------
             // Date
             // -----------------------------
@@ -156,6 +161,23 @@ namespace logpp
             {
                 ++it;
                 formatter = std::make_shared<NameFormatter>();
+                break;
+            }
+            // Structured data (fields)
+            case 'f':
+            {
+                ++it;
+                std::string prefix;
+                if (*it == '[')
+                {
+                    ++it;
+                    while (*it != ']')
+                    {
+                        prefix.push_back(*it++);
+                    }
+                    ++it;
+                }
+                formatter = std::make_shared<FieldsFormatter>(std::move(prefix));
                 break;
             }
         }

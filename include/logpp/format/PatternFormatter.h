@@ -33,7 +33,7 @@ namespace logpp
         std::string m_pattern;
         std::vector<std::shared_ptr<FlagFormatter>> m_formatters;
 
-        void parsePattern(const std::string& pattern);
+        static std::vector<std::shared_ptr<FlagFormatter>> parsePattern(const std::string& pattern);
         static std::pair<std::string::const_iterator, std::shared_ptr<FlagFormatter>> parseFlag(std::string::const_iterator it);
     };
 }

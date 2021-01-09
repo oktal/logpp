@@ -24,7 +24,7 @@ namespace logpp::sink
             });
         }
 
-        void format(std::string_view name, LogLevel level, EventLogBuffer buffer)
+        void format(std::string_view name, LogLevel level, const EventLogBuffer& buffer)
         {
             m_queue->push(Entry::create(name, level, buffer));
         }

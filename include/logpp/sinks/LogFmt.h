@@ -10,7 +10,7 @@ namespace logpp::sink
     {
     public:
         explicit LogFmt(std::ostream &os);
-        void format(std::string_view name, LogLevel level, EventLogBuffer buffer) override;
+        void format(std::string_view name, LogLevel level, const EventLogBuffer& buffer) override;
 
     private:
         std::ostream& m_os;

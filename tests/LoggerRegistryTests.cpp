@@ -8,7 +8,7 @@ using namespace logpp;
 class NoopSink : public sink::Sink
 {
 public:
-    void format(std::string_view, LogLevel, EventLogBuffer)
+    void format(std::string_view, LogLevel, const EventLogBuffer&)
     { }
 };
 

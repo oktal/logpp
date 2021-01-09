@@ -7,6 +7,8 @@ namespace logpp
     class LogVisitor
     {
     public:
+        virtual void visitStart(size_t count) = 0;
+
         virtual void visit(std::string_view key, std::string_view value) = 0;
 
         virtual void visit(std::string_view key, uint8_t value) = 0;
@@ -21,5 +23,7 @@ namespace logpp
 
         virtual void visit(std::string_view key, float value) = 0;
         virtual void visit(std::string_view key, double value) = 0;
+
+        virtual void visitEnd() = 0;
     };
 }

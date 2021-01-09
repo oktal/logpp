@@ -1,5 +1,7 @@
-#include "logpp/core/Clock.h"
 #include "logpp/sinks/LogFmt.h"
+
+#include "logpp/core/Clock.h"
+#include "logpp/core/LogVisitor.h"
 
 #include <chrono>
 #include <fmt/format.h>
@@ -49,6 +51,8 @@ namespace logpp::sink
             : m_writer(writer)
         {}
 
+        void visitStart(size_t) override {}
+
         void visit(std::string_view key, std::string_view value) override
         {
             m_writer.write(key, value);
@@ -94,15 +98,17 @@ namespace logpp::sink
             m_writer.writeFmt("{}={}", key, value);
         }
 
-        void visit(std::string_view key, float value)
+        void visit(std::string_view key, float value) override
         {
             m_writer.writeFmt("{}={}", key, value);
         }
 
-        void visit(std::string_view key, double value)
+        void visit(std::string_view key, double value) override
         {
             m_writer.writeFmt("{}={}", key, value);
         }
+
+        void visitEnd() override {}
 
     private:
         Writer& m_writer;
@@ -112,7 +118,7 @@ namespace logpp::sink
         : m_os(os)
     {}
 
-    void LogFmt::format(std::string_view name, LogLevel level, EventLogBuffer buffer)
+    void LogFmt::format(std::string_view name, LogLevel level, const EventLogBuffer& buffer)
     {
         auto time = buffer.time();
         auto cTime = Clock::to_time_t(time);
