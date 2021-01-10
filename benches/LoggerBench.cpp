@@ -37,6 +37,16 @@ std::string generateRandomString(size_t size)
     return ret;
 }
 
+static void BM_BenchLoggerNoopSink_Empty(benchmark::State& state)
+{
+    auto logger = logpp::LoggerFactory::getLogger("BM_BenchLoggerNoopSink_Empty", std::make_shared<NoopSink>());
+
+    for (auto _: state)
+    {
+        logger->debug("Looping");
+    }
+}
+
 static void BM_BenchLoggerNoopSink_NoCopy_1(benchmark::State& state)
 {
     auto logger = logpp::LoggerFactory::getLogger("BM_BenchLoggerNoopSink_NoCopy_1", std::make_shared<NoopSink>());
@@ -147,6 +157,7 @@ static void BM_BenchLoggerNoopSink_NoCopy_LargeLogBuffer(benchmark::State& state
     }
 }
 
+BENCHMARK(BM_BenchLoggerNoopSink_Empty);
 BENCHMARK(BM_BenchLoggerNoopSink_NoCopy_1);
 BENCHMARK(BM_BenchLoggerNoopSink_NoCopy_Format_1);
 BENCHMARK(BM_BenchLoggerNoopSink_Copy_1);
