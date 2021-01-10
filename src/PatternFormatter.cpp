@@ -141,6 +141,20 @@ namespace logpp
                 formatter = std::make_shared<SecondsFormatter>();
                 break;
             }
+            // Writes milliseconds as a decimal number (range [000, 999])
+            case 'i':
+            {
+                ++it;
+                formatter = std::make_shared<MillisecondsFormatter>();
+                break;
+            }
+            // Writes microseconds as a decimal number (range [000, 999])
+            case 'u':
+            {
+                ++it;
+                formatter = std::make_shared<MicrosecondsFormatter>();
+                break;
+            }
 
             // Text
             case 'v':
@@ -163,7 +177,7 @@ namespace logpp
                 formatter = std::make_shared<NameFormatter>();
                 break;
             }
-            // Structured data (fields)
+            // Log event fields
             case 'f':
             {
                 ++it;
