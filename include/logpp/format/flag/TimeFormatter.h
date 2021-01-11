@@ -1,36 +1,37 @@
 #pragma once
 
 #include "logpp/format/flag/Formatter.h"
+#include "logpp/utils/date.h"
 
 namespace logpp
 {
     class HoursFormatter : public FlagFormatter
     {
-        void format(std::string_view, LogLevel, const std::tm* time, const EventLogBuffer&, fmt::memory_buffer& out) const override
+        void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
-            fmt::format_to(out, "{:02}", time->tm_hour);
+            fmt::format_to(out, "{:02}", date_utils::hours(buffer.time()));
         }
     };
 
     class MinutesFormatter : public FlagFormatter
     {
-        void format(std::string_view, LogLevel, const std::tm* time, const EventLogBuffer&, fmt::memory_buffer& out) const override
+        void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
-            fmt::format_to(out, "{:02}", time->tm_min);
+            fmt::format_to(out, "{:02}", date_utils::minutes(buffer.time()));
         }
     };
 
     class SecondsFormatter : public FlagFormatter
     {
-        void format(std::string_view, LogLevel, const std::tm* time, const EventLogBuffer&, fmt::memory_buffer& out) const override
+        void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
-            fmt::format_to(out, "{:02}", time->tm_sec);
+            fmt::format_to(out, "{:02}", date_utils::seconds(buffer.time()));
         }
     };
 
     class MillisecondsFormatter : public FlagFormatter
     {
-        void format(std::string_view, LogLevel, const std::tm*, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
+        void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
             auto time = buffer.time();
             auto epoch = time.time_since_epoch();
@@ -43,7 +44,7 @@ namespace logpp
 
     class MicrosecondsFormatter : public FlagFormatter
     {
-        void format(std::string_view, LogLevel, const std::tm*, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
+        void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
             auto time = buffer.time();
             auto epoch = time.time_since_epoch();

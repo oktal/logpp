@@ -12,6 +12,6 @@ namespace logpp
     public:
         virtual ~FlagFormatter() = default;
 
-        virtual void format(std::string_view name, LogLevel level, const std::tm* time, const EventLogBuffer& buffer, fmt::memory_buffer& out) const = 0;
+        virtual void format(std::string_view name, LogLevel level, const EventLogBuffer& buffer, fmt::memory_buffer& out) const = 0;
     };
 }

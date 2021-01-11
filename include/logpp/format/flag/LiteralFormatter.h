@@ -11,7 +11,7 @@ namespace logpp
             : m_str(str)
         {}
 
-        virtual void format(std::string_view, LogLevel, const std::tm*, const EventLogBuffer&, fmt::memory_buffer& out) const override
+        virtual void format(std::string_view, LogLevel, const EventLogBuffer&, fmt::memory_buffer& out) const override
         {
             out.append(m_str.data(), m_str.data() + m_str.size());
         }

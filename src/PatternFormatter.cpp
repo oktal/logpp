@@ -28,13 +28,9 @@ namespace logpp
 
     void PatternFormatter::format(std::string_view name, LogLevel level, const EventLogBuffer& buffer, fmt::memory_buffer& out) const
     {
-        auto time = buffer.time();
-        auto cTime = Clock::to_time_t(time);
-        auto tm = std::localtime(&cTime);
-
         for (const auto& formatter: m_formatters)
         {
-            formatter->format(name, level, tm, buffer, out);
+            formatter->format(name, level, buffer, out);
         }
     }
 

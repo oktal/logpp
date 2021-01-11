@@ -19,7 +19,7 @@ namespace logpp
             m_postFormat = postFormat;
         }
 
-        void format(std::string_view, LogLevel level, const std::tm*, const EventLogBuffer&, fmt::memory_buffer& out) const override
+        void format(std::string_view, LogLevel level, const EventLogBuffer&, fmt::memory_buffer& out) const override
         {
             if (m_preFormat)
                 m_preFormat(level, out);
