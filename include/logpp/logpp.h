@@ -58,4 +58,11 @@ namespace logpp
     {
         log(LogLevel::Error, text, std::forward<Args>(args)...);
     }
+
+    template<typename Sink, typename... SinkArgs>
+    std::shared_ptr<Logger> create(std::string name, LogLevel level, SinkArgs&& ...args)
+    {
+        auto sink = std::make_shared<Sink>(std::forward<SinkArgs>(args)...);
+        return std::make_shared<Logger>(std::move(name), level, std::move(sink));
+    }
 }
