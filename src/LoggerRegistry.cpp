@@ -1,6 +1,6 @@
 #include "logpp/core/LoggerRegistry.h"
 
-#include "logpp/sinks/ColoredOutputConsole.h"
+#include "logpp/sinks/ColoredConsole.h"
 
 namespace logpp
 {

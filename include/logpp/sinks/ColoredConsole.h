@@ -7,11 +7,11 @@
 
 namespace logpp::sink
 {
-    class ColoredOutputConsole : public Sink
+    class ColoredConsole : public Sink
     {
     public:
-        ColoredOutputConsole()
-            : m_stream(stdout)
+        ColoredConsole(FILE* fp)
+            : m_file(fp)
             , m_formatter(std::make_shared<PatternFormatter>("%+"))
         {
             configureFormatter(m_formatter);
@@ -44,11 +44,11 @@ namespace logpp::sink
             fmt::memory_buffer formatBuf;
             m_formatter->format(name, level, buffer, formatBuf);
 
-            ::fwrite(formatBuf.data(), 1, formatBuf.size(), m_stream);
-            ::fputc('\n', m_stream);
+            ::fwrite(formatBuf.data(), 1, formatBuf.size(), m_file);
+            ::fputc('\n', m_file);
         }
     private:
-        FILE *m_stream;
+        FILE *m_file;
         std::shared_ptr<PatternFormatter> m_formatter;
 
         std::array<std::string_view, 5> m_colors;
@@ -79,5 +79,21 @@ namespace logpp::sink
                 });
             }
         }
+    };
+
+    class ColoredOutputConsole : public ColoredConsole
+    {
+        public:
+            ColoredOutputConsole()
+                : ColoredConsole(stdout)
+        {}
+    };
+
+    class ColoredErrorConsole : public ColoredConsole
+    {
+        public:
+            ColoredErrorConsole()
+                : ColoredConsole(stderr)
+        {}
     };
 }
