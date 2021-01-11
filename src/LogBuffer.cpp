@@ -1,5 +1,7 @@
 #include "logpp/core/LogBuffer.h"
 
+#include <iostream>
+
 namespace logpp
 {
     StringOffset LogBufferBase::write(std::string_view str)
@@ -15,6 +17,12 @@ namespace logpp
     StringOffset LogBufferBase::write(const char* str)
     {
         return writeString(str, std::strlen(str));
+    }
+
+    StringLiteralOffset LogBufferBase::write(StringLiteral str)
+    {
+        auto val = reinterpret_cast<uintptr_t>(str.value);
+        return offsetAt<tag::StringLiteral>(encode(val));
     }
 
     size_t LogBufferBase::size() const

@@ -5,6 +5,8 @@
 #include <cstring>
 #include <functional>
 
+#include <iostream>
+
 namespace logpp
 {
     template< typename T >
@@ -79,25 +81,21 @@ namespace logpp
     struct Offset<tag::StringLiteral>
     {
         Offset()
-            : ptr{0}
+            : offset {0}
         {}
 
-        explicit Offset(const char* ptr)
-            : ptr{ptr}
+        explicit Offset(uint16_t offset)
+            : offset{offset}
         {}
 
-        std::string_view get(LogBufferView) const
+        std::string_view get(LogBufferView buffer) const
         {
-            return std::string_view(ptr);
-        }
-
-        size_t size() const
-        {
-            return std::strlen(ptr);
+            auto ptr = buffer.readAs<uintptr_t>(offset);
+            return std::string_view(reinterpret_cast<const char *>(ptr));
         }
 
     private:
-        const char* ptr;
+        uint16_t offset;
     };
 
     template<typename T>

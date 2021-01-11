@@ -6,8 +6,9 @@
 #include "logpp/core/LogFieldVisitor.h"
 #include "logpp/core/StringLiteral.h"
 
+#include "logpp/utils/tuple.h"
+
 #include <cstddef>
-#include <iostream>
 
 #include <fmt/format.h>
 
@@ -15,42 +16,14 @@ namespace logpp
 {
     namespace details
     {
-        template<size_t... Indexes, typename Tuple, typename Visitor>
-        void visitTuple(std::index_sequence<Indexes...>, Tuple&& tuple, Visitor&& visitor)
-        {
-            (visitor(std::get<Indexes>(tuple)),...);
-        }
-
-        template<typename Tuple>
-        constexpr size_t tupleSize(const Tuple&)
-        {
-            return std::tuple_size_v<Tuple>;
-        }
-
-        template<typename Visitor, typename Tuple>
-        void visitTuple(Tuple&& tuple, Visitor&& visitor)
-        {
-            visitTuple(std::make_index_sequence<tupleSize(tuple)>{}, std::forward<Tuple>(tuple), std::forward<Visitor>(visitor));
-        }
 
         template< typename T >
         using OffsetT = decltype(static_cast< LogBufferBase* >(nullptr)->write(std::declval< T >()));
 
-        template<typename Str>
-        auto writeString(LogBufferBase& buffer, const Str& str)
-        {
-            return buffer.write(str);
-        }
-
-        inline auto writeString(LogBufferBase&, StringLiteral str)
-        {
-            return StringLiteralOffset { str.value };
-        }
-
         template<typename Arg>
         auto write(LogBufferBase& buffer, const Arg& arg)
         {
-            auto keyOffset = writeString(buffer, arg.key);
+            auto keyOffset = buffer.write(arg.key);
             auto valueOffset = buffer.write(arg.value);
 
             return fieldOffset(keyOffset, valueOffset);
@@ -124,7 +97,7 @@ namespace logpp
 
             void visit(LogBufferView view, LogFieldVisitor& visitor) const
             {
-                visitTuple(offsets, [&](const auto& fieldOffset) {
+                tuple_utils::visit(offsets, [&](const auto& fieldOffset) {
                     auto key = fieldOffset.key.get(view);
                     auto value = fieldOffset.value.get(view);
                     visitor.visit(key, value);

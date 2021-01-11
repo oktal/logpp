@@ -1,6 +1,7 @@
 #pragma once
 
 #include "logpp/core/Offset.h"
+#include "logpp/core/StringLiteral.h"
 
 #include <memory>
 #include <cstring>
@@ -31,6 +32,8 @@ namespace logpp
 
         StringOffset write(const std::string& str);
         StringOffset write(const char* str);
+
+        StringLiteralOffset write(StringLiteral str);
 
         template< typename Return, typename... Args >
         FunctionOffset write(Return (*func)(Args ...))
