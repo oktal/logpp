@@ -8,6 +8,11 @@ using namespace logpp;
 class NoopSink : public sink::Sink
 {
 public:
+    bool setOption(std::string, std::string) override
+    {
+        return false;
+    }
+
     void format(std::string_view, LogLevel, const EventLogBuffer&)
     { }
 };

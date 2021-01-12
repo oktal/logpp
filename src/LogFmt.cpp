@@ -114,9 +114,18 @@ namespace logpp::sink
         Writer& m_writer;
     };
 
+    LogFmt::LogFmt()
+        : m_os(std::cout)
+    {}
+
     LogFmt::LogFmt(std::ostream& os)
         : m_os(os)
     {}
+
+    bool LogFmt::setOption(std::string, std::string)
+    {
+        return false;
+    }
 
     void LogFmt::format(std::string_view name, LogLevel level, const EventLogBuffer& buffer)
     {

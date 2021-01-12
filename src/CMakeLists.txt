@@ -6,6 +6,7 @@ set(SOURCE_FILES
     LogFmt.cpp
     PatternFormatter.cpp
     SpinWait.cpp
+    TomlConfigurator.cpp
 )
 
 add_library(logpp ${SOURCE_FILES})
@@ -43,7 +44,7 @@ target_include_directories(logpp
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries(logpp PUBLIC ${CONAN_LIBS_FMT} Threads::Threads)
+target_link_libraries(logpp PUBLIC ${CONAN_LIBS_FMT} ${CONAN_LIBS_TOMLPLUSPLUS} Threads::Threads)
 
 set_target_properties(logpp PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib

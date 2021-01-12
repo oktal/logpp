@@ -1,6 +1,9 @@
 #include "logpp/core/LoggerRegistry.h"
 
 #include "logpp/sinks/ColoredConsole.h"
+#include "logpp/sinks/LogFmt.h"
+
+#include <iostream>
 
 namespace logpp
 {
@@ -8,6 +11,10 @@ namespace logpp
     {
         auto sink = std::make_shared<sink::ColoredOutputConsole>();
         setDefaultLogger(std::make_shared<Logger>("logpp", LogLevel::Debug, sink));
+
+        registerSink<sink::ColoredOutputConsole>();
+        registerSink<sink::ColoredErrorConsole>();
+        registerSink<sink::LogFmt>();
     }
 
     LoggerRegistry& LoggerRegistry::defaultRegistry()
@@ -18,19 +25,28 @@ namespace logpp
 
     bool LoggerRegistry::registerLogger(std::shared_ptr<Logger> logger)
     {
-        return m_loggers.insert(std::make_pair(logger->name(), std::move(logger))).second;
+        return registerLoggerFunc(std::string(logger->name()), [=](std::string_view) {
+            return logger;
+        });
+    }
+
+    bool LoggerRegistry::registerLoggerFunc(std::string name, LoggerRegistry::LoggerFactory factory)
+    {
+        auto it = m_loggerFactories.insert(std::make_pair(std::move(name), std::move(factory)));
+        return it.second;
     }
 
     std::shared_ptr<Logger> LoggerRegistry::get(std::string_view name)
     {
         LoggerKey key(name);
 
+
         for (auto fragmentIt = key.rbegin(); fragmentIt != key.rend(); ++fragmentIt)
         {
             auto fragment = *fragmentIt;
-            auto loggerIt = m_loggers.find(fragment);
-            if (loggerIt != std::end(m_loggers))
-                return loggerIt->second;
+            auto factoryIt = m_loggerFactories.find(fragment);
+            if (factoryIt != std::end(m_loggerFactories))
+                return std::invoke(factoryIt->second, std::string(name));
         }
 
         return m_defaultLogger;

@@ -17,6 +17,11 @@
 class NoopSink : public logpp::sink::Sink
 {
 public:
+    bool setOption(std::string, std::string) override
+    {
+        return false;
+    }
+
     void format(std::string_view, logpp::LogLevel, const logpp::EventLogBuffer&) override
     {}
 };
@@ -27,6 +32,11 @@ public:
     PatternFormatSink()
         : m_formatter(std::make_shared<logpp::PatternFormatter>("%+"))
     {}
+
+    bool setOption(std::string, std::string) override
+    {
+        return false;
+    }
 
     void setPattern(std::string pattern)
     {

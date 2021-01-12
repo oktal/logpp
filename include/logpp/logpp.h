@@ -3,6 +3,7 @@
 #include "logpp/core/Logger.h"
 #include "logpp/core/LoggerRegistry.h"
 
+
 namespace logpp
 {
 
@@ -57,6 +58,11 @@ namespace logpp
     void error(const Str& text, Args&&... args)
     {
         log(LogLevel::Error, text, std::forward<Args>(args)...);
+    }
+
+    std::shared_ptr<Logger> getLogger(std::string_view name)
+    {
+        return defaultRegistry().get(name);
     }
 
     template<typename Sink, typename... SinkArgs>

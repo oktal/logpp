@@ -24,6 +24,11 @@ namespace logpp::sink
             });
         }
 
+        bool setOption(std::string, std::string) override
+        {
+            return false;
+        }
+
         void format(std::string_view name, LogLevel level, const EventLogBuffer& buffer)
         {
             m_queue->push(Entry::create(name, level, buffer));

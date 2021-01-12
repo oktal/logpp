@@ -1,6 +1,7 @@
 #pragma once
 
 #include "logpp/core/Logger.h"
+#include "logpp/sinks/Sink.h"
 
 #include <map>
 #include <iostream>
@@ -130,14 +131,38 @@ namespace logpp
     class LoggerRegistry
     {
     public:
+        using SinkFactory = std::function<std::shared_ptr<sink::Sink>()>;
+        using LoggerFactory = std::function<std::shared_ptr<Logger>(std::string)>;
+
         LoggerRegistry();
 
         bool registerLogger(std::shared_ptr<Logger> logger);
+        bool registerLoggerFunc(std::string name, LoggerFactory factory);
 
         std::shared_ptr<Logger> get(std::string_view name);
 
         std::shared_ptr<Logger> defaultLogger();
         void setDefaultLogger(std::shared_ptr<Logger> logger);
+
+        template<typename Sink>
+        bool registerSink()
+        {
+            static_assert(sink::concepts::IsSink<Sink>, "Sink must be satisfy the Sink concept");
+
+            auto factory = [] { return std::make_shared<Sink>(); };
+            auto it = m_sinkFactories.insert(std::make_pair(std::string(Sink::Name), std::move(factory)));
+            return it.second;
+        }
+
+        std::shared_ptr<sink::Sink> createSink(std::string_view name) const
+        {
+            auto it = m_sinkFactories.find(name);
+            if (it == std::end(m_sinkFactories))
+                return nullptr;
+
+            auto factory = it->second;
+            return std::invoke(factory);
+        }
 
         static LoggerRegistry& defaultRegistry();
     private:
@@ -146,6 +171,7 @@ namespace logpp
         // note: We are explicitely using std::less<> as a comparator
         // to benefit from the c++14 is_transparent heterogenous feature
         // and be able to find with string_view as a key type
-        std::map<std::string, std::shared_ptr<Logger>, std::less<>> m_loggers;
+        std::map<std::string, LoggerFactory, std::less<>> m_loggerFactories;
+        std::map<std::string, SinkFactory, std::less<>> m_sinkFactories;
     };
 }

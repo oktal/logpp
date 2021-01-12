@@ -23,6 +23,17 @@ namespace logpp::sink
             setColor(LogLevel::Error, FgRed);
         }
 
+        bool setOption(std::string key, std::string value) override
+        {
+            if (key == "pattern")
+            {
+                setPattern(std::move(value));
+                return true;
+            }
+
+            return false;
+        }
+
         void setPattern(std::string pattern)
         {
             m_formatter->setPattern(std::move(pattern));
@@ -83,17 +94,21 @@ namespace logpp::sink
 
     class ColoredOutputConsole : public ColoredConsole
     {
-        public:
-            ColoredOutputConsole()
-                : ColoredConsole(stdout)
+    public:
+        static constexpr std::string_view Name = "ColoredOutputConsole";
+
+        ColoredOutputConsole()
+            : ColoredConsole(stdout)
         {}
     };
 
     class ColoredErrorConsole : public ColoredConsole
     {
-        public:
-            ColoredErrorConsole()
-                : ColoredConsole(stderr)
+    public:
+        static constexpr std::string_view Name = "ColoredErrorConsole";
+
+        ColoredErrorConsole()
+            : ColoredConsole(stderr)
         {}
     };
 }
