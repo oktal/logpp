@@ -4,9 +4,12 @@
 #include "logpp/core/Logger.h"
 #include "logpp/sinks/Sink.h"
 
+#include "logpp/utils/date.h"
+
 #include <gtest/gtest.h>
 
 using namespace logpp;
+using namespace date;
 
 struct PatternFormatterTest : public ::testing::Test
 {
@@ -35,21 +38,11 @@ TEST_F(PatternFormatterTest, should_format_date)
 {
     setPattern("%Y-%m-%d");
 
-    std::tm date;
-    std::memset(&date, 0, sizeof(date));
-
-    date.tm_year = 2021 - 1900;
-    date.tm_mon = 0;
-    date.tm_mday = 8;
-    date.tm_hour = 15;
-    date.tm_min = 20;
-    date.tm_sec = 10;
-
-    auto time = std::mktime(&date);
-    auto ts = Clock::from_time_t(time);
+    auto ymd = jan/8/2021;
+    TimePoint tp = sys_days(ymd);
 
     EventLogBuffer buffer;
-    buffer.writeTime(ts);
+    buffer.writeTime(tp);
 
     format("", LogLevel::Debug, buffer);
 
@@ -58,23 +51,13 @@ TEST_F(PatternFormatterTest, should_format_date)
 
 TEST_F(PatternFormatterTest, should_format_time)
 {
+    using namespace std::chrono;
     setPattern("%H:%M:%S");
 
-    std::tm date;
-    std::memset(&date, 0, sizeof(date));
-
-    date.tm_year = 2021 - 1900;
-    date.tm_mon = 0;
-    date.tm_mday = 8;
-    date.tm_hour = 15;
-    date.tm_min = 20;
-    date.tm_sec = 10;
-
-    auto time = std::mktime(&date);
-    auto ts = Clock::from_time_t(time);
+    auto time = make_time(hours{15} + minutes{20} + seconds{10});
 
     EventLogBuffer buffer;
-    buffer.writeTime(ts);
+    buffer.writeTime(TimePoint{seconds(time)});
 
     format("", LogLevel::Debug, buffer);
 
@@ -135,23 +118,14 @@ TEST_F(PatternFormatterTest, should_format_name)
 
 TEST_F(PatternFormatterTest, should_format_full)
 {
+    using namespace std::chrono;
     setPattern("%+");
 
-    std::tm date;
-    std::memset(&date, 0, sizeof(date));
-
-    date.tm_year = 2021 - 1900;
-    date.tm_mon = 0;
-    date.tm_mday = 8;
-    date.tm_hour = 15;
-    date.tm_min = 20;
-    date.tm_sec = 10;
-
-    auto time = std::mktime(&date);
-    auto ts = Clock::from_time_t(time);
+    auto ymd = jan/8/2021;
+    TimePoint tp = sys_days(ymd) + hours{15} + minutes{20} + seconds{10};
 
     EventLogBuffer buffer;
-    buffer.writeTime(ts);
+    buffer.writeTime(tp);
     buffer.writeText(logpp::format("Test result: {} ({})", std::string("Pass"), 0));
 
     format("MyLogger", LogLevel::Info, buffer);
