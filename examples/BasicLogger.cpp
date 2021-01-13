@@ -51,12 +51,21 @@ bool grantUser(const std::string& userName, AccessRight access)
 
 int main(int argc, const char *argv[])
 {
+    // Set the global logger level to Debug
+    logpp::setLevel(logpp::LogLevel::Debug);
+
     if (argc < 3)
     {
         logpp::error(logpp::format("Usage: {} [username] [password]", argv[0]));
         return 0;
     }
-    
+
+    // Set LogLevel above to Trace to show this message.
+    logpp::trace(logpp::format("Running {}", argv[0]),
+        logpp::field("user_name", argv[1]),
+        logpp::field("password", argv[2])
+    );
+
     if (authorizeUser(argv[1], argv[2]))
     {
         if (grantUser(argv[1], AccessRight::Read))

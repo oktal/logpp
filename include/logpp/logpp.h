@@ -37,6 +37,12 @@ namespace logpp
     }
 
     template<typename Str, typename... Args>
+    void trace(const Str& text, Args&&... args)
+    {
+        log(LogLevel::Trace, text, std::forward<Args>(args)...);
+    }
+
+    template<typename Str, typename... Args>
     void debug(const Str& text, Args&&... args)
     {
         log(LogLevel::Debug, text, std::forward<Args>(args)...);
@@ -60,7 +66,12 @@ namespace logpp
         log(LogLevel::Error, text, std::forward<Args>(args)...);
     }
 
-    std::shared_ptr<Logger> getLogger(std::string_view name)
+    inline void setLevel(LogLevel level)
+    {
+        defaultLogger()->setLevel(level);
+    }
+
+    inline std::shared_ptr<Logger> getLogger(std::string_view name)
     {
         return defaultRegistry().get(name);
     }

@@ -6,6 +6,8 @@
 
 #include "logpp/sinks/Sink.h"
 
+#include <atomic>
+
 namespace logpp
 {
     template<typename KeyStr, typename T>
@@ -53,6 +55,9 @@ namespace logpp
         template<typename Str, typename... Fields>
         void log(const Str& text, LogLevel level, Fields&&... fields)
         {
+            if (!is(level))
+                return;
+
             EventLogBuffer buffer;
 
             buffer.writeTime(Clock::now());
@@ -60,6 +65,12 @@ namespace logpp
             buffer.writeFields(std::forward<Fields>(fields)...);
 
             m_sink->format(name(), level, buffer);
+        }
+
+        template<typename Str, typename... Args>
+        void trace(Str text, Args&&... args)
+        {
+            log(text, LogLevel::Trace, std::forward<Args>(args)...);
         }
 
         template<typename Str, typename... Args>
@@ -74,6 +85,18 @@ namespace logpp
             log(text, LogLevel::Info, std::forward<Args>(args)...);
         }
 
+        template<typename Str, typename... Args>
+        void warn(Str text, Args&&... args)
+        {
+            log(text, LogLevel::Warning, std::forward<Args>(args)...);
+        }
+
+        template<typename Str, typename... Args>
+        void error(Str text, Args&&... args)
+        {
+            log(text, LogLevel::Error, std::forward<Args>(args)...);
+        }
+
         std::string_view name() const
         {
             return m_name;
@@ -81,12 +104,22 @@ namespace logpp
 
         LogLevel level() const
         {
-            return m_level;
+            return m_level.load(std::memory_order_relaxed);
+        }
+
+        void setLevel(LogLevel level)
+        {
+            m_level.store(level, std::memory_order_relaxed);
+        }
+
+        bool is(LogLevel lvl) const
+        {
+            return static_cast<int>(lvl) >= static_cast<int>(level());
         }
 
     private:
         std::string m_name;
-        LogLevel m_level;
+        std::atomic<LogLevel> m_level;
 
         std::shared_ptr<sink::Sink> m_sink;
     };
