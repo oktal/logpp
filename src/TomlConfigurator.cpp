@@ -3,6 +3,8 @@
 #include "logpp/core/Logger.h"
 #include "logpp/core/LogLevel.h"
 
+#include <fstream>
+
 namespace logpp
 {
     std::optional<TomlConfigurator::Error> TomlConfigurator::configure(std::string_view config)
@@ -12,29 +14,24 @@ namespace logpp
 
     std::optional<TomlConfigurator::Error> TomlConfigurator::configure(std::string_view config, LoggerRegistry& registry)
     {
-        try
-        {
-            auto table = toml::parse(config);
-            auto [sinks, err] = parseSinks(table);
-            if (err)
-                return err;
+        return configure([&] { return toml::parse(config); }, registry);
+    }
 
-            err = parseLoggers(table, sinks, registry);
-            if (err)
-                return err;
+    std::optional<TomlConfigurator::Error> TomlConfigurator::configureFile(std::string_view path)
+    {
+        return configureFile(path, LoggerRegistry::defaultRegistry());
+    }
 
-        }
-        catch (const toml::parse_error& e)
-        {
-            return Error::from(e);
-        }
-        
-        return std::nullopt;
+    std::optional<TomlConfigurator::Error> TomlConfigurator::configureFile(std::string_view path, LoggerRegistry& registry)
+    {
+        return configure([&] { return toml::parse_file(path); }, registry);
     }
 
     std::pair<std::vector<TomlConfigurator::Sink>, std::optional<TomlConfigurator::Error>> TomlConfigurator::parseSinks(const toml::table& table)
     {
         auto sinksNode = table["sinks"];
+        if (!sinksNode)
+            return std::make_pair(std::vector<Sink>{}, std::nullopt);
 
         auto* sinksTable = sinksNode.as_table();
         if (!sinksTable)

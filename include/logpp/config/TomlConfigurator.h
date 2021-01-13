@@ -3,6 +3,7 @@
 #include "logpp/core/LoggerRegistry.h"
 
 #include <toml.hpp>
+#include <istream>
 
 namespace logpp
 {
@@ -30,7 +31,33 @@ public:
     static std::optional<Error> configure(std::string_view config);
     static std::optional<Error> configure(std::string_view config, LoggerRegistry& registry);
 
+    static std::optional<Error> configureFile(std::string_view path);
+    static std::optional<Error> configureFile(std::string_view path, LoggerRegistry& registry);
+
 private:
+    template<typename ParseFunc>
+    static std::optional<Error> configure(ParseFunc parseFunc, LoggerRegistry& registry)
+    {
+        try
+        {
+            auto table = std::invoke(parseFunc);
+            auto [sinks, err] = parseSinks(table);
+            if (err)
+                return err;
+
+            err = parseLoggers(table, sinks, registry);
+            if (err)
+                return err;
+
+        }
+        catch (const toml::parse_error& e)
+        {
+            return Error::from(e);
+        }
+        
+        return std::nullopt;
+    }
+
     struct Sink
     {
         std::string name;
