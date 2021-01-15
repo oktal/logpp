@@ -1,0 +1,10 @@
+[sinks]
+[sinks.console]
+    type = "ColoredOutputConsole"
+    options = { format = "logfmt" }
+
+[loggers]
+[loggers.main]
+    name = "main"
+    sinks = [ "console" ]
+    level = "debug"
