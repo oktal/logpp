@@ -29,7 +29,7 @@ namespace logpp::sink
             return false;
         }
 
-        void format(std::string_view name, LogLevel level, const EventLogBuffer& buffer)
+        void sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer)
         {
             m_queue->push(Entry::create(name, level, buffer));
         }
@@ -42,6 +42,11 @@ namespace logpp::sink
         void stop()
         {
             m_queuePoller->removeQueue(m_queue);
+        }
+
+        std::shared_ptr<Sink> innerSink() const
+        {
+            return m_innerSink;
         }
 
     private:
@@ -63,7 +68,7 @@ namespace logpp::sink
 
         void handleEntry(const Entry& entry)
         {
-            m_innerSink->format(entry.name, entry.level, entry.logBuffer);
+            m_innerSink->sink(entry.name, entry.level, entry.logBuffer);
         }
     };
 }

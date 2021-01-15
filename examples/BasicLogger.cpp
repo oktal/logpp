@@ -1,7 +1,7 @@
 #include "logpp/logpp.h"
 
 #include "logpp/core/Logger.h"
-#include "logpp/sinks/LogFmt.h"
+#include "logpp/sinks/ColoredConsole.h"
 
 enum class AccessRight
 {
@@ -53,6 +53,8 @@ int main(int argc, const char *argv[])
 {
     // Set the global logger level to Debug
     logpp::setLevel(logpp::LogLevel::Debug);
+    // Uncomment this line to log lines in logfmt format
+    // logpp::setFormatter<logpp::LogFmtFormatter>();
 
     if (argc < 3)
     {

@@ -2,6 +2,7 @@
 
 #include "logpp/core/Logger.h"
 #include "logpp/sinks/Sink.h"
+#include "logpp/format/Formatter.h"
 
 #include <map>
 #include <iostream>

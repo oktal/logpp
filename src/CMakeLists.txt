@@ -3,7 +3,7 @@ set(SOURCE_FILES
     LogBuffer.cpp
     LogBufferView.cpp
     LoggerRegistry.cpp
-    LogFmt.cpp
+    LogFmtFormatter.cpp
     PatternFormatter.cpp
     SpinWait.cpp
     TomlConfigurator.cpp

@@ -12,8 +12,7 @@ namespace logpp::sink
     {
     public:
         virtual bool setOption(std::string key, std::string value) = 0;
-
-        virtual void format(std::string_view name, LogLevel level, const EventLogBuffer& buffer) = 0;
+        virtual void sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer) = 0;
     };
 
     namespace details

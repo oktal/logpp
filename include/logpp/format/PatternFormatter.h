@@ -27,11 +27,12 @@ namespace logpp
         }
 
         void setPattern(std::string pattern);
-        void format(std::string_view name, LogLevel level, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override;
 
     private:
         std::string m_pattern;
         std::vector<std::shared_ptr<FlagFormatter>> m_formatters;
+
+        void doFormat(std::string_view name, LogLevel level, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override;
 
         static std::vector<std::shared_ptr<FlagFormatter>> parsePattern(const std::string& pattern);
         static std::pair<std::string::const_iterator, std::shared_ptr<FlagFormatter>> parseFlag(std::string::const_iterator it);

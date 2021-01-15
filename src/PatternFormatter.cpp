@@ -26,7 +26,7 @@ namespace logpp
         m_formatters = parsePattern(m_pattern);
     }
 
-    void PatternFormatter::format(std::string_view name, LogLevel level, const EventLogBuffer& buffer, fmt::memory_buffer& out) const
+    void PatternFormatter::doFormat(std::string_view name, LogLevel level, const EventLogBuffer& buffer, fmt::memory_buffer& out) const
     {
         for (const auto& formatter: m_formatters)
         {

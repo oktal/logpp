@@ -11,6 +11,7 @@
 
 #include "logpp/sinks/AsyncSink.h"
 #include "logpp/sinks/Sink.h"
+#include "logpp/sinks/FormatSink.h"
 
 #include <random>
 
@@ -22,35 +23,22 @@ public:
         return false;
     }
 
-    void format(std::string_view, logpp::LogLevel, const logpp::EventLogBuffer&) override
+    void sink(std::string_view, logpp::LogLevel, const logpp::EventLogBuffer&) override
     {}
 };
 
-class PatternFormatSink : public logpp::sink::Sink
+class PatternFormatSink : public logpp::sink::FormatSink
 {
 public:
     PatternFormatSink()
-        : m_formatter(std::make_shared<logpp::PatternFormatter>("%+"))
+        : FormatSink(std::make_shared<logpp::PatternFormatter>("%+"))
     {}
 
-    bool setOption(std::string, std::string) override
-    {
-        return false;
-    }
-
-    void setPattern(std::string pattern)
-    {
-        m_formatter->setPattern(std::move(pattern));
-    }
-
-    void format(std::string_view name, logpp::LogLevel level, const logpp::EventLogBuffer& buffer) override
+    void sink(std::string_view name, logpp::LogLevel level, const logpp::EventLogBuffer& buffer) override
     {
         fmt::memory_buffer out;
-        m_formatter->format(name, level, buffer, out);
+        format(name, level, buffer, out);
     }
-
-private:
-    std::shared_ptr<logpp::PatternFormatter> m_formatter;
 };
 
 std::string generateRandomString(size_t size)

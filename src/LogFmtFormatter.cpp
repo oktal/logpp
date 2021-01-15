@@ -1,31 +1,45 @@
-#include "logpp/sinks/LogFmt.h"
+#include "logpp/format/LogFmtFormatter.h"
 
 #include "logpp/core/Clock.h"
 #include "logpp/core/LogFieldVisitor.h"
 
+#include "logpp/utils/date.h"
+
 #include <chrono>
 #include <fmt/format.h>
 
-namespace logpp::sink
+namespace logpp
 {
     class Writer
     {
     public:
+        explicit Writer(fmt::memory_buffer& buffer)
+            : m_buf(buffer)
+        {}
+
         void write(std::string_view key, std::string_view value)
         {
             if (value.find(' ') != std::string::npos)
-                writeFmt("{}=\"{}\"", key, value);
+                writeFmt(key, "\"{}\"", value);
             else
-                writeFmt("{}={}", key, value);
+                writeFmt(key, "{}", value);
+        }
+
+        template<typename Val>
+        void write(std::string_view key, Val&& value)
+        {
+            writeFmt(key, "{}", std::forward<Val>(value));
         }
 
         template<typename... Args>
-        void writeFmt(const char* formatStr, Args&& ...args)
+        void writeFmt(std::string_view key, const char* valueFormatStr, Args&& ...args)
         {
             if (m_count > 0)
                 m_buf.push_back(' ');
 
-            fmt::format_to(m_buf, formatStr, std::forward<Args>(args)...);
+            m_buf.append(key.data(), key.data() + key.size());
+            m_buf.push_back('=');
+            fmt::format_to(m_buf, valueFormatStr, std::forward<Args>(args)...);
             ++m_count;
         }
 
@@ -40,7 +54,7 @@ namespace logpp::sink
         }
 
     private:
-        fmt::memory_buffer m_buf;
+        fmt::memory_buffer& m_buf;
         size_t m_count = 0;
     };
 
@@ -60,52 +74,52 @@ namespace logpp::sink
 
         void visit(std::string_view key, uint8_t value) override
         {
-            m_writer.writeFmt("{}={}", key, value);
+            m_writer.write(key, value);
         }
 
         void visit(std::string_view key, uint16_t value) override
         {
-            m_writer.writeFmt("{}={}", key, value);
+            m_writer.write(key, value);
         }
 
         void visit(std::string_view key, uint32_t value) override
         {
-            m_writer.writeFmt("{}={}", key, value);
+            m_writer.write(key, value);
         }
 
         void visit(std::string_view key, uint64_t value) override
         {
-            m_writer.writeFmt("{}={}", key, value);
+            m_writer.write(key, value);
         }
 
         void visit(std::string_view key, int8_t value) override
         {
-            m_writer.writeFmt("{}={}", key, value);
+            m_writer.write(key, value);
         }
 
         void visit(std::string_view key, int16_t value) override
         {
-            m_writer.writeFmt("{}={}", key, value);
+            m_writer.write(key, value);
         }
 
         void visit(std::string_view key, int32_t value) override
         {
-            m_writer.writeFmt("{}={}", key, value);
+            m_writer.write(key, value);
         }
 
         void visit(std::string_view key, int64_t value) override
         {
-            m_writer.writeFmt("{}={}", key, value);
+            m_writer.write(key, value);
         }
 
         void visit(std::string_view key, float value) override
         {
-            m_writer.writeFmt("{}={}", key, value);
+            m_writer.write(key, value);
         }
 
         void visit(std::string_view key, double value) override
         {
-            m_writer.writeFmt("{}={}", key, value);
+            m_writer.write(key, value);
         }
 
         void visitEnd() override {}
@@ -114,24 +128,11 @@ namespace logpp::sink
         Writer& m_writer;
     };
 
-    LogFmt::LogFmt()
-        : m_os(std::cout)
-    {}
-
-    LogFmt::LogFmt(std::ostream& os)
-        : m_os(os)
-    {}
-
-    bool LogFmt::setOption(std::string, std::string)
+    void LogFmtFormatter::doFormat(std::string_view name, LogLevel level, const EventLogBuffer& buffer, fmt::memory_buffer& dest) const
     {
-        return false;
-    }
-
-    void LogFmt::format(std::string_view name, LogLevel level, const EventLogBuffer& buffer)
-    {
-        auto time = buffer.time();
-        auto cTime = Clock::to_time_t(time);
-        auto utcTime = std::gmtime(&cTime);
+        auto tp = buffer.time();
+        auto date = date_utils::date(tp);
+        auto time = date_utils::time(tp);
 
         auto getFractionTime = [](TimePoint tp) -> std::pair<std::chrono::milliseconds, std::chrono::microseconds>
         {
@@ -146,17 +147,18 @@ namespace logpp::sink
             return { ms, us };
         };
 
-        auto [ms, us] = getFractionTime(time);
+        auto [ms, us] = getFractionTime(tp);
 
-        Writer writer;
+        Writer writer(dest);
         writer.writeFmt(
-            "ts={:04}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}{:03}",
-            utcTime->tm_year + 1900,
-            utcTime->tm_mon + 1,
-            utcTime->tm_mday,
-            utcTime->tm_hour,
-            utcTime->tm_min,
-            utcTime->tm_sec,
+            "ts",
+            "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}{:03}",
+            static_cast<int>(date.year()),
+            static_cast<unsigned>(date.month()),
+            static_cast<unsigned>(date.day()),
+            time.hours().count(),
+            time.minutes().count(),
+            time.seconds().count(),
             ms.count(),
             us.count()
         );
@@ -170,8 +172,5 @@ namespace logpp::sink
 
         Visitor visitor(writer);
         buffer.visitFields(visitor);
-
-        m_os.write(writer.data(), writer.size());
-        m_os.put('\n');
     }
 }

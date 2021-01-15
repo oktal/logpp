@@ -3,6 +3,10 @@
 #include "logpp/core/Logger.h"
 #include "logpp/core/LoggerRegistry.h"
 
+#include "logpp/format/Formatter.h"
+
+#include "logpp/sinks/AsyncSink.h"
+#include "logpp/sinks/FormatSink.h"
 
 namespace logpp
 {
@@ -69,6 +73,26 @@ namespace logpp
     inline void setLevel(LogLevel level)
     {
         defaultLogger()->setLevel(level);
+    }
+
+    template<typename Formatter, typename... Args>
+    bool setFormatter(Args&& ...args)
+    {
+        static_assert(concepts::IsFormatter<Formatter>, "Formatter must satisfy the Formatter concept");
+
+        auto logger = defaultLogger();
+        auto sink = logger->sink();
+
+        if (auto asyncSink = std::dynamic_pointer_cast<sink::AsyncSink>(sink))
+            sink = asyncSink->innerSink();
+
+        if (auto formatSink = std::dynamic_pointer_cast<sink::FormatSink>(sink))
+        {
+            formatSink->setFormatter(std::make_shared<Formatter>(std::forward<Args>(args)...));
+            return true;
+        }
+
+        return false;
     }
 
     inline std::shared_ptr<Logger> getLogger(std::string_view name)

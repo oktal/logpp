@@ -13,22 +13,24 @@ namespace logpp
             return date::make_time(tp - dp);
         }
 
-        inline auto year(TimePoint tp)
+        inline date::year_month_day date(TimePoint tp)
         {
-            date::year_month_day ymd { date::floor<date::days>(tp) };
-            return static_cast<int>(ymd.year());
+            return { date::floor<date::days>(tp) };
         }
 
-        inline auto month(TimePoint tp)
+        inline int year(TimePoint tp)
         {
-            date::year_month_day ymd { date::floor<date::days>(tp) };
-            return static_cast<unsigned>(ymd.month());
+            return static_cast<int>(date(tp).year());
         }
 
-        inline auto day(TimePoint tp)
+        inline unsigned month(TimePoint tp)
         {
-            date::year_month_day ymd { date::floor<date::days>(tp) };
-            return static_cast<unsigned>(ymd.day());
+            return static_cast<unsigned>(date(tp).month());
+        }
+
+        inline unsigned day(TimePoint tp)
+        {
+            return static_cast<unsigned>(date(tp).day());
         }
 
         inline auto hours(TimePoint tp)

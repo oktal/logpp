@@ -1,5 +1,7 @@
 #pragma once
 
+#include "logpp/utils/string.h"
+
 #include <string_view>
 #include <optional>
 
@@ -21,34 +23,31 @@ namespace logpp
         switch (level)
         {
             case LogLevel::Trace:
-                return "Trace"sv;
+                return "trace"sv;
             case LogLevel::Debug:
-                return "Debug"sv;
+                return "debug"sv;
             case LogLevel::Info:
-                return "Info"sv;
+                return "info"sv;
             case LogLevel::Warning:
-                return "Warn"sv;
+                return "warn"sv;
             case LogLevel::Error:
-                return "Error"sv;
+                return "error"sv;
         }
 
         return "none";
     }
 
-    inline std::optional<LogLevel> parseLevel(std::string level)
+    inline std::optional<LogLevel> parseLevel(std::string_view level)
     {
-        for (auto& c: level)
-            c = std::tolower(c);
-
-        if (level == "trace")
+        if (string_utils::iequals(level, "trace"))
             return LogLevel::Trace;
-        else if (level == "debug")
+        else if (string_utils::iequals(level, "debug"))
             return LogLevel::Debug;
-        else if (level == "info")
+        else if (string_utils::iequals(level, "info"))
             return LogLevel::Info;
-        else if (level == "warn")
+        else if (string_utils::iequals(level, "warn"))
             return LogLevel::Warning;
-        else if (level == "error")
+        else if (string_utils::iequals(level, "error"))
             return LogLevel::Error;
 
         return std::nullopt;

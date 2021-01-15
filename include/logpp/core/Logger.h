@@ -64,7 +64,7 @@ namespace logpp
             buffer.writeText(text);
             buffer.writeFields(std::forward<Fields>(fields)...);
 
-            m_sink->format(name(), level, buffer);
+            m_sink->sink(name(), level, buffer);
         }
 
         template<typename Str, typename... Args>
@@ -95,6 +95,11 @@ namespace logpp
         void error(Str text, Args&&... args)
         {
             log(text, LogLevel::Error, std::forward<Args>(args)...);
+        }
+
+        std::shared_ptr<sink::Sink> sink() const
+        {
+            return m_sink;
         }
 
         std::string_view name() const
