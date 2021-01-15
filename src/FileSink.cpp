@@ -1,6 +1,7 @@
 #include "logpp/sinks/FileSink.h"
 
 #include "logpp/format/PatternFormatter.h"
+#include "logpp/utils/env.h"
 
 namespace logpp::sink
 {
@@ -16,6 +17,21 @@ namespace logpp::sink
         : FormatSink(std::move(formatter))
     {
         open(filePath);
+    }
+
+    bool FileSink::setOption(std::string key, std::string value)
+    {
+        auto optionsBase = FormatSink::setOption(key, value);
+        if (optionsBase)
+            return true;
+
+        if (key == "file")
+        {
+            open(env_utils::expandEnvironmentVariables(value));
+            return true;
+        }
+
+        return false;
     }
 
     bool FileSink::open(std::string_view filePath)

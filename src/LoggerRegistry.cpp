@@ -1,5 +1,7 @@
 #include "logpp/core/LoggerRegistry.h"
+
 #include "logpp/sinks/ColoredConsole.h"
+#include "logpp/sinks/FileSink.h"
 
 #include <iostream>
 
@@ -12,6 +14,7 @@ namespace logpp
 
         registerSink<sink::ColoredOutputConsole>();
         registerSink<sink::ColoredErrorConsole>();
+        registerSink<sink::FileSink>();
     }
 
     LoggerRegistry& LoggerRegistry::defaultRegistry()
