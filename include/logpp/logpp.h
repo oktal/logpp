@@ -21,17 +21,19 @@ namespace logpp
         defaultRegistry().setDefaultLogger(std::move(logger));
     }
 
-    template<typename Sink, typename... Args>
-    void setDefaultLoggerSinked(std::string name, LogLevel level, Args&& ...args)
-    {
-        auto sink = std::make_shared<Sink>(std::forward<Args>(args)...);
-        auto logger = std::make_shared<Logger>(std::move(name), level, std::move(sink));
-        setDefaultLogger(std::move(logger));
-    }
-
     inline std::shared_ptr<Logger> defaultLogger()
     {
         return defaultRegistry().defaultLogger();
+    }
+
+    template<typename Sink, typename... Args>
+    std::shared_ptr<Sink> setDefaultLoggerSinked(std::string name, LogLevel level, Args&& ...args)
+    {
+        auto sink = std::make_shared<Sink>(std::forward<Args>(args)...);
+        auto logger = std::make_shared<Logger>(std::move(name), level, sink);
+        setDefaultLogger(std::move(logger));
+
+        return sink;
     }
 
     template<typename Str, typename... Args>
