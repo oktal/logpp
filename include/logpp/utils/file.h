@@ -36,7 +36,7 @@ namespace logpp::file_utils
           return std::filesystem::remove(path);
       }
 
-      size_t removeAll(std::string_view path)
+      inline size_t removeAll(std::string_view path)
       {
           return static_cast<size_t>(std::filesystem::remove_all(path));
       }

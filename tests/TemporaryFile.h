@@ -1,6 +1,6 @@
 #pragma once
 
-#include "logpp/sinks/FileSink.h"
+#include "logpp/sinks/file/FileSink.h"
 
 #include <fmt/format.h>
 

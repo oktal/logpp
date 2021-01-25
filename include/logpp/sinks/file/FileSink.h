@@ -1,6 +1,8 @@
-#include "logpp/sinks/FormatSink.h"
+#pragma once
 
-#include <fstream>
+#include "logpp/sinks/FormatSink.h"
+#include "logpp/sinks/file/File.h"
+
 #include <memory>
 #include <string_view>
 
@@ -25,7 +27,6 @@ namespace logpp::sink
         void sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer) override;
 
     private:
-        std::unique_ptr<std::ofstream> m_fs;
-        fmt::memory_buffer m_formatBuf;
+        std::unique_ptr<File> m_file;
     };
 }
