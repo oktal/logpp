@@ -100,7 +100,7 @@ TEST_F(PatternFormatterTest, should_format_level)
 
     format("", LogLevel::Info, buffer);
 
-    ASSERT_EQ(data(), "[Info]");
+    ASSERT_EQ(data(), fmt::format("[{}]", levelString(LogLevel::Info)));
 }
 
 TEST_F(PatternFormatterTest, should_format_name)
@@ -130,5 +130,8 @@ TEST_F(PatternFormatterTest, should_format_full)
 
     format("MyLogger", LogLevel::Info, buffer);
 
-    ASSERT_EQ(data(), "2021-01-08 15:20:10 [Info] (MyLogger) Test result: Pass (0)");
+    ASSERT_EQ(
+        data(),
+        fmt::format("2021-01-08 15:20:10 [{}] (MyLogger) Test result: Pass (0)", levelString(LogLevel::Info))
+    );
 }
