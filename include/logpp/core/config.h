@@ -23,3 +23,9 @@
 #elif defined(_WIN32) || defined(_WIN64)
     #define LOGPP_PLATFORM_WINDOWS
 #endif
+
+#if defined __has_include
+  #if __has_include (<filesystem>)
+    #define LOGPP_CPP17_FILESYSTEM
+  #endif
+#endif

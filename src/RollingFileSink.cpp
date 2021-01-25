@@ -1,4 +1,4 @@
-#include "logpp/sinks/RollingFileSink.h"
+#include "logpp/sinks/file/RollingFileSink.h"
 
 #include "logpp/format/PatternFormatter.h"
 

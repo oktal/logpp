@@ -1,4 +1,4 @@
-#include "logpp/sinks/FileSink.h"
+#include "logpp/sinks/file/FileSink.h"
 
 #include "logpp/format/PatternFormatter.h"
 #include "logpp/utils/env.h"
@@ -36,37 +36,23 @@ namespace logpp::sink
 
     bool FileSink::open(std::string_view filePath)
     {
-        auto openMode = std::ios_base::out | std::ios_base::app;
-        auto fs = std::make_unique<std::ofstream>(filePath.data(), openMode);
-        if (fs->bad())
-            return false;
-
-        std::swap(m_fs, fs);
-        return true;
+        return m_file->open(filePath, std::ios_base::out | std::ios_base::app);
     }
 
     bool FileSink::isOpen() const
     {
-        return m_fs && m_fs->is_open();
+        return m_file->isOpen();
     }
 
     bool FileSink::close()
     {
-        if (!m_fs)
-            return false;
-
-        m_fs->close();
-        m_fs.reset();
-
-        return true;
+        return m_file->close();
     }
 
     void FileSink::sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer)
     {
-        m_formatBuf.clear();
-        format(name, level, buffer, m_formatBuf);
-        m_fs->write(m_formatBuf.data(), m_formatBuf.size());
-        m_fs->put('\n');
+        fmt::memory_buffer formatBuf;
+        format(name, level, buffer, formatBuf);
+        m_file->write(formatBuf.data(), formatBuf.size());
     }
-
 }

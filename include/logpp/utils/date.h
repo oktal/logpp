@@ -1,7 +1,7 @@
 #pragma once
 
 #include "logpp/core/Clock.h"
-#include "logpp/core/date.h"
+#include "logpp/date/date.h"
 
 namespace logpp
 {
