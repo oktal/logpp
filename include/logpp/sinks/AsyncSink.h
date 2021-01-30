@@ -24,7 +24,7 @@ namespace logpp::sink
             });
         }
 
-        bool setOption(std::string, std::string) override
+        bool activateOptions(const Options& options) override
         {
             return false;
         }

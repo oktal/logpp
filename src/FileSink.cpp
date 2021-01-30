@@ -19,19 +19,21 @@ namespace logpp::sink
         open(filePath);
     }
 
-    bool FileSink::setOption(std::string key, std::string value)
+    bool FileSink::activateOptions(const Options& options)
     {
-        auto optionsBase = FormatSink::setOption(key, value);
-        if (optionsBase)
-            return true;
+        if (!FormatSink::activateOptions(options))
+            return false;
 
-        if (key == "file")
-        {
-            open(env_utils::expandEnvironmentVariables(value));
-            return true;
-        }
+        auto fileOption = options.tryGet("file");
+        if (!fileOption)
+            return false;
 
-        return false;
+        auto file = fileOption->asString();
+        if (!file)
+            return false;
+
+        open(env_utils::expandEnvironmentVariables(*file));
+        return true;
     }
 
     bool FileSink::open(std::string_view filePath)

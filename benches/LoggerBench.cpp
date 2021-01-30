@@ -18,7 +18,7 @@
 class NoopSink : public logpp::sink::Sink
 {
 public:
-    bool setOption(std::string, std::string) override
+    bool activateOptions(const logpp::sink::Options& options) override
     {
         return false;
     }

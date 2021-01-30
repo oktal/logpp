@@ -22,13 +22,19 @@ namespace logpp::sink
         , m_archiveStrategy(std::move(archiveStrategy))
     { }
 
-    bool RollingFileSink::setOption(std::string key, std::string value)
+    bool RollingFileSink::activateOptions(const Options& options)
     {
-        if (string_utils::iequals(key, "strategy"))
-            return setRollingStrategy(createRollingStrategy(value));
-        else if (string_utils::iequals(key, "archive"))        
-            return setArchiveStrategy(createArchiveStrategy(value));
-        return false;
+        if (!FileSink::activateOptions(options))
+            return false;
+
+        auto strategyOpts = options.tryGet("strategy");
+        auto archiveOpts = options.tryGet("archive");
+
+        if (!strategyOpts || !archiveOpts)
+            return false;
+
+        return setRollingStrategy(createRollingStrategy(*strategyOpts)) &&
+               setArchiveStrategy(createArchiveStrategy(*archiveOpts));
     }
 
     void RollingFileSink::sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer)
@@ -60,48 +66,85 @@ namespace logpp::sink
         return true;
     }
 
-    std::pair<std::string_view, std::string_view> RollingFileSink::parseStrategy(std::string_view strategy)
+    std::shared_ptr<ArchiveStrategy> RollingFileSink::createArchiveStrategy(const Options::Value& options)
     {
-        auto sep = strategy.find('|');
-
-        if (sep == std::string_view::npos)
-            return std::make_pair(strategy, strategy);
-
-        return std::make_pair(strategy.substr(sep), strategy.substr(sep + 1));
-    }
-
-    std::shared_ptr<ArchiveStrategy> RollingFileSink::createArchiveStrategy(std::string_view strategy)
-    {
-        auto [name, option] = parseStrategy(strategy);
-        if (string_utils::iequals(name, "incremental"))
+        if (auto opts = options.asString())
         {
-            return std::make_shared<IncrementalArchiveStrategy>();
-        }
-        else if (string_utils::iequals(name, "timestamp"))
-        {
-            if (option.empty())
-                option = "utc";
-
-            if (string_utils::iequals(option, "utc"))
+            if (string_utils::iequals(*opts, "incremental"))
+                return std::make_shared<IncrementalArchiveStrategy>();
+            else if (string_utils::iequals(*opts, "timestamp"))
                 return std::make_shared<TimestampArchiveStrategy<SystemClock>>();
-            else if (string_utils::iequals(option, "local"))
-                return std::make_shared<TimestampArchiveStrategy<LocalClock>>();
+        }
+        else if (auto opts = options.asDict())
+        {
+            auto typeIt = opts->find("type");
+            if (typeIt == std::end(*opts))
+                return nullptr;
+
+            auto type = typeIt->second;
+
+            if (string_utils::iequals(type, "incremental"))
+            {
+                return std::make_shared<IncrementalArchiveStrategy>();
+            }
+            else if (string_utils::iequals(type, "timestamp"))
+            {
+                auto clockIt = opts->find("clock");
+                if (clockIt == std::end(*opts))
+                    return std::make_shared<TimestampArchiveStrategy<SystemClock>>();
+
+                auto clock = clockIt->second;
+                if (string_utils::iequals(clock, "utc"))
+                    return std::make_shared<TimestampArchiveStrategy<SystemClock>>();
+                else if (string_utils::iequals(clock, "local"))
+                    return std::make_shared<TimestampArchiveStrategy<LocalClock>>();
+            }
         }
 
         return nullptr;
     }
 
-    std::shared_ptr<RollingStrategy> RollingFileSink::createRollingStrategy(std::string_view strategy)
+    std::shared_ptr<RollingStrategy> RollingFileSink::createRollingStrategy(const Options::Value& options)
     {
-        auto [name, option] = parseStrategy(strategy);
-        if (string_utils::iequals(name, "size"))
+        if (auto opts = options.asDict())
         {
-            auto size = string_utils::parseSize(option);
-            if (!size)
+            auto typeIt = opts->find("type");
+            if (typeIt == std::end(*opts))
                 return nullptr;
 
-            return std::make_shared<SizeRollingStrategy>(*size);
+            auto type = typeIt->second;
+            if (string_utils::iequals(type, "size"))
+            {
+                auto sizeIt = opts->find("size");
+                if (sizeIt == std::end(*opts))
+                    return nullptr;
+
+                auto size = string_utils::parseSize(sizeIt->second);
+                if (!size)
+                    return nullptr;
+
+                return std::make_shared<SizeRollingStrategy>(*size);
+            }
+            else if (string_utils::iequals(type, "date"))
+            {
+                auto intervalIt = opts->find("interval");
+                if (intervalIt == std::end(*opts))
+                    return nullptr;
+
+                auto kindIt = opts->find("kind");
+                if (kindIt == std::end(*opts))
+                    return nullptr;
+
+                auto interval = tryParseRollingInterval(intervalIt->second);
+                auto kind = tryParseRollingKind(kindIt->second);
+
+                if (!interval || !kind)
+                    return nullptr;
+
+                return std::make_shared<DateRollingStrategy>(*interval, *kind);
+            }
         }
+
         return nullptr;
     }
 }

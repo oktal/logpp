@@ -3,10 +3,87 @@
 #include "logpp/core/Logger.h"
 #include "logpp/core/LogLevel.h"
 
+#include "logpp/sinks/Sink.h"
+
 #include <fstream>
 
 namespace logpp
 {
+    namespace
+    {
+        template<typename Node>
+        std::optional<std::string> toString(const Node& node)
+        {
+            if (auto* strVal = node.as_string())
+                return strVal->get();
+            else if (auto* intVal = node.as_integer())
+                return std::to_string(intVal->get());
+            else if (auto* floatVal = node.as_floating_point())
+                return std::to_string(floatVal->get());
+            else if (auto* boolVal = node.as_boolean())
+                return boolVal->get() ? "true" : "false";
+
+            return std::nullopt;
+        }
+
+        template<typename Node>
+        std::optional<TomlConfigurator::Error> addSinkOption(sink::Options& options, std::string key, const Node& node)
+        {
+            if constexpr (toml::is_integer<Node>)
+            {
+                if (!options.add(std::move(key), std::to_string(node.get())))
+                    return TomlConfigurator::Error { "invalid option", node.source() };
+
+                return std::nullopt;
+            }
+            else if constexpr (toml::is_string<Node>)
+            {
+                if (!options.add(std::move(key), node.get()))
+                    return TomlConfigurator::Error { "invalid option", node.source() };
+
+                return std::nullopt;
+            }
+            else if constexpr (toml::is_array<Node>)
+            {
+                sink::Options::Array arr;
+                for (const auto& valueNode: node)
+                {
+                    auto str = toString(valueNode);
+                    if (!str)
+                        return TomlConfigurator::Error { "invalid array value type", valueNode.source() };
+
+                    arr.push_back(std::move(*str));
+                }
+
+                if (!options.add(std::move(key), std::move(arr)))
+                    return TomlConfigurator::Error { "could not add option", node.source() };
+
+                return std::nullopt;
+            }
+            else if constexpr (toml::is_table<Node>)
+            {
+                sink::Options::Dict dict;
+                for (auto&& [key, valueNode]: node)
+                {
+                    auto str = toString(valueNode);
+                    if (!str)
+                        return TomlConfigurator::Error { "invalid table value type", valueNode.source() };
+
+                    auto res = dict.insert(std::make_pair(std::move(key), std::move(*str))).second;
+                    if (!res)
+                        return TomlConfigurator::Error { "could not add table value", valueNode.source() };
+                }
+
+                if (!options.add(std::move(key), std::move(dict)))
+                    return TomlConfigurator::Error { "could not add option", node.source() };
+
+                return std::nullopt;
+            }
+
+            return TomlConfigurator::Error { "invalid option type", node.source() };
+        }
+    }
+
     std::optional<TomlConfigurator::Error> TomlConfigurator::configure(std::string_view config)
     {
         return configure(config, LoggerRegistry::defaultRegistry());
@@ -67,16 +144,11 @@ namespace logpp
         {
             for (auto&& [key, valueNode]: *options)
             {
-                std::string valueString;
-                valueNode.visit([&](const auto& node) {
-                    if constexpr (toml::is_integer<decltype(node)>)
-                        valueString = std::to_string(node.get());
-                    else if constexpr (toml::is_string<decltype(node)>)
-                        valueString = node.get();
+                auto err = valueNode.visit([&sink, &key](const auto& node) {
+                    return addSinkOption(sink.options, key, node);
                 });
-                auto ok = sink.options.insert(std::make_pair(key, std::move(valueString))).second;
-                if (!ok)
-                    return std::make_pair(std::nullopt, Error { "duplicated option", valueNode.source() });
+                if (err)
+                    return std::make_pair(std::nullopt, err);
             }
         }
 
@@ -140,11 +212,8 @@ namespace logpp
             if (!sink)
                 return Error { "logger: unknown sink type", sinkNode.source() };
 
-            for (const auto& option: sinkRef.options) 
-            {
-                if (!sink->setOption(option.first, option.second))
-                    return Error { "logger: unknown sink option", sinkNode.source() };
-            }
+            if (!sink->activateOptions(sinkRef.options))
+                return Error { "sink: failed to activate options", sinkNode.source() };
 
             auto res = registry.registerLoggerFunc(*name, [=](std::string name) {
                 return std::make_shared<Logger>(std::move(name), *level, sink);
