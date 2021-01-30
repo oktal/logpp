@@ -2,7 +2,11 @@
 
 #include "logpp/core/Clock.h"
 #include "logpp/sinks/file/File.h"
+
 #include "logpp/utils/date.h"
+#include "logpp/utils/string.h"
+
+#include <optional>
 
 namespace logpp::sink
 {
@@ -21,6 +25,34 @@ namespace logpp::sink
         Precise,
         Round
     };
+
+    inline std::optional<RollingInterval> tryParseRollingInterval(std::string_view str)
+    {
+        if (string_utils::iequals(str, "minute"))
+            return RollingInterval::Minute;
+        else if (string_utils::iequals(str, "hour"))
+            return RollingInterval::Hour;
+        else if (string_utils::iequals(str, "day"))
+            return RollingInterval::Day;
+        else if (string_utils::iequals(str, "month"))
+            return RollingInterval::Month;
+        else if (string_utils::iequals(str, "year"))
+            return RollingInterval::Year;
+        else if (string_utils::iequals(str, "infinite"))
+            return RollingInterval::Infinite;
+
+        return std::nullopt;
+    }
+
+    inline std::optional<RollingKind> tryParseRollingKind(std::string_view str)
+    {
+        if (string_utils::iequals(str, "precise"))
+            return RollingKind::Precise;
+        else if (string_utils::iequals(str, "round"))
+            return RollingKind::Round;
+
+        return std::nullopt;
+    }
 
     inline std::string_view toString(RollingInterval interval)
     {

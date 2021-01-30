@@ -6,7 +6,13 @@
 
 int main(int argc, const char* argv[])
 {
-    auto err = logpp::TomlConfigurator::configureFile("logpp.toml");
+    std::string file = "logpp.toml";
+    if (argc == 2)
+        file = argv[1];
+
+    std::cout << "Configuring logger with " << file << std::endl;
+
+    auto err = logpp::TomlConfigurator::configureFile(file);
     if (err)
     {
         std::cerr << "Error configuring logger: " << *err << std::endl;

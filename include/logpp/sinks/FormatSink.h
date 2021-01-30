@@ -23,25 +23,36 @@ namespace logpp::sink
             createFormatter<PatternFormatter>(std::move(pattern));
         }
 
-        bool setOption(std::string key, std::string value) override
+        bool activateOptions(const Options& options) override
         {
-            if (key == "format")
+            for (auto&& [key, value]: options)
             {
-                if (value == "pattern")
+                if (string_utils::iequals(key, "format"))
                 {
-                    createFormatter<PatternFormatter>();
+                    auto formatStr = value.asString();
+                    if (!formatStr)
+                        return false;
+
+                    if (string_utils::iequals(*formatStr, "pattern"))
+                    {
+                        createFormatter<PatternFormatter>();
+                        return true;
+                    }
+                    else if (string_utils::iequals(*formatStr, "logfmt"))
+                    {
+                        createFormatter<LogFmtFormatter>();
+                        return true;
+                    }
+                }
+                else if (string_utils::iequals(key, "pattern"))
+                {
+                    auto patternStr = value.asString();
+                    if (!patternStr)
+                        return false;
+
+                    setPattern(std::move(*patternStr));
                     return true;
                 }
-                if (value == "logfmt")
-                {
-                    createFormatter<LogFmtFormatter>();
-                    return true;
-                }
-            }
-            if (key == "pattern")
-            {
-                setPattern(std::move(value));
-                return true;
             }
 
             return false;

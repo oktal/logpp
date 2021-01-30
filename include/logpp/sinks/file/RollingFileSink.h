@@ -12,7 +12,7 @@ namespace logpp::sink
     class RollingFileSink : public FileSink
     {
     public:
-        static constexpr std::string_view Name = "RollingFileSink";
+        static constexpr std::string_view Name = "RollingFile";
 
         RollingFileSink();
         RollingFileSink(
@@ -22,7 +22,7 @@ namespace logpp::sink
             std::shared_ptr<ArchiveStrategy> archiveStrategy
         );
 
-        bool setOption(std::string key, std::string value) override;
+        bool activateOptions(const Options& options) override;
 
         void sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer) override;
 
@@ -36,9 +36,7 @@ namespace logpp::sink
         bool setArchiveStrategy(std::shared_ptr<ArchiveStrategy> strategy);
         bool setRollingStrategy(std::shared_ptr<RollingStrategy> strategy);
 
-        std::pair<std::string_view, std::string_view> parseStrategy(std::string_view strategy);
-
-        virtual std::shared_ptr<ArchiveStrategy> createArchiveStrategy(std::string_view strategy);
-        virtual std::shared_ptr<RollingStrategy> createRollingStrategy(std::string_view strategy);
+        virtual std::shared_ptr<ArchiveStrategy> createArchiveStrategy(const Options::Value& options);
+        virtual std::shared_ptr<RollingStrategy> createRollingStrategy(const Options::Value& options);
     };
 }

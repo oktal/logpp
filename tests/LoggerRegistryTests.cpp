@@ -8,7 +8,7 @@ using namespace logpp;
 class NoopSink : public sink::Sink
 {
 public:
-    bool setOption(std::string, std::string) override
+    bool activateOptions(const sink::Options& options) override
     {
         return false;
     }

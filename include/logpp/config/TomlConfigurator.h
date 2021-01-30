@@ -62,22 +62,7 @@ private:
     {
         std::string name;
         std::string type;
-        std::unordered_map<std::string, std::string> options;
-
-        friend std::ostream& operator<<(std::ostream& os, const Sink& sink)
-        {
-            os << "Sink(name=" << sink.name << ", type=" << sink.type << ", options={";
-            size_t i = 0;
-            for (const auto& option: sink.options)
-            {
-                if (i > 0)
-                    os << ", ";
-                os << option.first << "=" << option.second;
-                ++i;
-            }
-            os << "})";
-            return os;
-        }
+        sink::Options options;
     };
 
     static std::pair<std::vector<Sink>, std::optional<Error>> parseSinks(const toml::table& table);
