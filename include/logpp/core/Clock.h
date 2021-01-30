@@ -11,7 +11,15 @@ namespace logpp
     using TimePoint = typename Clock::time_point;
 
     // A Clock that represents system wall clock and measures time in UTC
-    using SystemClock = std::chrono::system_clock;
+    class SystemClock : public std::chrono::system_clock
+    {
+    public:
+        static std::tm* toTm(const time_point& tp)
+        {
+            auto time = to_time_t(tp);
+            return std::gmtime(&time);
+        }
+    };
 
     // A Clock that represents sytem wall clock and adjusts time to local time zone
     class LocalClock
@@ -22,12 +30,16 @@ namespace logpp
         using duration = Clock::duration;
         using time_point = date::local_time<duration>;
 
-        static time_point now()
+        static std::tm* toTm(const time_point& tp)
         {
-            auto utcNow = Clock::now();
-            auto now = date::make_zoned(date::current_zone(), utcNow);
+            auto time = to_time_t(tp);
+            return std::gmtime(&time);
+        }
 
-            return now.get_local_time();
+        static std::tm* toTm(const TimePoint& tp)
+        {
+            auto time = SystemClock::to_time_t(tp);
+            return std::localtime(&time);
         }
 
         static time_t to_time_t(const time_point& tp)

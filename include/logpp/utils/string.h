@@ -4,6 +4,8 @@
 #include <cctype>
 #include <string_view>
 
+#include <cstdlib>
+
 namespace logpp
 {
     namespace string_utils
@@ -16,6 +18,28 @@ namespace logpp
                     return std::tolower(c1) == std::tolower(c2);
                 }
             );
+        }
+
+        inline std::optional<size_t> parseSize(std::string_view str)
+        {
+            char *end;
+            auto val = std::strtol(str.data(), &end, 10);
+            if (val < 0)
+                return std::nullopt;
+            else if (*end == '\0')
+                return val;
+
+            const auto suffixSize = str.end() - end;
+            std::string_view suffix(end, suffixSize);
+
+            if (iequals(suffix, "kb"))
+                return val * 1024;
+            else if (iequals(suffix, "mb"))
+                return val * 1024 * 1024;
+            else if (iequals(suffix, "gb"))
+                return val * 1024 * 1024 * 1024;
+
+            return std::nullopt;
         }
     }
 }

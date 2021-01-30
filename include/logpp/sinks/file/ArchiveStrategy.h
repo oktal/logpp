@@ -1,5 +1,6 @@
 #pragma once
 
+#include "logpp/core/Clock.h"
 #include "logpp/sinks/file/File.h"
 #include "logpp/utils/file.h"
 
@@ -14,14 +15,14 @@ namespace logpp::sink
     public:
         virtual ~ArchiveStrategy() = default;
 
-        virtual File* apply(File* logFile) = 0;
+        virtual File* apply(TimePoint tp, File* logFile) = 0;
     };
 
     class IncrementalArchiveStrategy : public ArchiveStrategy
     {
     public:
 
-        File* apply(File* logFile) override
+        File* apply(TimePoint, File* logFile) override
         {
             auto basePath = logFile->path();
             archive(basePath);
@@ -66,17 +67,16 @@ namespace logpp::sink
             return m_pattern;
         }
 
-        File* apply(File* logFile) override
+        File* apply(TimePoint tp, File* logFile) override
         {
             auto basePath = logFile->path();
             auto newPath = std::string(basePath);
             newPath.push_back('.');
 
-            auto now = Clock::now();
-            auto tp = Clock::to_time_t(now);
+            auto tm = Clock::toTm(tp);
 
             char buf[255];
-            auto size = std::strftime(buf, sizeof(buf), m_pattern.c_str(), std::gmtime(&tp));
+            auto size = std::strftime(buf, sizeof(buf), m_pattern.c_str(), tm);
 
             newPath.append(buf, size);
 
