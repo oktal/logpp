@@ -144,8 +144,9 @@ namespace logpp
         {
             for (auto&& [key, valueNode]: *options)
             {
-                auto err = valueNode.visit([&sink, &key](const auto& node) {
-                    return addSinkOption(sink.options, key, node);
+                auto&& k = key;
+                auto err = valueNode.visit([&sink, k](const auto& node) {
+                    return addSinkOption(sink.options, k, node);
                 });
                 if (err)
                     return std::make_pair(std::nullopt, err);

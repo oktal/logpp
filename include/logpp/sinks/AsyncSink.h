@@ -29,7 +29,7 @@ namespace logpp::sink
             return false;
         }
 
-        void sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer)
+        void sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer) override
         {
             m_queue->push(Entry::create(name, level, buffer));
         }

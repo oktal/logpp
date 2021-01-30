@@ -13,7 +13,7 @@ public:
         return false;
     }
 
-    void sink(std::string_view, LogLevel, const EventLogBuffer&)
+    void sink(std::string_view, LogLevel, const EventLogBuffer&) override
     { }
 };
 
