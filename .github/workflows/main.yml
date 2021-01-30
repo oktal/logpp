@@ -46,8 +46,8 @@ jobs:
            conan profile update settings.compiler.libcxx=libstdc++11 ${{ matrix.cc }}
            conan profile update env.CXX=${{ matrix.cxx }} ${{ matrix.cc }}
         env:
-          CC=${{ matrix.cc }}
-          CXX=${{ matrix.cxx }}
+          CC:  ${{ matrix.cc }}
+          CXX: ${{ matrix.cxx }}
 
       - name: Show conan profile
         run: conan profile show ${{ matrix.cc }}
