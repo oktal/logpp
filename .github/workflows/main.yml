@@ -13,12 +13,18 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
+  build-ubuntu:
     # The type of runner that the job will run on
+    strategy:
+      matrix:
+        cc: ['gcc', 'clang']
+        cxx: ['g++', 'clang++']
     runs-on: ubuntu-latest
+    name: Ubuntu - ${{ matrix.cxx }}
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
