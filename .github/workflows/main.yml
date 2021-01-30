@@ -20,7 +20,7 @@ jobs:
       matrix:
         include:
           - compiler: gcc
-            compiler-version: 7
+            compiler-version: 9
          #  - compiler: clang
          #    compiler-version: 9.0
           
