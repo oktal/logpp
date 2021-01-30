@@ -21,6 +21,7 @@ jobs:
         include:
           - compiler: gcc
             compiler-version: 9
+            cxx: g++-9
          #  - compiler: clang
          #    compiler-version: 9.0
           
@@ -32,6 +33,9 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
+      - name: Install compiler
+        run: sudo apt install ${{ matrix.cxx }}
+
       # Runs a single command using the runners shell
       - name: Install conan
         uses: turtlebrowser/get-conan@v1.0
@@ -42,6 +46,7 @@ jobs:
            conan profile update settings.compiler=${{ matrix.compiler }} ${{ matrix.compiler }}${{ matrix.compiler-version }}
            conan profile update settings.compiler.version=${{ matrix.compiler-version }} ${{ matrix.compiler }}${{ matrix.compiler-version }}
            conan profile update settings.compiler.libcxx=libstdc++11 ${{ matrix.compiler }}${{ matrix.compiler-version }}
+           conan profile update env.CXX=${{ matrix.cxx }} ${{ matrix.compiler }}${{ matrix.compiler-version }}
 
       - name: Show conan profile
         run: conan profile show ${{ matrix.compiler }}${{ matrix.compiler-version }}
