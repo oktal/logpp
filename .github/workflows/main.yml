@@ -18,12 +18,10 @@ jobs:
     # The type of runner that the job will run on
     strategy:
       matrix:
-        cc: ['gcc', 'clang']
         cxx: ['g++', 'clang++']
     runs-on: ubuntu-latest
     name: Ubuntu - ${{ matrix.cxx }}
     env:
-      CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
