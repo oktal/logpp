@@ -18,11 +18,14 @@ jobs:
     # The type of runner that the job will run on
     strategy:
       matrix:
-        cxx: ['g++', 'clang++']
+        include:
+          - compiler: gcc
+            compiler-version: 7
+         #  - compiler: clang
+         #    compiler-version: 9.0
+          
     runs-on: ubuntu-latest
-    name: Ubuntu - ${{ matrix.cxx }}
-    env:
-      CXX: ${{ matrix.cxx }}
+    name: Ubuntu - ${{ matrix.compiler }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -32,20 +35,29 @@ jobs:
       # Runs a single command using the runners shell
       - name: Install conan
         uses: turtlebrowser/get-conan@v1.0
+
+      - name: Configure conan
+        run: |
+           conan profile new ${{ matrix.compiler }}${{ matrix.compiler-version }} --detect
+           conan profile update settings.compiler=${{ matrix.compiler }} ${{ matrix.compiler }}${{ matrix.compiler-version }}
+           conan profile update settings.compiler.version=${{ matrix.compiler-version }} ${{ matrix.compiler }}${{ matrix.compiler-version }}
+           conan profile update settings.compiler.libcxx=libstdc++11 ${{ matrix.compiler }}${{ matrix.compiler-version }}
+
+      - name: Show conan profile
+        run: conan profile show ${{ matrix.compiler }}${{ matrix.compiler-version }}
       
       - name: Create Build Environment
-        run: cmake -E make_directory ${{github.workspace}}/build
+        run: cmake -E make_directory ${{github.workspace}}/build-${{ matrix.compiler }}${{ matrix.compiler-version }}
 
       # Runs conan install to fetch dependencies
       - name: Fetch dependencies
-        working-directory: ${{github.workspace}}/build
+        working-directory: ${{github.workspace}}/build-${{ matrix.compiler }}${{ matrix.compiler-version }}
         shell: bash
-          # Execute the build.  You can specify a specific target with "--target <NAME>"
-        run: conan install .. -o build_tests=True
+        run: conan install .. -o build_tests=True -pr=${{ matrix.compiler }}${{matrix.compiler-version}} --build=missing
     
-    # Build
+      # Build
       - name: Build
-        working-directory: ${{github.workspace}}/build
+        working-directory: ${{github.workspace}}/build-${{ matrix.compiler }}${{ matrix.compiler-version }}
         shell: bash
           # Execute the build.  You can specify a specific target with "--target <NAME>"
         run: conan build ..
