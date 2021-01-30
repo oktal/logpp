@@ -36,23 +36,33 @@ namespace logpp::sink
 
     bool FileSink::open(std::string_view filePath)
     {
-        return m_file->open(filePath, std::ios_base::out | std::ios_base::app);
+        m_file.reset(new File(filePath, std::ios_base::out | std::ios_base::app));
+        return isOpen();
     }
 
     bool FileSink::isOpen() const
     {
+        if (!m_file)
+            return false;
         return m_file->isOpen();
     }
 
     bool FileSink::close()
     {
+        if (!m_file)
+            return false;
         return m_file->close();
     }
 
     void FileSink::sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer)
     {
+        if (!m_file)
+            return;
+
         fmt::memory_buffer formatBuf;
         format(name, level, buffer, formatBuf);
         m_file->write(formatBuf.data(), formatBuf.size());
+        m_file->write('\n');
+        m_file->flush();
     }
 }

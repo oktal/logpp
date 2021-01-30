@@ -26,7 +26,7 @@ namespace logpp::sink
 
         void sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer) override;
 
-    private:
+    protected:
         std::unique_ptr<File> m_file;
     };
 }

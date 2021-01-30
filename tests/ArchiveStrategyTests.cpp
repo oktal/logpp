@@ -36,37 +36,11 @@ private:
     std::string m_dir;
 };
 
-
-template<typename UnderlyingClock>
-class FrozenClock
-{
-public:
-    using time_point = typename UnderlyingClock::time_point;
-
-    static time_point now()
-    {
-        return m_now;
-    }
-
-    static void setNow(time_point now)
-    {
-        m_now = now;
-    }
-
-    static std::time_t to_time_t(time_point t)
-    {
-        return UnderlyingClock::to_time_t(t);
-    }
-
-private:
-    static time_point m_now;
-};
-
-template<typename UnderlyingClock>
-typename FrozenClock<UnderlyingClock>::time_point FrozenClock<UnderlyingClock>::m_now;
-
 TEST(ArchiveStrategyTests, should_archive_with_incrementing_number)
 {
+    auto ymd = jan/23/2021;
+    auto now = date::sys_days{ymd};
+
     IncrementalArchiveStrategy strategy;
     auto file = std::make_unique<TemporaryFile>(std::ios_base::out, "logpptestfile", ".log");
     auto basePath = file->path();
@@ -76,15 +50,15 @@ TEST(ArchiveStrategyTests, should_archive_with_incrementing_number)
     file->write("File0"sv);
     file->flush();
 
-    std::unique_ptr<File> newFile(strategy.apply(file.get()));
+    std::unique_ptr<File> newFile(strategy.apply(now, file.get()));
     newFile->write("File1"sv);
     newFile->flush();
 
-    std::unique_ptr<File> newFile2(strategy.apply(newFile.get()));
+    std::unique_ptr<File> newFile2(strategy.apply(now, newFile.get()));
     newFile2->write("File2"sv);
     newFile2->flush();
 
-    std::unique_ptr<File> newFile3(strategy.apply(newFile2.get()));
+    std::unique_ptr<File> newFile3(strategy.apply(now, newFile2.get()));
     newFile3->write("File3"sv);
     newFile3->flush();
 
@@ -124,11 +98,10 @@ TEST(ArchiveStrategyTests, should_archive_with_incrementing_number)
 
 TEST(ArchiveStrategyTests, should_apply_timestamp)
 {
-    using Clock = FrozenClock<SystemClock>;
-    TimestampArchiveStrategy<Clock> strategy("%Y%m%d");
+    TimestampArchiveStrategy<SystemClock> strategy("%Y%m%d");
 
     auto ymd = jan/23/2021;
-    Clock::setNow(date::sys_days{ymd});
+    auto now = date::sys_days{ymd} + hours{9} + minutes{10} + seconds{35};
 
     auto file = std::make_unique<TemporaryFile>(std::ios_base::out, "logpptestfile", ".log");
     auto basePath = file->path();
@@ -138,7 +111,7 @@ TEST(ArchiveStrategyTests, should_apply_timestamp)
     file->write("File0"sv);
     file->flush();
 
-    std::unique_ptr<File> newFile(strategy.apply(file.get()));
+    std::unique_ptr<File> newFile(strategy.apply(now, file.get()));
     newFile->write("File1"sv);
     newFile->flush();
 
@@ -170,11 +143,10 @@ TEST(ArchiveStrategyTests, should_apply_timestamp)
 
 TEST(ArchiveStrategyTests, should_apply_incremental_if_already_exists)
 {
-    using Clock = FrozenClock<SystemClock>;
-    TimestampArchiveStrategy<Clock> strategy("%Y%m%d");
+    TimestampArchiveStrategy<SystemClock> strategy("%Y%m%d");
 
     auto ymd = jan/23/2021;
-    Clock::setNow(date::sys_days{ymd});
+    auto now = date::sys_days{ymd};
 
     auto file = std::make_unique<TemporaryFile>(std::ios_base::out, "logpptestfile", ".log");
     auto basePath = file->path();
@@ -184,15 +156,15 @@ TEST(ArchiveStrategyTests, should_apply_incremental_if_already_exists)
     file->write("File0"sv);
     file->flush();
 
-    std::unique_ptr<File> newFile(strategy.apply(file.get()));
+    std::unique_ptr<File> newFile(strategy.apply(now, file.get()));
     newFile->write("File1"sv);
     newFile->flush();
 
-    std::unique_ptr<File> newFile2(strategy.apply(newFile.get()));
+    std::unique_ptr<File> newFile2(strategy.apply(now, newFile.get()));
     newFile2->write("File2"sv);
     newFile2->flush();
 
-    std::unique_ptr<File> newFile3(strategy.apply(newFile2.get()));
+    std::unique_ptr<File> newFile3(strategy.apply(now, newFile2.get()));
     newFile3->write("File3"sv);
     newFile3->flush();
 
