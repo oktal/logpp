@@ -22,8 +22,9 @@ jobs:
           - cc: gcc-9
             cxx: g++-9
             packages: gcc-9 g++-9
-         #  - compiler: clang
-         #    compiler-version: 9.0
+          - cc: clang-10
+            cxx: clang++-10
+            packages: clang-10
           
     runs-on: ubuntu-latest
     name: Ubuntu - ${{ matrix.cc }}
