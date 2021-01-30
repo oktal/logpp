@@ -19,14 +19,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - compiler: gcc
-            compiler-version: 9
-            cxx: g++-9
+          cc: gcc-9
+          cxx: g++-9
+          packages: gcc-9 g++-9
          #  - compiler: clang
          #    compiler-version: 9.0
           
     runs-on: ubuntu-latest
-    name: Ubuntu - ${{ matrix.compiler }}
+    name: Ubuntu - ${{ matrix.cc }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -34,35 +34,36 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install compiler
-        run: sudo apt install ${{ matrix.cxx }}
+        run: sudo apt install ${{ matrix.packages }}
 
       # Runs a single command using the runners shell
       - name: Install conan
         uses: turtlebrowser/get-conan@v1.0
 
-      - name: Configure conan
+      - name: Create conan profile
         run: |
-           conan profile new ${{ matrix.compiler }}${{ matrix.compiler-version }} --detect
-           conan profile update settings.compiler=${{ matrix.compiler }} ${{ matrix.compiler }}${{ matrix.compiler-version }}
-           conan profile update settings.compiler.version=${{ matrix.compiler-version }} ${{ matrix.compiler }}${{ matrix.compiler-version }}
-           conan profile update settings.compiler.libcxx=libstdc++11 ${{ matrix.compiler }}${{ matrix.compiler-version }}
-           conan profile update env.CXX=${{ matrix.cxx }} ${{ matrix.compiler }}${{ matrix.compiler-version }}
+           conan profile new ${{ matrix.cc }} --detect
+           conan profile update settings.compiler.libcxx=libstdc++11 ${{ matrix.cc }}
+           conan profile update env.CXX=${{ matrix.cxx }} ${{ matrix.cc }}
+        env:
+          CC=${{ matrix.cc }}
+          CXX=${{ matrix.cxx }}
 
       - name: Show conan profile
-        run: conan profile show ${{ matrix.compiler }}${{ matrix.compiler-version }}
+        run: conan profile show ${{ matrix.cc }}
       
       - name: Create Build Environment
-        run: cmake -E make_directory ${{github.workspace}}/build-${{ matrix.compiler }}${{ matrix.compiler-version }}
+        run: cmake -E make_directory ${{github.workspace}}/build-${{ matrix.cc }}
 
       # Runs conan install to fetch dependencies
       - name: Fetch dependencies
-        working-directory: ${{github.workspace}}/build-${{ matrix.compiler }}${{ matrix.compiler-version }}
+        working-directory: ${{github.workspace}}/build-${{ matrix.cc }}
         shell: bash
-        run: conan install .. -o build_tests=True -pr=${{ matrix.compiler }}${{matrix.compiler-version}} --build=missing
+        run: conan install .. -o build_tests=True -pr=${{ matrix.cc }} --build=missing
     
       # Build
       - name: Build
-        working-directory: ${{github.workspace}}/build-${{ matrix.compiler }}${{ matrix.compiler-version }}
+        working-directory: ${{github.workspace}}/build-${{ matrix.cc }}
         shell: bash
           # Execute the build.  You can specify a specific target with "--target <NAME>"
         run: conan build ..
