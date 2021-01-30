@@ -19,9 +19,9 @@ jobs:
     strategy:
       matrix:
         include:
-          cc: gcc-9
-          cxx: g++-9
-          packages: gcc-9 g++-9
+          - cc: gcc-9
+            cxx: g++-9
+            packages: gcc-9 g++-9
          #  - compiler: clang
          #    compiler-version: 9.0
           
