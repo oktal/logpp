@@ -3,8 +3,9 @@
 #include "logpp/core/Offset.h"
 #include "logpp/core/StringLiteral.h"
 
-#include <memory>
+#include <array>
 #include <cstring>
+#include <memory>
 
 namespace logpp
 {

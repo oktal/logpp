@@ -1,3 +1,5 @@
+#include "logpp/core/config.h"
+
 #include <regex>
 #include <string>
 #include <string_view>
@@ -24,7 +26,7 @@ namespace logpp
             return res;
         }
 
-        #if LOGPP_COMPILER_MSVC
+        #if defined(LOGPP_COMPILER_MSVC)
             int setenv(const char* name, const char* value, int overwrite)
             {
                 int err = 0;

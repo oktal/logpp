@@ -1,10 +1,12 @@
 #pragma once
 
 #include <algorithm>
-#include <cctype>
+#include <optional>
+#include <utility>
 #include <string_view>
 
 #include <cstdlib>
+#include <cctype>
 
 namespace logpp
 {
@@ -22,22 +24,25 @@ namespace logpp
 
         inline std::optional<size_t> parseSize(std::string_view str)
         {
-            char *end;
-            auto val = std::strtol(str.data(), &end, 10);
+            char *endptr;
+            auto val = std::strtoll(str.data(), &endptr, 10);
             if (val < 0)
                 return std::nullopt;
-            else if (*end == '\0')
+            else if (*endptr == '\0')
                 return val;
 
-            const auto suffixSize = str.end() - end;
-            std::string_view suffix(end, suffixSize);
+            auto result = static_cast<size_t>(val);
+
+            const auto prefixSize = endptr - str.data();
+            std::string_view suffix(str);
+            suffix.remove_prefix(prefixSize);
 
             if (iequals(suffix, "kb"))
-                return val * 1024;
+                return result * 1024;
             else if (iequals(suffix, "mb"))
-                return val * 1024 * 1024;
+                return result * 1024 * 1024;
             else if (iequals(suffix, "gb"))
-                return val * 1024 * 1024 * 1024;
+                return result * 1024 * 1024 * 1024;
 
             return std::nullopt;
         }

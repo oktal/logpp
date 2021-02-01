@@ -1,8 +1,16 @@
 #pragma once
 
+#include "logpp/core/config.h"
 #include "logpp/sinks/file/FileSink.h"
 
 #include <fmt/format.h>
+
+#if defined(LOGPP_PLATFORM_WINDOWS)
+  #include <windows.h>
+  #include <fileapi.h>
+  #include <rpc.h>
+  #pragma comment(lib, "Rpcrt4.lib")
+#endif
 
 namespace logpp
 {
@@ -41,16 +49,34 @@ namespace logpp
             return fmt::format("{}-{}{}", prefix, idx++, suffix);
         }
 
-    #if defined(LOGPP_PLATFORM_LINUX) 
         static std::string createTemporaryDirectory()
         {
+        #if defined(LOGPP_PLATFORM_LINUX) 
             char templateName[] = "logpptmpXXXXXX";
             auto res = mkdtemp(templateName);
             if (!res)
                 throw std::runtime_error("failed to create temporary directory");
             return std::string(templateName);
+        #elif defined(LOGPP_PLATFORM_WINDOWS)
+            UUID uuid;
+            if (UuidCreate(&uuid) != RPC_S_OK)
+                throw std::runtime_error("failed to create temporary directory: could not generate uuid-based unique name");
+
+            unsigned char* str;
+            if (UuidToString(&uuid, &str) != RPC_S_OK)
+                throw std::runtime_error("failed to create temporary directory: could not generate uuid-based unique name");
+
+            auto dir = std::string("logpptmp-") + std::string(reinterpret_cast<char *>(str));
+            RpcStringFree(&str);
+
+            if (!CreateDirectoryA(dir.c_str(), NULL))
+                throw std::runtime_error("failed to create temporary directory");
+
+            return dir;
+        #else
+            #error "Unsupported platform"
+        #endif
         }
-    #endif
 
     };
 

@@ -1,10 +1,15 @@
 #include "SpinWait.h"
 #include "logpp/core/config.h"
 
-#include <thread>
 #include <chrono>
-
+#include <limits>
+#include <thread>
 #include <stdexcept>
+
+#if defined(LOGPP_PLATFORM_WINDOWS)
+  #define NOMINMAX
+  #include <Windows.h>
+#endif
 
 namespace logpp
 {

@@ -25,6 +25,7 @@ namespace logpp::sink
         File* apply(TimePoint, File* logFile) override
         {
             auto basePath = logFile->path();
+            logFile->close();
             archive(basePath);
             return new File(basePath, std::ios_base::out);
         }
@@ -72,6 +73,8 @@ namespace logpp::sink
             auto basePath = logFile->path();
             auto newPath = std::string(basePath);
             newPath.push_back('.');
+
+            logFile->close();
 
             auto tm = Clock::toTm(tp);
 

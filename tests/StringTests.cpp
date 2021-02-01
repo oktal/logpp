@@ -51,12 +51,12 @@ TEST(StringTests, should_parse_size)
         {
             "Parse with gb suffix",
             "10gb",
-            10UL * 1024 * 1024 * 1024
+            10ULL * 1024 * 1024 * 1024
         },
         {
             "Parse with gb suffix case",
             "10Gb",
-            10UL * 1024 * 1024 * 1024
+            10ULL * 1024 * 1024 * 1024
         },
         {
             "Parse with invalid suffix",

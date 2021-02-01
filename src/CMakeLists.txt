@@ -53,7 +53,8 @@ target_link_libraries(logpp
   ${CONAN_LIBS_TOMLPLUSPLUS}
 
   Threads::Threads
-  stdc++fs
+  $<$<CXX_COMPILER_ID:GNU>:
+    stdc++fs>
 )
 
 set_target_properties(logpp PROPERTIES

@@ -8,7 +8,6 @@
 #include "gtest/gtest.h"
 
 #include <fstream>
-#include <streambuf>
 
 using namespace logpp;
 using namespace logpp::sink;

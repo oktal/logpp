@@ -25,7 +25,7 @@ namespace logpp::file_utils
               std::filesystem::rename(from, to);
               return true;
           }
-          catch (const std::filesystem::filesystem_error& e)
+          catch (const std::filesystem::filesystem_error)
           {
               return false;
           }

@@ -3,6 +3,7 @@
 #include "logpp/format/PatternFormatter.h"
 #include "logpp/format/flag/LevelFormatter.h"
 
+#include <array>
 #include <cstdio>
 
 namespace logpp::sink
