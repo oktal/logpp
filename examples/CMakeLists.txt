@@ -24,17 +24,26 @@ function(logpp_copy_file)
     add_custom_command(
         TARGET ${LOGPP_COPY_TARGET} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
-            ${CMAKE_CURRENT_SOURCE_DIR}/logpp.toml
-            ${LOGPP_TARGET_OUTPUT_DIRECTORY}/logpp.toml
+            ${CMAKE_CURRENT_SOURCE_DIR}/${LOGPP_COPY_FILE}
+            ${LOGPP_TARGET_OUTPUT_DIRECTORY}/${LOGPP_COPY_FILE}
     )
 
 endfunction()
 
 logpp_sample(AsyncLogger)
 logpp_sample(BasicLogger)
-
 logpp_sample(TomlConfig)
+logpp_sample(TomlCustomSinkConfig)
+
 logpp_copy_file(
     TARGET sample_TomlConfig
-    FILE ${CMAKE_CURRENT_SOURCE_DIR}/logpp.toml
+    FILE logpp.toml
+)
+logpp_copy_file(
+    TARGET sample_TomlConfig
+    FILE logpp.file.toml
+)
+logpp_copy_file(
+    TARGET sample_TomlConfig
+    FILE logpp.file.custom.toml
 )

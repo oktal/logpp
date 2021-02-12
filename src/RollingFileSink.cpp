@@ -43,7 +43,13 @@ namespace logpp::sink
         auto* file = m_file.get();
 
         if (m_rollingStrategy->apply(time, file))
+        {
+            onBeforeClosing(m_file);
+
             m_file.reset(m_archiveStrategy->apply(time, file));
+
+            onAfterOpened(m_file);
+        }
 
         FileSink::sink(name, level, buffer);
     }

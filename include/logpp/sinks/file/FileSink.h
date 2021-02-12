@@ -14,8 +14,8 @@ namespace logpp::sink
         static constexpr std::string_view Name = "FileSink";
 
         FileSink();
-        explicit FileSink(std::string_view filePath);
-        explicit FileSink(std::string_view filePath, std::shared_ptr<Formatter> formatter);
+        FileSink(std::string_view filePath);
+        FileSink(std::string_view filePath, std::shared_ptr<Formatter> formatter);
 
         bool activateOptions(const Options& options) override;
 
@@ -28,5 +28,8 @@ namespace logpp::sink
 
     protected:
         std::unique_ptr<File> m_file;
+
+        virtual void onAfterOpened(const std::unique_ptr<File>&) {}
+        virtual void onBeforeClosing(const std::unique_ptr<File>&) {}
     };
 }

@@ -7,7 +7,7 @@ namespace logpp::sink
 {
     FileSink::FileSink()
         : FormatSink(std::make_shared<PatternFormatter>("%+"))
-    { }
+    {}
 
     FileSink::FileSink(std::string_view filePath)
         : FileSink(filePath, std::make_shared<PatternFormatter>("%+"))
@@ -39,6 +39,7 @@ namespace logpp::sink
     bool FileSink::open(std::string_view filePath)
     {
         m_file.reset(new File(filePath, std::ios_base::out | std::ios_base::app));
+        onAfterOpened(m_file);
         return isOpen();
     }
 
@@ -53,6 +54,8 @@ namespace logpp::sink
     {
         if (!m_file)
             return false;
+
+        onBeforeClosing(m_file);
         return m_file->close();
     }
 

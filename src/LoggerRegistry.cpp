@@ -42,13 +42,21 @@ namespace logpp
     {
         LoggerKey key(name);
 
-
         for (auto fragmentIt = key.rbegin(); fragmentIt != key.rend(); ++fragmentIt)
         {
             auto fragment = *fragmentIt;
+
+            auto loggerIt = m_loggers.find(fragment);
+            if (loggerIt != std::end(m_loggers))
+                return loggerIt->second;
+
             auto factoryIt = m_loggerFactories.find(fragment);
             if (factoryIt != std::end(m_loggerFactories))
-                return std::invoke(factoryIt->second, std::string(name));
+            {
+                auto logger = std::invoke(factoryIt->second, std::string(name));
+                m_loggers.insert(std::make_pair(std::string(name), logger));
+                return logger;
+            }
         }
 
         return m_defaultLogger;
@@ -62,5 +70,31 @@ namespace logpp
     void LoggerRegistry::setDefaultLogger(std::shared_ptr<Logger> logger)
     {
         m_defaultLogger = std::move(logger);
+    }
+
+
+    std::shared_ptr<sink::Sink> LoggerRegistry::createSink(std::string_view name)
+    {
+        auto sinkIt = m_sinks.find(name);
+        if (sinkIt == std::end(m_sinks))
+        {
+            auto factoryIt = m_sinkFactories.find(name);
+            if (factoryIt == std::end(m_sinkFactories))
+                return nullptr;
+
+            auto factory = factoryIt->second;
+            sinkIt = m_sinks.insert(std::make_pair(std::string(name), factory())).first;
+        }
+
+        return sinkIt->second;
+    }
+
+    std::shared_ptr<sink::Sink> LoggerRegistry::findSink(std::string_view name) const
+    {
+        auto it = m_sinks.find(name);
+        if (it == std::end(m_sinks))
+            return nullptr;
+
+        return it->second;
     }
 }

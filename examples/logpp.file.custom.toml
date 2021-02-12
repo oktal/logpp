@@ -1,0 +1,10 @@
+[sinks]
+[sinks.file]
+    type = "HeaderFileSink"
+    options = { format = "logfmt", file = "sample.file.custom.log" }
+
+[loggers]
+[loggers.main]
+    name = "main"
+    sinks = [ "file" ]
+    level = "debug"

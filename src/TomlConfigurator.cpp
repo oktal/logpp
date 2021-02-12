@@ -209,6 +209,7 @@ namespace logpp
                 return Error { "logger: unknown sink reference", sinkNode.source() };
 
             const auto& sinkRef = *it;
+
             auto sink = registry.createSink(sinkRef.type);
             if (!sink)
                 return Error { "logger: unknown sink type", sinkNode.source() };

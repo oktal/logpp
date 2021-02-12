@@ -155,14 +155,47 @@ namespace logpp
             return it.second;
         }
 
-        std::shared_ptr<sink::Sink> createSink(std::string_view name) const
+        template<typename Sink>
+        bool hasSink()
         {
-            auto it = m_sinkFactories.find(name);
-            if (it == std::end(m_sinkFactories))
-                return nullptr;
+            static_assert(sink::concepts::IsSink<Sink>, "Sink must be satisfy the Sink concept");
 
-            auto factory = it->second;
-            return std::invoke(factory);
+            return hasSink(Sink::Name);
+        }
+
+        bool hasSink(std::string_view type) const;
+
+        std::shared_ptr<sink::Sink> createSink(std::string_view name);
+        std::shared_ptr<sink::Sink> findSink(std::string_view name) const;
+
+        template<typename Sink, typename SinkFunc>
+        void forEachSink(SinkFunc&& func)
+        {
+            static_assert(sink::concepts::IsSink<Sink>, "Sink must be satisfy the Sink concept");
+
+            for (const auto& [name, sink]: m_sinks)
+            {
+                if (auto s = std::dynamic_pointer_cast<Sink>(sink))
+                    std::invoke(func, name, s);
+            }
+        }
+
+        template<typename SinkFunc>
+        void forEachSink(SinkFunc&& func)
+        {
+            for (auto& [name, sink]: m_sinks)
+            {
+                std::invoke(func, name, sink);
+            }
+        }
+
+        template<typename SinkFunc>
+        void forEachSink(SinkFunc&& func) const
+        {
+            for (const auto& [name, sink]: m_sinks)
+            {
+                std::invoke(func, name, sink);
+            }
         }
 
         static LoggerRegistry& defaultRegistry();
@@ -174,5 +207,8 @@ namespace logpp
         // and be able to find with string_view as a key type
         std::map<std::string, LoggerFactory, std::less<>> m_loggerFactories;
         std::map<std::string, SinkFactory, std::less<>> m_sinkFactories;
+
+        std::map<std::string, std::shared_ptr<Logger>, std::less<>> m_loggers;
+        std::map<std::string, std::shared_ptr<sink::Sink>, std::less<>> m_sinks;
     };
 }
