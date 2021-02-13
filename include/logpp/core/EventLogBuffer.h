@@ -36,15 +36,15 @@ namespace logpp
         }
 
         template<typename Tuple, size_t... Indexes>
-        auto writeArgsImpl(LogBufferBase& buffer, const Tuple& args, std::index_sequence<Indexes...>)
+        auto writeFormatArgsImpl(LogBufferBase& buffer, const Tuple& args, std::index_sequence<Indexes...>)
         {
             return std::make_tuple(buffer.write(std::get<Indexes>(args))...);
         }
 
         template<typename...Args>
-        auto writeArgs(LogBufferBase& buffer, const std::tuple<Args...>& args)
+        auto writeFormatArgs(LogBufferBase& buffer, const std::tuple<Args...>& args)
         {
-            return writeArgsImpl(buffer, args, std::make_index_sequence<sizeof...(Args)>{});
+            return writeFormatArgsImpl(buffer, args, std::make_index_sequence<sizeof...(Args)>{});
         }
 
         template<typename> struct TextBlock;
@@ -186,7 +186,7 @@ namespace logpp
         void writeText(const FormatArgsHolder<Args...>& holder)
         {
             auto formatStrOffset = this->write(holder.formatStr);
-            auto argsOffsets = details::writeArgs(*this, holder.args);
+            auto argsOffsets = details::writeFormatArgs(*this, holder.args);
 
             auto block = details::textBlock(formatStrOffset, argsOffsets);
             auto blockOffset = this->encode(block);

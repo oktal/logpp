@@ -169,7 +169,7 @@ namespace logpp
         std::shared_ptr<sink::Sink> findSink(std::string_view name) const;
 
         template<typename Sink, typename SinkFunc>
-        void forEachSink(SinkFunc&& func)
+        void forEachSinkOfType(SinkFunc&& func) const
         {
             static_assert(sink::concepts::IsSink<Sink>, "Sink must be satisfy the Sink concept");
 
