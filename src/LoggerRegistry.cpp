@@ -19,6 +19,17 @@ namespace logpp
         registerSink<sink::RollingFileSink>();
     }
 
+    bool LoggerRegistry::matches(const LoggerKey& key, std::string_view name)
+    {
+        // return std::find(key.rbegin(), key.rend(), name) != key.rend();
+        for (auto fragmentIt = key.rbegin(); fragmentIt != key.rend(); ++fragmentIt)
+        {
+            if (*fragmentIt == name)
+                return true;
+        }
+        return false;
+    }
+
     LoggerRegistry& LoggerRegistry::defaultRegistry()
     {
         static LoggerRegistry instance;

@@ -137,10 +137,21 @@ namespace logpp
 
         LoggerRegistry();
 
+        static bool matches(const LoggerKey& key, std::string_view name);
+
         bool registerLogger(std::shared_ptr<Logger> logger);
         bool registerLoggerFunc(std::string name, LoggerFactory factory);
 
         std::shared_ptr<Logger> get(std::string_view name);
+
+        template<typename LoggerFunc>
+        void forEachLogger(LoggerFunc&& loggerFunc) const
+        {
+            for (const auto& [name, logger]: m_loggers)
+            {
+                std::invoke(loggerFunc, name, logger);
+            }
+        }
 
         std::shared_ptr<Logger> defaultLogger();
         void setDefaultLogger(std::shared_ptr<Logger> logger);

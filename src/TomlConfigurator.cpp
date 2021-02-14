@@ -4,7 +4,9 @@
 #include "logpp/core/LogLevel.h"
 
 #include "logpp/sinks/Sink.h"
+#include "logpp/sinks/MultiSink.h"
 
+#include <iostream>
 #include <fstream>
 
 namespace logpp
@@ -104,7 +106,76 @@ namespace logpp
         return configure([&] { return toml::parse_file(path); }, registry);
     }
 
-    std::pair<std::vector<TomlConfigurator::Sink>, std::optional<TomlConfigurator::Error>> TomlConfigurator::parseSinks(const toml::table& table)
+    std::pair<std::optional<FileWatcher::WatchId>, std::optional<TomlConfigurator::Error>>
+    TomlConfigurator::configureFileAndWatch(std::string_view path, std::shared_ptr<FileWatcher> watcher)
+    {
+        return configureFileAndWatch(path, std::move(watcher), LoggerRegistry::defaultRegistry());
+    }
+
+    std::pair<std::optional<FileWatcher::WatchId>, std::optional<TomlConfigurator::Error>>
+    TomlConfigurator::configureFileAndWatch(std::string_view path, std::shared_ptr<FileWatcher> watcher, LoggerRegistry& registry)
+    {
+        auto err = configureFile(path, registry);
+        if (err)
+            return std::make_pair(std::nullopt, std::move(err));
+
+        std::cout << "&registry = " << &registry << std::endl;
+
+        auto watchId = watcher->addWatch(path, [=, &registry](std::string_view path)
+        {
+            try
+            {
+                auto table = toml::parse_file(path);
+                auto [loggers, err] = parseConfiguration(table);
+                if (err)
+                {
+                    std::cerr << "[logpp] Error reading file " << path << ": " << *err << std::endl;
+                    return;
+                }
+
+                for (const auto& loggerConfig: loggers)
+                {
+                    registry.forEachLogger([&](const std::string& name, const std::shared_ptr<logpp::Logger>& logger) {
+                        LoggerKey key(loggerConfig.name);
+                        if (LoggerRegistry::matches(key, name))
+                        {
+                            if (logger->level() != loggerConfig.level)
+                                logger->setLevel(loggerConfig.level);
+                        }
+                    });
+                }
+                
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << "[logpp] Error reading file " << path << ": " << e.what() << '\n';
+            }
+        });
+
+        if (!watchId)
+            return std::make_pair(std::nullopt, Error { "Failed to add watch", std::nullopt });
+
+        return std::make_pair(watchId, std::nullopt);
+    }
+
+    std::pair<std::vector<TomlConfigurator::Logger>, std::optional<TomlConfigurator::Error>>
+    TomlConfigurator::parseConfiguration(const toml::table& table)
+    {
+        static auto error = [](Error err) { return std::make_pair(std::vector<Logger>{}, std::move(err)); };
+
+        auto [sinks, err1] = parseSinks(table);
+        if (err1)
+            return error(*err1);
+
+        auto [loggers, err2] = parseLoggers(table, sinks);
+        if (err2)
+            return error(*err2);
+
+        return std::make_pair(std::move(loggers), std::nullopt);
+    }
+
+    std::pair<std::vector<TomlConfigurator::Sink>, std::optional<TomlConfigurator::Error>>
+    TomlConfigurator::parseSinks(const toml::table& table)
     {
         auto sinksNode = table["sinks"];
         if (!sinksNode)
@@ -130,101 +201,135 @@ namespace logpp
         return std::make_pair(std::move(sinks), std::nullopt);
     }
 
-    std::pair<std::optional<TomlConfigurator::Sink>, std::optional<TomlConfigurator::Error>> TomlConfigurator::parseSink(std::string name, const toml::table& table)
+    std::pair<std::optional<TomlConfigurator::Sink>, std::optional<TomlConfigurator::Error>>
+    TomlConfigurator::parseSink(std::string name, const toml::table& table)
     {
         auto [type, err] = tryRead<std::string>(table, "type", "sink.type: expected string");
         if (err)
             return std::make_pair(std::nullopt, err);
 
-        Sink sink;
-        sink.name = std::move(name);
-        sink.type = *type;
-
+        sink::Options sinkOptions;
         if (auto* options = table["options"].as_table())
         {
             for (auto&& [key, valueNode]: *options)
             {
                 auto&& k = key;
-                auto err = valueNode.visit([&sink, k](const auto& node) {
-                    return addSinkOption(sink.options, k, node);
+                auto err = valueNode.visit([&sinkOptions, k](const auto& node) {
+                    return addSinkOption(sinkOptions, k, node);
                 });
                 if (err)
                     return std::make_pair(std::nullopt, err);
             }
         }
 
-        return std::make_pair(std::move(sink), std::nullopt);
+        return std::make_pair(Sink{std::move(name), *type, std::move(sinkOptions), table.source()}, std::nullopt);
     }
 
-    std::optional<TomlConfigurator::Error> TomlConfigurator::parseLoggers(const toml::table& table, const std::vector<Sink>& sinks, LoggerRegistry& registry)
+    std::pair<std::vector<TomlConfigurator::Logger>, std::optional<TomlConfigurator::Error>>
+    TomlConfigurator::parseLoggers(const toml::table& table, const std::vector<Sink>& sinks)
     {
+        static auto error = [](Error err) { return std::make_pair(std::vector<Logger> {}, std::move(err)); };
+
         auto loggersTable = table["loggers"].as_table();
         if (!loggersTable)
-            return Error{ "expected loggers", table.source() };
+            return error(Error{ "expected loggers", table.source() });
 
+        std::vector<Logger> loggers;
         for (auto&& [name, loggerNode]: *loggersTable)
         {
             auto* loggerTable = loggerNode.as_table();
             if (!loggerTable)
-                return Error{ "expected logger", loggerNode.source()};
+                return error(Error{ "expected logger", loggerNode.source()});
 
-            auto err = parseLogger(name, *loggerTable, sinks, registry);
+            auto [logger, err] = parseLogger(name, *loggerTable, sinks);
             if (err)
-                return err;
+                return error(*err);
+
+            loggers.push_back(*logger);
         }
 
-        return std::nullopt;
+        return std::make_pair(std::move(loggers), std::nullopt);
     }
 
-    std::optional<TomlConfigurator::Error> TomlConfigurator::parseLogger(std::string, const toml::table& table, const std::vector<Sink>& sinks, LoggerRegistry& registry)
+    std::pair<std::optional<TomlConfigurator::Logger>, std::optional<TomlConfigurator::Error>>
+    TomlConfigurator::parseLogger(std::string, const toml::table& table, const std::vector<Sink>& sinks)
     {
+        static auto error = [](Error err) { return std::make_pair(std::nullopt, std::move(err)); };
+
         auto [name, err1] = tryRead<std::string>(table, "name", "logger.name: expected string");
         if (err1)
-            return err1;
+            return error(*err1);
 
         auto [levelStr, err2] = tryRead<std::string>(table, "level", "logger.level: expected string");
         if (err2)
-            return err2;
+            return error(*err2);
 
         auto level = parseLevel(*levelStr);
         if (!level)
-            return Error { "logger: unknown level", table["level"].as_string()->source() };
+            return error(Error { "logger: unknown level", table["level"].as_string()->source() });
 
         auto sinksNode = table["sinks"];
         auto sinksArray = sinksNode.as_array();
         if (!sinksArray)
-            return Error { "logger: expected sinks", table.source() };
+            return error(Error { "logger: expected sinks", table.source() });
 
+        std::vector<Sink> loggerSinks;
         for (const auto& sinkNode: *sinksArray)
         {
             auto sinkName = sinkNode.value<std::string>();
             if (!sinkName)
-                return Error { "sink: expected string", sinkNode.source() };
+                return error(Error { "sink: expected string", sinkNode.source() });
 
             auto it = std::find_if(std::begin(sinks), std::end(sinks), [&](const auto& sink) {
                 return sink.name == *sinkName;
             });
 
             if (it == std::end(sinks))
-                return Error { "logger: unknown sink reference", sinkNode.source() };
+                return error(Error { "logger: unknown sink reference", sinkNode.source() });
 
-            const auto& sinkRef = *it;
+            const auto& sink = *it;
+            loggerSinks.push_back(sink);
+        }
 
-            auto sink = registry.createSink(sinkRef.type);
-            if (!sink)
-                return Error { "logger: unknown sink type", sinkNode.source() };
+        return std::make_pair(Logger { *name, *level, std::move(loggerSinks), table.source() }, std::nullopt);
+    }
 
-            if (!sink->activateOptions(sinkRef.options))
-                return Error { "sink: failed to activate options", sinkNode.source() };
+    std::optional<TomlConfigurator::Error>
+    TomlConfigurator::configureRegistry(LoggerRegistry& registry, const std::vector<TomlConfigurator::Logger>& loggers)
+    {
+        for (const auto& logger: loggers)
+        {
+            std::shared_ptr<sink::Sink> sink;
+            if (logger.sinks.size() > 1)
+            {
+                std::vector<std::shared_ptr<sink::Sink>> innerSinks;
+                for (const auto& loggerSink: logger.sinks)
+                {
+                    auto sink = registry.createSink(loggerSink.type);
+                    if (!sink)
+                        return Error { "logger: unknown sink type", loggerSink.sourceRegion };
 
-            auto res = registry.registerLoggerFunc(*name, [=](std::string name) {
-                return std::make_shared<Logger>(std::move(name), *level, sink);
+                    innerSinks.push_back(std::move(sink));
+                }
+
+                sink = std::make_shared<sink::MultiSink>(std::move(innerSinks));
+            }
+            else
+            {
+                const auto& loggerSink = logger.sinks[0];
+
+                sink = registry.createSink(loggerSink.type);
+                if (!sink)
+                    return Error { "logger: unknown sink type", loggerSink.sourceRegion };
+            }
+
+            auto res = registry.registerLoggerFunc(logger.name, [=](std::string name) {
+                return std::make_shared<logpp::Logger>(std::move(name), logger.level, sink);
             });
 
             if (!res)
-                return Error { "logger: failed to register logger", table.source() };
+                return Error { "logger: failed to register logger", logger.sourceRegion };
         }
-
         return std::nullopt;
     }
 }
