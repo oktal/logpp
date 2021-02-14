@@ -1,6 +1,7 @@
 set(SOURCE_FILES
     AsyncQueuePoller.cpp
     FileSink.cpp
+    FileWatcher.cpp
     LogBuffer.cpp
     LogBufferView.cpp
     LoggerRegistry.cpp
