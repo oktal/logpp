@@ -9,6 +9,8 @@ namespace logpp::sink
     class File
     {
     public:
+        virtual ~File() = default;
+
         std::string_view path() const
         {
             return m_path;
