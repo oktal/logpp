@@ -1,25 +1,245 @@
 #include "logpp/sinks/file/RollingFileSink.h"
 
 #include "logpp/format/PatternFormatter.h"
+#include "logpp/sinks/file/RollingOfstream.h"
 #include "logpp/utils/string.h"
+
+#include <cstring>
 
 namespace logpp::sink
 {
 
+    namespace
+    {
+        template <typename Func>
+        bool parseRolling(const Options::Value& options, Func&& onParsed)
+        {
+            if (auto opts = options.asDict())
+            {
+                auto typeIt = opts->find("type");
+                if (typeIt == std::end(*opts))
+                    return false;
+
+                auto type = typeIt->second;
+                if (string_utils::iequals(type, "size"))
+                {
+                    auto sizeIt = opts->find("size");
+                    if (sizeIt == std::end(*opts))
+                        return false;
+
+                    auto size = string_utils::parseSize(sizeIt->second);
+                    if (!size)
+                        return false;
+
+                    onParsed(RollBySize { *size });
+                    return true;
+                }
+                else if (string_utils::iequals(type, "date"))
+                {
+                    auto intervalIt = opts->find("interval");
+                    if (intervalIt == std::end(*opts))
+                        return false;
+
+                    auto kindIt = opts->find("kind");
+                    if (kindIt == std::end(*opts))
+                        return false;
+
+                    bool ok = false;
+
+                    ok = string_utils::parseDuration(intervalIt->second, [&](auto duration) {
+                        if (string_utils::iequals(kindIt->second, "precise"))
+                        {
+                            onParsed(RollEvery { PreciseInterval { duration } });
+                            ok = true;
+                        }
+                        else if (string_utils::iequals(kindIt->second, "round"))
+                        {
+                            onParsed(RollEvery { RoundInterval { duration } });
+                            ok = true;
+                        }
+                    });
+
+                    return ok;
+                }
+            }
+            return false;
+        }
+
+        template <typename Func>
+        bool parseArchive(const Options::Value& options, Func&& onParsed)
+        {
+            if (auto opts = options.asString())
+            {
+                if (string_utils::iequals(*opts, "incremental"))
+                {
+                    onParsed(ArchiveIncremental {});
+                    return true;
+                }
+                else if (string_utils::iequals(*opts, "timestamp"))
+                {
+                    onParsed(ArchiveTimestamp<UTCTime> {});
+                    return true;
+                }
+
+                return false;
+            }
+            else if (auto opts = options.asDict())
+            {
+                auto typeIt = opts->find("type");
+                if (typeIt == std::end(*opts))
+                    return false;
+
+                auto type = typeIt->second;
+
+                if (string_utils::iequals(type, "incremental"))
+                {
+                    onParsed(ArchiveIncremental {});
+                    return true;
+                }
+                else if (string_utils::iequals(type, "timestamp"))
+                {
+                    auto clockIt = opts->find("clock");
+                    if (clockIt == std::end(*opts))
+                    {
+                        onParsed(ArchiveTimestamp<UTCTime> {});
+                        return true;
+                    }
+
+                    auto clock = clockIt->second;
+                    if (string_utils::iequals(clock, "utc"))
+                    {
+                        onParsed(ArchiveTimestamp<UTCTime> {});
+                        return true;
+                    }
+                    else if (string_utils::iequals(clock, "local"))
+                    {
+                        onParsed(ArchiveTimestamp<LocalTime> {});
+                        return true;
+                    }
+
+                    return false;
+                }
+            }
+
+            return false;
+        }
+
+        template <typename Func>
+        bool parseRollingAndArchive(const Options& options, Func&& onParsed)
+        {
+            auto rollingOpts = options.tryGet("strategy");
+            auto archiveOpts = options.tryGet("archive");
+
+            if (!rollingOpts || !archiveOpts)
+                return false;
+
+            auto parsed = false;
+            parseRolling(*rollingOpts, [&](auto rollingStrategy) {
+                parseArchive(*archiveOpts, [&](auto archiveStrategy) {
+                    onParsed(rollingStrategy, archiveStrategy);
+                    parsed = true;
+                });
+            });
+
+            return parsed;
+        }
+    }
+
+    class FileImpl : public File
+    {
+    public:
+        template <typename RollingStrategy, typename ArchiveStrategy>
+        FileImpl(std::string_view filePath, std::ios_base::openmode openMode, RollingStrategy rollingStrategy, ArchiveStrategy archiveStrategy)
+        {
+            open(filePath, openMode, rollingStrategy, archiveStrategy);
+        }
+
+        template <typename RollingStrategy, typename ArchiveStrategy>
+        bool open(std::string_view filePath, std::ios_base::openmode openMode, RollingStrategy rollingStrategy, ArchiveStrategy archiveStrategy)
+        {
+            if (m_rofs)
+                return false;
+
+            auto rofs = std::make_unique<rolling_ofstream>(filePath, openMode, rollingStrategy, archiveStrategy, roll_mode::manual);
+            if (rofs->bad() || !rofs->is_open())
+                return false;
+
+            std::swap(m_rofs, rofs);
+            m_path = filePath;
+            return true;
+        }
+
+        bool isOpen() const override
+        {
+            return m_rofs && m_rofs->is_open();
+        }
+
+        bool close() override
+        {
+            if (!m_rofs)
+                return false;
+
+            m_rofs->close();
+            m_rofs.reset();
+
+            return true;
+        }
+
+        size_t write(const char* data, size_t size) override
+        {
+            if (!m_rofs)
+                return 0ULL;
+
+            m_rofs->write(data, size);
+            return size;
+        }
+
+        size_t write(const char c) override
+        {
+            if (!m_rofs)
+                return 0ULL;
+
+            m_rofs->put(c);
+            return 1ULL;
+        }
+
+        size_t size() const override
+        {
+            if (!m_rofs || !m_rofs->rdbuf())
+                return 0;
+
+            return m_rofs->rdbuf()->pubseekoff(0, std::ios_base::cur, std::ios_base::out);
+        }
+
+        void flush() override
+        {
+            if (!m_rofs)
+                return;
+
+            m_rofs->flush();
+        }
+
+        bool canRoll() const
+        {
+            return m_rofs->can_roll();
+        }
+
+        void roll()
+        {
+            m_rofs->roll();
+        }
+
+    private:
+        std::unique_ptr<rolling_ofstream> m_rofs;
+    };
+
     RollingFileSink::RollingFileSink()
         : FileSink()
-    {}
+    { }
 
-    RollingFileSink::RollingFileSink(
-        std::string_view baseFilePath,
-        std::shared_ptr<Formatter> formatter,
-        std::shared_ptr<RollingStrategy> rollingStrategy,
-        std::shared_ptr<ArchiveStrategy> archiveStrategy
-    )
+    RollingFileSink::RollingFileSink(std::string_view baseFilePath, std::shared_ptr<Formatter> formatter)
         : FileSink(baseFilePath, std::move(formatter))
         , m_baseFilePath(baseFilePath)
-        , m_rollingStrategy(std::move(rollingStrategy))
-        , m_archiveStrategy(std::move(archiveStrategy))
     { }
 
     bool RollingFileSink::activateOptions(const Options& options)
@@ -27,130 +247,29 @@ namespace logpp::sink
         if (!FileSink::activateOptions(options))
             return false;
 
-        auto strategyOpts = options.tryGet("strategy");
-        auto archiveOpts = options.tryGet("archive");
+        bool isOpen = false;
 
-        if (!strategyOpts || !archiveOpts)
-            return false;
+        parseRollingAndArchive(options, [&](auto rollingStrategy, auto archiveStrategy) {
+            m_file.reset(new FileImpl(m_baseFilePath, std::ios_base::out | std::ios_base::app, rollingStrategy, archiveStrategy));
+            isOpen = m_file->isOpen();
+        });
 
-        return setRollingStrategy(createRollingStrategy(*strategyOpts)) &&
-               setArchiveStrategy(createArchiveStrategy(*archiveOpts));
+        return isOpen;
     }
 
     void RollingFileSink::sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer)
     {
-        auto time = buffer.time();
-        auto* file = m_file.get();
+        if (!m_file)
+            return;
 
-        if (m_rollingStrategy->apply(time, file))
+        auto* file = static_cast<FileImpl*>(m_file.get());
+        if (file->canRoll())
         {
             onBeforeClosing(m_file);
-
-            m_file.reset(m_archiveStrategy->apply(time, file));
-
+            file->roll();
             onAfterOpened(m_file);
         }
 
         FileSink::sink(name, level, buffer);
-    }
-
-    bool RollingFileSink::setArchiveStrategy(std::shared_ptr<ArchiveStrategy> strategy)
-    {
-        if (!strategy)
-            return false;
-
-        m_archiveStrategy = std::move(strategy);
-        return true;
-    }
-
-    bool RollingFileSink::setRollingStrategy(std::shared_ptr<RollingStrategy> strategy)
-    {
-        if (!strategy)
-            return false;
-
-        m_rollingStrategy = std::move(strategy);
-        return true;
-    }
-
-    std::shared_ptr<ArchiveStrategy> RollingFileSink::createArchiveStrategy(const Options::Value& options)
-    {
-        if (auto opts = options.asString())
-        {
-            if (string_utils::iequals(*opts, "incremental"))
-                return std::make_shared<IncrementalArchiveStrategy>();
-            else if (string_utils::iequals(*opts, "timestamp"))
-                return std::make_shared<TimestampArchiveStrategy<SystemClock>>();
-        }
-        else if (auto opts = options.asDict())
-        {
-            auto typeIt = opts->find("type");
-            if (typeIt == std::end(*opts))
-                return nullptr;
-
-            auto type = typeIt->second;
-
-            if (string_utils::iequals(type, "incremental"))
-            {
-                return std::make_shared<IncrementalArchiveStrategy>();
-            }
-            else if (string_utils::iequals(type, "timestamp"))
-            {
-                auto clockIt = opts->find("clock");
-                if (clockIt == std::end(*opts))
-                    return std::make_shared<TimestampArchiveStrategy<SystemClock>>();
-
-                auto clock = clockIt->second;
-                if (string_utils::iequals(clock, "utc"))
-                    return std::make_shared<TimestampArchiveStrategy<SystemClock>>();
-                else if (string_utils::iequals(clock, "local"))
-                    return std::make_shared<TimestampArchiveStrategy<LocalClock>>();
-            }
-        }
-
-        return nullptr;
-    }
-
-    std::shared_ptr<RollingStrategy> RollingFileSink::createRollingStrategy(const Options::Value& options)
-    {
-        if (auto opts = options.asDict())
-        {
-            auto typeIt = opts->find("type");
-            if (typeIt == std::end(*opts))
-                return nullptr;
-
-            auto type = typeIt->second;
-            if (string_utils::iequals(type, "size"))
-            {
-                auto sizeIt = opts->find("size");
-                if (sizeIt == std::end(*opts))
-                    return nullptr;
-
-                auto size = string_utils::parseSize(sizeIt->second);
-                if (!size)
-                    return nullptr;
-
-                return std::make_shared<SizeRollingStrategy>(*size);
-            }
-            else if (string_utils::iequals(type, "date"))
-            {
-                auto intervalIt = opts->find("interval");
-                if (intervalIt == std::end(*opts))
-                    return nullptr;
-
-                auto kindIt = opts->find("kind");
-                if (kindIt == std::end(*opts))
-                    return nullptr;
-
-                auto interval = tryParseRollingInterval(intervalIt->second);
-                auto kind = tryParseRollingKind(kindIt->second);
-
-                if (!interval || !kind)
-                    return nullptr;
-
-                return std::make_shared<DateRollingStrategy>(*interval, *kind);
-            }
-        }
-
-        return nullptr;
     }
 }

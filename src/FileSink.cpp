@@ -5,13 +5,95 @@
 
 namespace logpp::sink
 {
+    class FileImpl : public File
+    {
+    public:
+        explicit FileImpl(std::string_view filePath, std::ios_base::openmode openMode)
+        {
+            open(filePath, openMode);
+        }
+
+        ~FileImpl()
+        {
+            if (isOpen())
+                close();
+        }
+
+        bool open(std::string_view filePath, std::ios_base::openmode openMode)
+        {
+            if (m_ofs)
+                return false;
+
+            auto ofs = std::make_unique<std::ofstream>(filePath.data(), openMode);
+            if (ofs->bad() || !ofs->is_open())
+                return false;
+
+            std::swap(m_ofs, ofs);
+            m_path = filePath;
+            return true;
+        }
+
+        bool isOpen() const override
+        {
+            return m_ofs && m_ofs->is_open();
+        }
+
+        bool close() override
+        {
+            if (!m_ofs)
+                return false;
+
+            m_ofs->close();
+            m_ofs.reset();
+
+            return true;
+        }
+
+        size_t write(const char* data, size_t size) override
+        {
+            if (!m_ofs)
+                return 0ULL;
+
+            m_ofs->write(data, size);
+            return size;
+        }
+
+        size_t write(const char c) override
+        {
+            if (!m_ofs)
+                return 0ULL;
+
+            m_ofs->put(c);
+            return 1ULL;
+        }
+
+        size_t size() const override
+        {
+            if (!m_ofs || !m_ofs->rdbuf())
+                return 0;
+
+            return  m_ofs->rdbuf()->pubseekoff(0, std::ios_base::cur, std::ios_base::out);
+        }
+
+        void flush() override
+        {
+            if (!m_ofs)
+                return;
+
+            m_ofs->flush();
+        }
+
+    private:
+        std::unique_ptr<std::ofstream> m_ofs;
+    };
+
     FileSink::FileSink()
         : FormatSink(std::make_shared<PatternFormatter>("%+"))
-    {}
+    { }
 
     FileSink::FileSink(std::string_view filePath)
         : FileSink(filePath, std::make_shared<PatternFormatter>("%+"))
-    {}
+    { }
 
     FileSink::FileSink(std::string_view filePath, std::shared_ptr<Formatter> formatter)
         : FormatSink(std::move(formatter))
@@ -38,7 +120,7 @@ namespace logpp::sink
 
     bool FileSink::open(std::string_view filePath)
     {
-        m_file.reset(new File(filePath, std::ios_base::out | std::ios_base::app));
+        m_file.reset(new FileImpl(filePath, std::ios_base::out | std::ios_base::app));
         onAfterOpened(m_file);
         return isOpen();
     }

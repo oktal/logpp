@@ -1,12 +1,15 @@
 #pragma once
 
-#include <algorithm>
-#include <optional>
-#include <utility>
-#include <string_view>
+#include "logpp/date/date.h"
 
-#include <cstdlib>
+#include <algorithm>
+#include <chrono>
+#include <optional>
+#include <string_view>
+#include <utility>
+
 #include <cctype>
+#include <cstdlib>
 
 namespace logpp
 {
@@ -18,13 +21,12 @@ namespace logpp
                 std::begin(lhs), std::end(lhs), std::begin(rhs),
                 [](char c1, char c2) {
                     return std::tolower(c1) == std::tolower(c2);
-                }
-            );
+                });
         }
 
         inline std::optional<size_t> parseSize(std::string_view str)
         {
-            char *endptr;
+            char* endptr;
             auto val = std::strtoll(str.data(), &endptr, 10);
             if (val < 0)
                 return std::nullopt;
@@ -46,5 +48,49 @@ namespace logpp
 
             return std::nullopt;
         }
+
+        template <typename ParseFunc>
+        bool parseDuration(std::string_view str, ParseFunc&& onParsed)
+        {
+            char* endptr;
+
+            const char* end = str.data() + str.size();
+
+            auto value = std::strtoll(str.data(), &endptr, 10);
+            if (value <= 0)
+                return false;
+            if (endptr == nullptr || endptr == end)
+                return false;
+
+            while (std::isspace(*endptr))
+                ++endptr;
+
+            switch (std::tolower(*endptr))
+            {
+            case 's':
+                onParsed(std::chrono::seconds(value));
+                break;
+            case 'm':
+                onParsed(std::chrono::minutes(value));
+                break;
+            case 'h':
+                onParsed(std::chrono::hours(value));
+                break;
+            case 'D':
+                onParsed(date::days(value));
+                break;
+            case 'M':
+                onParsed(date::months(value));
+                break;
+            case 'Y':
+                onParsed(date::years(value));
+                break;
+            default:
+                return false;
+            }
+
+            return true;
+        }
+
     }
 }
