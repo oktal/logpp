@@ -132,6 +132,8 @@ using FrozenTime  = FrozenTimeBase<std::chrono::system_clock>;
 
 struct TestCase
 {
+    virtual ~TestCase() = default;
+
     struct Case
     {
         using TimeDuration = decltype(hours { 0 } + minutes { 0 } + seconds { 0 });

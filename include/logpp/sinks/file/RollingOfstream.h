@@ -145,7 +145,7 @@ namespace logpp
         }
 
     protected:
-        std::streamsize xsputn(const char_type* s, std::streamsize count)
+        std::streamsize xsputn(const char_type* s, std::streamsize count) override
         {
             if (m_rollingPolicy.apply(this) && m_mode == roll_mode::automatic)
             {
@@ -390,9 +390,9 @@ namespace logpp
             auto mode     = buf->mode();
 
             buf->close();
+
             archive(basePath);
-            buf->open(basePath.data(), mode);
-            return buf->is_open();
+            return buf->open(basePath.data(), mode);
         }
 
         static int archive(std::string_view basePath)
@@ -476,8 +476,7 @@ namespace logpp
             if (!file_utils::rename(basePath, newPath))
                 return false;
 
-            buf->open(basePath.data(), mode);
-            return buf->is_open();
+            return buf->open(basePath.data(), mode);
         }
     };
 

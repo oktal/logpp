@@ -23,8 +23,10 @@ namespace logpp
             , m_name(createTemporaryFileName(prefix, suffix))
         {
             auto path = fmt::format("{}/{}", m_directory, m_name);
-            open(path, openMode);
+            if (!open(path, openMode))
+                throw std::runtime_error(fmt::format("Failed to open file {}", path));
             this->path(path);
+            this->mode(openMode);
         }
 
         std::string_view directory() const
@@ -50,7 +52,7 @@ namespace logpp
             // However, we are generating a unique temporary directory, so full path of temporary files
             // will be unique in that unique directory
             static size_t idx = 0;
-            return fmt::format("{}-{}{}", prefix, idx++, suffix);
+            return fmt::format("{}{}{}", prefix, idx++, suffix);
         }
 
         static std::string createTemporaryDirectory()
