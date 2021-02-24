@@ -119,8 +119,6 @@ namespace logpp
         if (err)
             return std::make_pair(std::nullopt, std::move(err));
 
-        std::cout << "&registry = " << &registry << std::endl;
-
         auto watchId = watcher->addWatch(path, [=, &registry](std::string_view path)
         {
             try
@@ -144,7 +142,8 @@ namespace logpp
                         }
                     });
                 }
-                
+
+                std::cout << "[logpp] Configuration " << path << " has been reloaded\n";
             }
             catch(const std::exception& e)
             {
