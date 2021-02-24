@@ -17,6 +17,8 @@ namespace logpp
         struct WatchId
         {
         public:
+            WatchId() = default;
+
             explicit WatchId(uint64_t value)
                 : value(value)
             {}

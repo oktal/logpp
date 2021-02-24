@@ -4,6 +4,10 @@
 
 #if defined(LOGPP_PLATFORM_LINUX)
   #include "logpp/config/impl/FileWatcherLinuxImpl.h"
+#elif defined(LOGPP_PLATFORM_WINDOWS)
+  #include "logpp/config/impl/FileWatcherWindowsImpl.h"
+#else
+  #error "FileWatcher implementation not available on current platform"
 #endif
 
 namespace logpp

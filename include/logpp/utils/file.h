@@ -41,6 +41,12 @@ namespace logpp::file_utils
           return static_cast<size_t>(std::filesystem::remove_all(path));
       }
 
+      inline std::string directory(std::string_view path)
+      {
+          std::filesystem::path p { path };
+          return p.parent_path().string();
+      }
+
     #else
       #error "Unknown compiler version for filesystem utilities"
     #endif
