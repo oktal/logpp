@@ -7,7 +7,7 @@
 #elif defined(LOGPP_PLATFORM_WINDOWS)
   #include "logpp/config/impl/FileWatcherWindowsImpl.h"
 #else
-  #error "FileWatcher implementation not available on current platform"
+  #include "logpp/config/impl/FileWatcherNoopImpl.h"
 #endif
 
 namespace logpp
