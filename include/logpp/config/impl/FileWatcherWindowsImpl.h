@@ -5,8 +5,8 @@
 #include "logpp/utils/file.h"
 
 #define NOMINMAX
-#include <windows.h>
 #include <shlwapi.h>
+#include <windows.h>
 
 #include <chrono>
 #include <iostream>
@@ -23,7 +23,7 @@ namespace logpp
         }
 
         explicit Impl(std::shared_ptr<IAsyncQueuePoller> poller)
-	        : m_poller(std::move(poller))
+            : m_poller(std::move(poller))
             , m_queue(std::make_shared<WatchQueue>())
         {
         }
@@ -40,10 +40,9 @@ namespace logpp
 
         std::optional<FileWatcher::WatchId> addWatch(std::string_view path, FileWatcher::OnEvent onEvent)
         {
-            auto future = m_queue->pushActionAsync(WatchQueue::AddWatch{
+            auto future = m_queue->pushActionAsync(WatchQueue::AddWatch {
                 std::string(path),
-                std::move(onEvent)
-			});
+                std::move(onEvent) });
 
             try
             {
@@ -53,12 +52,11 @@ namespace logpp
             {
                 return std::nullopt;
             }
-
         }
 
         bool removeWatch(FileWatcher::WatchId watchId)
         {
-            auto future = m_queue->pushActionAsync(WatchQueue::RemoveWatch{ watchId });
+            auto future = m_queue->pushActionAsync(WatchQueue::RemoveWatch { watchId });
 
             try
             {
@@ -74,7 +72,7 @@ namespace logpp
         class WatchQueue : public logpp::IAsyncQueue
         {
         public:
-            template<typename T>
+            template <typename T>
             struct AsyncAction
             {
                 std::promise<T> result;
@@ -84,7 +82,7 @@ namespace logpp
                     result.set_value(std::move(value));
                 }
 
-            	template<typename Exception>
+                template <typename Exception>
                 void setException(Exception exc)
                 {
                     result.set_exception(std::make_exception_ptr(exc));
@@ -96,7 +94,7 @@ namespace logpp
                 AddWatch(std::string path, FileWatcher::OnEvent onEvent)
                     : path(std::move(path))
                     , onEvent(std::move(onEvent))
-                {}
+                { }
 
                 std::string path;
                 FileWatcher::OnEvent onEvent;
@@ -106,7 +104,7 @@ namespace logpp
             {
                 explicit RemoveWatch(FileWatcher::WatchId watchId)
                     : watchId(watchId)
-                {}
+                { }
 
                 FileWatcher::WatchId watchId;
             };
@@ -124,7 +122,7 @@ namespace logpp
                 }
 
                 count += pendingActions.size();
-                for (auto& pendingAction: pendingActions)
+                for (auto& pendingAction : pendingActions)
                 {
                     std::visit([&](auto& action) { handleAction(action); }, pendingAction);
                 }
@@ -139,7 +137,7 @@ namespace logpp
                 return pollOne();
             }
 
-            template<typename TAction>
+            template <typename TAction>
             auto pushActionAsync(TAction&& action)
             {
                 auto fut = action.result.get_future();
@@ -147,15 +145,15 @@ namespace logpp
                 return fut;
             }
 
-        private: 
-			struct PathEntry
-			{
-				uint64_t watchId;
-				std::string path;
+        private:
+            struct PathEntry
+            {
+                uint64_t watchId;
+                std::string path;
 
                 FileWatcher::OnEvent onEvent;
-			};
-            	
+            };
+
             struct DirectoryEntry
             {
                 std::string name;
@@ -167,7 +165,7 @@ namespace logpp
             // https://stackoverflow.com/questions/14036449/c-winapi-readdirectorychangesw-receiving-double-notifications
             // To dedup notifications, we do not trigger an event right away but instead wait for a short period of time.
             // If, during that period of time (1ms), a duplicated notification is received, we just discard it.
-            static constexpr auto NotificationDelay{std::chrono::milliseconds(1)};
+            static constexpr auto NotificationDelay { std::chrono::milliseconds(1) };
             struct Notification
             {
                 PathEntry pathEntry;
@@ -189,7 +187,7 @@ namespace logpp
             {
                 try
                 {
-                    auto directory = file_utils::directory(action.path);
+                    auto directory   = file_utils::directory(action.path);
                     auto directoryIt = m_directoryEntries.find(directory);
 
                     if (directoryIt == std::end(m_directoryEntries))
@@ -198,13 +196,13 @@ namespace logpp
                         if (!handle)
                             throw std::runtime_error("Failed to create HANDLE");
 
-                        directoryIt = m_directoryEntries.insert(std::make_pair(directory, DirectoryEntry{ directory, *handle })).first;
+                        directoryIt = m_directoryEntries.insert(std::make_pair(directory, DirectoryEntry { directory, *handle })).first;
                     }
 
                     auto& directoryEntry = directoryIt->second;
 
                     auto watchId = m_watchId++;
-                    PathEntry pathEntry{
+                    PathEntry pathEntry {
                         watchId,
                         action.path,
                         action.onEvent
@@ -224,20 +222,19 @@ namespace logpp
             {
                 try
                 {
-                    auto watchId = static_cast<uint64_t>(action.watchId);
+                    auto watchId      = static_cast<uint64_t>(action.watchId);
                     auto watchIndexIt = m_watchIndex.find(watchId);
                     if (watchIndexIt == std::end(m_watchIndex))
                     {
                         action.setValue(false);
-						return;
+                        return;
                     }
 
-                    auto directoryIt = watchIndexIt->second;
+                    auto directoryIt     = watchIndexIt->second;
                     auto& directoryEntry = directoryIt->second;
-                    auto& pathEntries = directoryEntry.pathEntries;
+                    auto& pathEntries    = directoryEntry.pathEntries;
 
-                    auto pathEntryIt = std::find_if(std::begin(pathEntries), std::end(pathEntries), [&](const PathEntry& entry)
-                    {
+                    auto pathEntryIt = std::find_if(std::begin(pathEntries), std::end(pathEntries), [&](const PathEntry& entry) {
                         return entry.watchId == watchId;
                     });
 
@@ -267,8 +264,7 @@ namespace logpp
                     nullptr,
                     OPEN_EXISTING,
                     FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
-                    HANDLE(0)
-                );
+                    HANDLE(0));
 
                 if (handle == INVALID_HANDLE_VALUE)
                     return std::nullopt;
@@ -286,8 +282,7 @@ namespace logpp
                     nullptr,
                     0,
                     nullptr,
-                    nullptr
-                );
+                    nullptr);
 
                 if (size <= 0)
                     return "";
@@ -302,8 +297,7 @@ namespace logpp
                     &out[0],
                     size,
                     nullptr,
-                    nullptr
-                );
+                    nullptr);
 
                 return out;
             }
@@ -315,10 +309,10 @@ namespace logpp
                 wchar_t filename[MAX_PATH];
                 std::vector<BYTE> buffer(BufferSize);
 
-                for (const auto& [_, directoryEntry]: m_directoryEntries)
+                for (const auto& [_, directoryEntry] : m_directoryEntries)
                 {
-                    auto handle = directoryEntry.handle;
-					DWORD bytesReturned = 0;
+                    auto handle         = directoryEntry.handle;
+                    DWORD bytesReturned = 0;
                     ReadDirectoryChangesW(
                         handle,
                         buffer.data(),
@@ -327,16 +321,15 @@ namespace logpp
                         FILE_NOTIFY_CHANGE_LAST_WRITE,
                         &bytesReturned,
                         nullptr,
-                        nullptr
-                    );
+                        nullptr);
 
-                	if (bytesReturned > 0)
+                    if (bytesReturned > 0)
                     {
-                        auto* fileInfo = reinterpret_cast<FILE_NOTIFY_INFORMATION *>(&buffer[0]);
-						do
+                        auto* fileInfo = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(&buffer[0]);
+                        do
                         {
                             handleDirectoryChange(directoryEntry, fileInfo);
-                            fileInfo = reinterpret_cast<FILE_NOTIFY_INFORMATION *>(&buffer[fileInfo->NextEntryOffset]);
+                            fileInfo = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(&buffer[fileInfo->NextEntryOffset]);
                         } while (fileInfo->NextEntryOffset != 0);
                     }
                 }
@@ -352,7 +345,7 @@ namespace logpp
                 path.append(fileName);
 
                 const auto& pathEntries = directoryEntry.pathEntries;
-                auto pathIt = std::find_if(std::begin(pathEntries), std::end(pathEntries), [&](const PathEntry& pathEntry) {
+                auto pathIt             = std::find_if(std::begin(pathEntries), std::end(pathEntries), [&](const PathEntry& pathEntry) {
                     return pathEntry.path == path;
                 });
 
@@ -362,7 +355,7 @@ namespace logpp
 
             bool addPendingNotification(const PathEntry& pathEntry)
             {
-                auto watchId = pathEntry.watchId;
+                auto watchId               = pathEntry.watchId;
                 auto pendingNotificationIt = std::find_if(std::begin(m_pendingNotifications), std::end(m_pendingNotifications), [&](const Notification& notification) {
                     return notification.pathEntry.watchId == watchId;
                 });
@@ -370,7 +363,7 @@ namespace logpp
                 if (pendingNotificationIt != std::end(m_pendingNotifications))
                     return false;
 
-                Notification notification{
+                Notification notification {
                     pathEntry,
                     std::chrono::steady_clock::now() + NotificationDelay
                 };
@@ -379,7 +372,7 @@ namespace logpp
                 return true;
             }
 
-        	size_t pollPendingNotifications()
+            size_t pollPendingNotifications()
             {
                 size_t count = 0;
 
@@ -387,27 +380,25 @@ namespace logpp
                 std::vector<std::vector<Notification>::const_iterator> toErase;
 
                 for (auto it = std::begin(m_pendingNotifications); it != std::end(m_pendingNotifications); ++it)
-            	{
+                {
                     if (now >= it->expiry)
                     {
                         it->pathEntry.onEvent(it->pathEntry.path);
                         ++count;
                         toErase.push_back(it);
                     }
-            	}
+                }
 
-				for (const auto& it: toErase)
-				{
+                for (const auto& it : toErase)
+                {
                     m_pendingNotifications.erase(it);
-				}
+                }
 
                 return count;
             }
-
         };
 
         std::shared_ptr<IAsyncQueuePoller> m_poller;
         std::shared_ptr<WatchQueue> m_queue;
-
     };
 }

@@ -66,7 +66,7 @@ namespace logpp
             if (m_fd < 0)
                 return false;
 
-            auto wd = static_cast<int>(static_cast<uint64_t>(watchId));
+            auto wd  = static_cast<int>(static_cast<uint64_t>(watchId));
             auto res = inotify_rm_watch(m_fd, wd);
             return res == 0;
         }
@@ -79,8 +79,8 @@ namespace logpp
             // the inotify file descriptor should have the same alignment as
             // struct inotify_event.
             char buf[4096]
-                __attribute__ ((aligned(__alignof__(struct inotify_event))));
-            const struct inotify_event *event;
+                __attribute__((aligned(__alignof__(struct inotify_event))));
+            const struct inotify_event* event;
             ssize_t len;
 
             for (;;)
@@ -90,7 +90,7 @@ namespace logpp
                 {
                     if (errno == EAGAIN)
                         break;
-                    
+
                     // The read returned with an error. Maybe should we trigger all the registered
                     // callbacks with an error instead of silently stoping ?
                     stop();
@@ -98,7 +98,7 @@ namespace logpp
 
                 for (char* ptr = buf; ptr < buf + len; ptr += sizeof(inotify_event) + event->len)
                 {
-                    event = reinterpret_cast<inotify_event *>(ptr);
+                    event = reinterpret_cast<inotify_event*>(ptr);
 
                     // The watch has been removed and triggered an IN_IGNORED event
                     if (event->mask & IN_IGNORED)
@@ -118,7 +118,7 @@ namespace logpp
             NotifyQueue(int fd, std::shared_ptr<FileWatcher::Impl> watcher)
                 : m_fd(fd)
                 , m_watcher(std::move(watcher))
-            {}
+            { }
 
             size_t pollOne() override
             {

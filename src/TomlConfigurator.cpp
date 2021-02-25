@@ -1,19 +1,19 @@
 #include "logpp/config/TomlConfigurator.h"
 
-#include "logpp/core/Logger.h"
 #include "logpp/core/LogLevel.h"
+#include "logpp/core/Logger.h"
 
-#include "logpp/sinks/Sink.h"
 #include "logpp/sinks/MultiSink.h"
+#include "logpp/sinks/Sink.h"
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 namespace logpp
 {
     namespace
     {
-        template<typename Node>
+        template <typename Node>
         std::optional<std::string> toString(const Node& node)
         {
             if (auto* strVal = node.as_string())
@@ -28,7 +28,7 @@ namespace logpp
             return std::nullopt;
         }
 
-        template<typename Node>
+        template <typename Node>
         std::optional<TomlConfigurator::Error> addSinkOption(sink::Options& options, std::string key, const Node& node)
         {
             if constexpr (toml::is_integer<Node>)
@@ -48,7 +48,7 @@ namespace logpp
             else if constexpr (toml::is_array<Node>)
             {
                 sink::Options::Array arr;
-                for (const auto& valueNode: node)
+                for (const auto& valueNode : node)
                 {
                     auto str = toString(valueNode);
                     if (!str)
@@ -65,7 +65,7 @@ namespace logpp
             else if constexpr (toml::is_table<Node>)
             {
                 sink::Options::Dict dict;
-                for (auto&& [key, valueNode]: node)
+                for (auto&& [key, valueNode] : node)
                 {
                     auto str = toString(valueNode);
                     if (!str)
@@ -119,11 +119,10 @@ namespace logpp
         if (err)
             return std::make_pair(std::nullopt, std::move(err));
 
-        auto watchId = watcher->addWatch(path, [=, &registry](std::string_view path)
-        {
+        auto watchId = watcher->addWatch(path, [=, &registry](std::string_view path) {
             try
             {
-                auto table = toml::parse_file(path);
+                auto table          = toml::parse_file(path);
                 auto [loggers, err] = parseConfiguration(table);
                 if (err)
                 {
@@ -131,7 +130,7 @@ namespace logpp
                     return;
                 }
 
-                for (const auto& loggerConfig: loggers)
+                for (const auto& loggerConfig : loggers)
                 {
                     registry.forEachLogger([&](const std::string& name, const std::shared_ptr<logpp::Logger>& logger) {
                         LoggerKey key(loggerConfig.name);
@@ -145,7 +144,7 @@ namespace logpp
 
                 std::cout << "[logpp] Configuration " << path << " has been reloaded\n";
             }
-            catch(const std::exception& e)
+            catch (const std::exception& e)
             {
                 std::cerr << "[logpp] Error reading file " << path << ": " << e.what() << '\n';
             }
@@ -160,7 +159,7 @@ namespace logpp
     std::pair<std::vector<TomlConfigurator::Logger>, std::optional<TomlConfigurator::Error>>
     TomlConfigurator::parseConfiguration(const toml::table& table)
     {
-        static auto error = [](Error err) { return std::make_pair(std::vector<Logger>{}, std::move(err)); };
+        static auto error = [](Error err) { return std::make_pair(std::vector<Logger> {}, std::move(err)); };
 
         auto [sinks, err1] = parseSinks(table);
         if (err1)
@@ -178,21 +177,21 @@ namespace logpp
     {
         auto sinksNode = table["sinks"];
         if (!sinksNode)
-            return std::make_pair(std::vector<Sink>{}, std::nullopt);
+            return std::make_pair(std::vector<Sink> {}, std::nullopt);
 
         auto* sinksTable = sinksNode.as_table();
         if (!sinksTable)
-            return std::make_pair(std::vector<Sink>{}, Error { "sinks: expected table", table.source()});
+            return std::make_pair(std::vector<Sink> {}, Error { "sinks: expected table", table.source() });
 
         std::vector<Sink> sinks;
 
-        for (auto&& [name, sinkNode]: *sinksTable)
+        for (auto&& [name, sinkNode] : *sinksTable)
         {
             if (auto* sinkTable = sinkNode.as_table())
             {
                 auto [sink, err] = parseSink(name, *sinkTable);
                 if (err)
-                    return std::make_pair(std::vector<Sink>{}, err);
+                    return std::make_pair(std::vector<Sink> {}, err);
                 sinks.push_back(std::move(*sink));
             }
         }
@@ -210,7 +209,7 @@ namespace logpp
         sink::Options sinkOptions;
         if (auto* options = table["options"].as_table())
         {
-            for (auto&& [key, valueNode]: *options)
+            for (auto&& [key, valueNode] : *options)
             {
                 auto&& k = key;
                 auto err = valueNode.visit([&sinkOptions, k](const auto& node) {
@@ -221,7 +220,7 @@ namespace logpp
             }
         }
 
-        return std::make_pair(Sink{std::move(name), *type, std::move(sinkOptions), table.source()}, std::nullopt);
+        return std::make_pair(Sink { std::move(name), *type, std::move(sinkOptions), table.source() }, std::nullopt);
     }
 
     std::pair<std::vector<TomlConfigurator::Logger>, std::optional<TomlConfigurator::Error>>
@@ -231,14 +230,14 @@ namespace logpp
 
         auto loggersTable = table["loggers"].as_table();
         if (!loggersTable)
-            return error(Error{ "expected loggers", table.source() });
+            return error(Error { "expected loggers", table.source() });
 
         std::vector<Logger> loggers;
-        for (auto&& [name, loggerNode]: *loggersTable)
+        for (auto&& [name, loggerNode] : *loggersTable)
         {
             auto* loggerTable = loggerNode.as_table();
             if (!loggerTable)
-                return error(Error{ "expected logger", loggerNode.source()});
+                return error(Error { "expected logger", loggerNode.source() });
 
             auto [logger, err] = parseLogger(name, *loggerTable, sinks);
             if (err)
@@ -267,13 +266,13 @@ namespace logpp
         if (!level)
             return error(Error { "logger: unknown level", table["level"].as_string()->source() });
 
-        auto sinksNode = table["sinks"];
+        auto sinksNode  = table["sinks"];
         auto sinksArray = sinksNode.as_array();
         if (!sinksArray)
             return error(Error { "logger: expected sinks", table.source() });
 
         std::vector<Sink> loggerSinks;
-        for (const auto& sinkNode: *sinksArray)
+        for (const auto& sinkNode : *sinksArray)
         {
             auto sinkName = sinkNode.value<std::string>();
             if (!sinkName)
@@ -296,13 +295,13 @@ namespace logpp
     std::optional<TomlConfigurator::Error>
     TomlConfigurator::configureRegistry(LoggerRegistry& registry, const std::vector<TomlConfigurator::Logger>& loggers)
     {
-        for (const auto& logger: loggers)
+        for (const auto& logger : loggers)
         {
             std::shared_ptr<sink::Sink> sink;
             if (logger.sinks.size() > 1)
             {
                 std::vector<std::shared_ptr<sink::Sink>> innerSinks;
-                for (const auto& loggerSink: logger.sinks)
+                for (const auto& loggerSink : logger.sinks)
                 {
                     auto sink = registry.createSink(loggerSink.type);
                     if (!sink)
