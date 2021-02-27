@@ -450,11 +450,16 @@ namespace logpp
     template <typename Time>
     struct ArchiveTimestamp
     {
-        std::string pattern;
+        static constexpr auto DefaultPattern = std::string_view("%Y%m%d");
+
+        std::string pattern { DefaultPattern };
 
         template <typename CharT>
         bool apply(rolling_filebuf_base<CharT>* buf) const
         {
+            if (pattern.empty())
+                return false;
+
             auto basePath = buf->path();
             auto mode     = buf->mode();
 

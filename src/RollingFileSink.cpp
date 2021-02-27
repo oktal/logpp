@@ -2,6 +2,8 @@
 
 #include "logpp/format/PatternFormatter.h"
 #include "logpp/sinks/file/RollingOfstream.h"
+
+#include "logpp/utils/env.h"
 #include "logpp/utils/string.h"
 
 #include <cstring>
@@ -98,22 +100,27 @@ namespace logpp::sink
                 }
                 else if (string_utils::iequals(type, "timestamp"))
                 {
-                    auto clockIt = opts->find("clock");
-                    if (clockIt == std::end(*opts))
+                    static constexpr auto DefaultPattern = std::string_view("%Y%m%d");
+
+                    auto patternIt = opts->find("pattern");
+                    auto pattern   = patternIt == std::end(*opts) ? std::string(DefaultPattern) : patternIt->second;
+
+                    auto tzIt = opts->find("tz");
+                    if (tzIt == std::end(*opts))
                     {
-                        onParsed(ArchiveTimestamp<UTCTime> {});
+                        onParsed(ArchiveTimestamp<UTCTime> { std::move(pattern) });
                         return true;
                     }
 
-                    auto clock = clockIt->second;
-                    if (string_utils::iequals(clock, "utc"))
+                    auto tz = tzIt->second;
+                    if (string_utils::iequals(tz, "utc"))
                     {
-                        onParsed(ArchiveTimestamp<UTCTime> {});
+                        onParsed(ArchiveTimestamp<UTCTime> { std::move(pattern) });
                         return true;
                     }
-                    else if (string_utils::iequals(clock, "local"))
+                    else if (string_utils::iequals(tz, "local"))
                     {
-                        onParsed(ArchiveTimestamp<LocalTime> {});
+                        onParsed(ArchiveTimestamp<LocalTime> { std::move(pattern) });
                         return true;
                     }
 
@@ -244,13 +251,21 @@ namespace logpp::sink
 
     bool RollingFileSink::activateOptions(const Options& options)
     {
-        if (!FileSink::activateOptions(options))
+        if (!FormatSink::activateOptions(options))
+            return false;
+
+        auto fileOption = options.tryGet("file");
+        if (!fileOption)
+            return false;
+
+        auto file = fileOption->asString();
+        if (!file)
             return false;
 
         bool isOpen = false;
 
         parseRollingAndArchive(options, [&](auto rollingStrategy, auto archiveStrategy) {
-            m_file.reset(new FileImpl(m_baseFilePath, std::ios_base::out | std::ios_base::app, rollingStrategy, archiveStrategy));
+            m_file.reset(new FileImpl(env_utils::expandEnvironmentVariables(*file), std::ios_base::out | std::ios_base::app, rollingStrategy, archiveStrategy));
             isOpen = m_file->isOpen();
         });
 

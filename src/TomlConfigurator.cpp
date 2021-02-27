@@ -307,6 +307,9 @@ namespace logpp
                     if (!sink)
                         return Error { "logger: unknown sink type", loggerSink.sourceRegion };
 
+                    if (!sink->activateOptions(loggerSink.options))
+                        return Error { "sink: invalid configuration", loggerSink.sourceRegion };
+
                     innerSinks.push_back(std::move(sink));
                 }
 
@@ -319,6 +322,9 @@ namespace logpp
                 sink = registry.createSink(loggerSink.type);
                 if (!sink)
                     return Error { "logger: unknown sink type", loggerSink.sourceRegion };
+
+                if (!sink->activateOptions(loggerSink.options))
+                    return Error { "sink: invalid configuration", loggerSink.sourceRegion };
             }
 
             auto res = registry.registerLoggerFunc(logger.name, [=](std::string name) {

@@ -49,8 +49,8 @@ namespace logpp
             return std::nullopt;
         }
 
-        template <typename ParseFunc>
-        bool parseDuration(std::string_view str, ParseFunc&& onParsed)
+        template <typename OnParsed>
+        bool parseDuration(std::string_view str, OnParsed&& onParsed)
         {
             char* endptr;
 
@@ -67,22 +67,22 @@ namespace logpp
 
             switch (std::tolower(*endptr))
             {
-            case 's':
+            case 'S':
                 onParsed(std::chrono::seconds(value));
                 break;
-            case 'm':
+            case 'M':
                 onParsed(std::chrono::minutes(value));
                 break;
-            case 'h':
+            case 'H':
                 onParsed(std::chrono::hours(value));
                 break;
-            case 'D':
+            case 'd':
                 onParsed(date::days(value));
                 break;
-            case 'M':
+            case 'm':
                 onParsed(date::months(value));
                 break;
-            case 'Y':
+            case 'y':
                 onParsed(date::years(value));
                 break;
             default:
