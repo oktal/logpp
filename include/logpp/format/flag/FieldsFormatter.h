@@ -11,7 +11,7 @@ namespace logpp
             : m_prefix(prefix)
         {}
 
-        virtual void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
+        void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
             Writer writer(out);
             Visitor visitor(writer, m_prefix);

@@ -102,6 +102,8 @@ namespace logpp::sink
     class Sink
     {
     public:
+        virtual ~Sink() = default;
+
         virtual bool activateOptions(const Options& options)                                   = 0;
         virtual void sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer) = 0;
     };

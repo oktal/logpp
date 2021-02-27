@@ -32,6 +32,7 @@ endfunction()
 
 logpp_sample(AsyncLogger)
 logpp_sample(BasicLogger)
+logpp_sample(CustomPatternFormatterFlag)
 logpp_sample(TomlConfig)
 logpp_sample(TomlCustomSinkConfig)
 

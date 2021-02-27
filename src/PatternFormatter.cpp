@@ -10,6 +10,9 @@
 
 namespace logpp
 {
+    std::unordered_map<char, PatternFormatter::FlagFormatterFactory>
+        PatternFormatter::m_customFormatters;
+
     PatternFormatter::PatternFormatter()
     {
         setPattern("%+");
@@ -22,13 +25,13 @@ namespace logpp
 
     void PatternFormatter::setPattern(std::string pattern)
     {
-        m_pattern = std::move(pattern);
+        m_pattern    = std::move(pattern);
         m_formatters = parsePattern(m_pattern);
     }
 
     void PatternFormatter::doFormat(std::string_view name, LogLevel level, const EventLogBuffer& buffer, fmt::memory_buffer& out) const
     {
-        for (const auto& formatter: m_formatters)
+        for (const auto& formatter : m_formatters)
         {
             formatter->format(name, level, buffer, out);
         }
@@ -61,7 +64,10 @@ namespace logpp
                     else
                     {
                         std::shared_ptr<FlagFormatter> formatter;
+                        auto flag               = *it;
                         std::tie(it, formatter) = parseFlag(it);
+                        if (!formatter)
+                            throw std::runtime_error(fmt::format("Unknown flag formatter '%{}'", flag));
                         formatters.push_back(std::move(formatter));
                     }
                 }
@@ -86,113 +92,120 @@ namespace logpp
 
         switch (*it)
         {
-            // -----------------------------
-            // Date
-            // -----------------------------
+        // -----------------------------
+        // Date
+        // -----------------------------
 
-            // Writes year as a decimal number, e.g. 2017
-            case 'Y':
-            {
-                ++it;
-                formatter = std::make_shared<YearFormatter>();
-                break;
-            }
-            // Writes month as a decimal number (range [01,12]) 
-            case 'm':
-            {
-                ++it;
-                formatter = std::make_shared<MonthDecimalFormatter>();
-                break;
-            }
-            // Writes day of the month as a decimal number (range [01,31])
-            case 'd':
-            {
-                ++it;
-                formatter = std::make_shared<DayDecimalFormatter>();
-                break;
-            }
-
-            // -----------------------------
-            // Time
-            // -----------------------------
-
-            // Writes hour as a decimal number, 24 hour clock (range [00-23])
-            case 'H':
-            {
-                ++it;
-                formatter = std::make_shared<HoursFormatter>();
-                break;
-            }
-            // Writes minute as a decimal number (range [00,59])
-            case 'M':
-            {
-                ++it;
-                formatter = std::make_shared<MinutesFormatter>();
-                break;
-            }
-            // Writes second as a decimal number (range [00,60])
-            case 'S':
-            {
-                ++it;
-                formatter = std::make_shared<SecondsFormatter>();
-                break;
-            }
-            // Writes millisecond as a decimal number (range [000, 999])
-            case 'i':
-            {
-                ++it;
-                formatter = std::make_shared<MillisecondsFormatter>();
-                break;
-            }
-            // Writes microsecond as a decimal number (range [000, 999])
-            case 'u':
-            {
-                ++it;
-                formatter = std::make_shared<MicrosecondsFormatter>();
-                break;
-            }
-
-            // Text
-            case 'v':
-            {
-                ++it;
-                formatter = std::make_shared<TextFormatter>();
-                break;
-            }
-            // Level
-            case 'l':
-            {
-                ++it;
-                formatter = std::make_shared<LevelFormatter>();
-                break;
-            }
-            // Logger name
-            case 'n':
-            {
-                ++it;
-                formatter = std::make_shared<NameFormatter>();
-                break;
-            }
-            // Log event fields
-            case 'f':
-            {
-                ++it;
-                std::string prefix;
-                if (*it == '[')
-                {
-                    ++it;
-                    while (*it != ']')
-                    {
-                        prefix.push_back(*it++);
-                    }
-                    ++it;
-                }
-                formatter = std::make_shared<FieldsFormatter>(std::move(prefix));
-                break;
-            }
+        // Writes year as a decimal number, e.g. 2017
+        case 'Y': {
+            ++it;
+            formatter = std::make_shared<YearFormatter>();
+            break;
+        }
+        // Writes month as a decimal number (range [01,12])
+        case 'm': {
+            ++it;
+            formatter = std::make_shared<MonthDecimalFormatter>();
+            break;
+        }
+        // Writes day of the month as a decimal number (range [01,31])
+        case 'd': {
+            ++it;
+            formatter = std::make_shared<DayDecimalFormatter>();
+            break;
         }
 
+        // -----------------------------
+        // Time
+        // -----------------------------
+
+        // Writes hour as a decimal number, 24 hour clock (range [00-23])
+        case 'H': {
+            ++it;
+            formatter = std::make_shared<HoursFormatter>();
+            break;
+        }
+        // Writes minute as a decimal number (range [00,59])
+        case 'M': {
+            ++it;
+            formatter = std::make_shared<MinutesFormatter>();
+            break;
+        }
+        // Writes second as a decimal number (range [00,60])
+        case 'S': {
+            ++it;
+            formatter = std::make_shared<SecondsFormatter>();
+            break;
+        }
+        // Writes millisecond as a decimal number (range [000, 999])
+        case 'i': {
+            ++it;
+            formatter = std::make_shared<MillisecondsFormatter>();
+            break;
+        }
+        // Writes microsecond as a decimal number (range [000, 999])
+        case 'u': {
+            ++it;
+            formatter = std::make_shared<MicrosecondsFormatter>();
+            break;
+        }
+
+        // Text
+        case 'v': {
+            ++it;
+            formatter = std::make_shared<TextFormatter>();
+            break;
+        }
+        // Level
+        case 'l': {
+            ++it;
+            formatter = std::make_shared<LevelFormatter>();
+            break;
+        }
+        // Logger name
+        case 'n': {
+            ++it;
+            formatter = std::make_shared<NameFormatter>();
+            break;
+        }
+        // Log event fields
+        case 'f': {
+            ++it;
+            std::string prefix;
+            std::tie(it, prefix) = parseFlagParameter(it);
+            formatter            = std::make_shared<FieldsFormatter>(std::move(prefix));
+            break;
+        }
+        // Custom
+        default: {
+            auto customIt = m_customFormatters.find(*it);
+            if (customIt != std::end(m_customFormatters))
+            {
+                ++it;
+                std::string param;
+                std::tie(it, param) = parseFlagParameter(it);
+                auto factory        = customIt->second;
+                formatter           = factory(std::move(param));
+            }
+        }
+        }
 
         return std::make_pair(it, std::move(formatter));
+    }
+
+    std::pair<std::string::const_iterator, std::string>
+    PatternFormatter::parseFlagParameter(std::string::const_iterator it)
+    {
+        std::string param;
+        if (*it == '[')
+        {
+            ++it;
+            while (*it != ']')
+            {
+                param.push_back(*it++);
+            }
+            ++it;
+        }
+        return std::make_pair(it, std::move(param));
     }
 }
