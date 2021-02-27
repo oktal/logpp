@@ -1,10 +1,114 @@
+###########################################
+#                  SINKS                  #
+###########################################
+
+# Section that configures the sinks that will be used by the loggers
+
 [sinks]
+# Sink that outputs content to console
 [sinks.console]
-    type = "ColoredOutputConsole"
-    options = { format = "logfmt" }
+   ## The type of the sink
+   type = "ColoredOutputConsole"
+   ## Write to stdout and enable colors
+   # type = "ColoredErrorConsole"
+   ## Write to stderr and enable colors
+
+   ## The options of the sink
+   options = { format = "logfmt" }
+   ## Will use the `logfmt` formatter.
+   ## See https://www.brandur.org/logfmt for more information on logfmt
+   # options = { format = "pattern", pattern = "%+" }
+   ## Will use the `pattern` formatter.
+   ## `pattern` will control the format that the formatter will use.
+   ## Here is a list of currently supported format flags:
+   ## %Y     Writes year as a decimal number, e.g 2017 
+   ## %m     Writes month as a decimal number (range [01, 12])
+   ## %d     Writes day of the month as a decimal number (range [01, 31])
+   ## %H     Writes hour as a decimal number, 24 hour clock (range [00, 23])
+   ## %M     Writes minute as a decimal number (range [00, 59])
+   ## %S     Writes second as a decimal number (range [00, 60])
+   ## %i     Writes millisecond as a decimal number (range [000, 999])
+   ## %u     Writes microsecond as a decimal number (range [000, 999])
+   ## %v     Log message
+   ## %l     Log level
+   ## %n     Logger name
+   ## %f[]   Structured fields. If fields are not empty, prefix with characters between []
+   ## %+     Equivalent to %Y-%m-%d %H:%M:%S [%l] (%n) %v%f[ - ]
+
+# Sink that outputs content to a file
+# [sinks.file]
+#   ## The type of the sink
+#   # type = "File"
+#
+#   ## The options of the sink
+#   # options = { format = "logfmt", file = "sample.file.log" }
+#   ## `file` is the name of the file to write to.
+#   ## See the `console` sink for a list of supported format options
+#   ## supported by this sink
+
+# Sink that outputs content to a rolling file
+# [sinks.rolling_file]
+#   ## The type of the sink
+#   # type = "RollingFile"
+#
+#   ## The options of the sink
+#   # [sinks.rolling_file.options]
+#      ## The formatter to use
+#      # format = "logfmt"
+#      ## See the `console` sink for a list of supported format options
+#      ## supported by this sink
+#
+#      ## The name of the file to write to
+#      # file = "sample.rolling_file.log"
+#
+#      ## The rolling strategy. The file will be rolled after a certain
+#      ## size is reached or after a certain period of time
+#      ## Currently supported strategies are `date` and `size`.
+#      # strategy = { type = "size", size = "1mb" }
+#      ## Will roll the role after reaching 1 megabyte. The `size` can be suffixed
+#      ## with "kb" (kilbyte), "mb" (megabyte) or "gb" (gigabyte)
+#      # strategy = { type = "date", interval = "1h", kind = "round" }   
+#      ## Will roll the file every hour, with a round time
+#      ## `interval` is the period of time after which the file will be rolled
+#      ## The `interval` can be suffixed with "s" (second), "m" (minute), "h" (hour),
+#      ## "d" (day), "M" (month) or "y" (year)
+#      ## `kind`  can be either `round` or `precise`.
+#      ## For a file created at 16:15:30, the next round rolling time will be
+#      ## 17:00:00. The next precise rolling time will be 17:15:30
+#
+#      ## The archive strategy determines the name of the rolled file.
+#      ## The file will be suffixed with an incrementing number (.0, .1, .2)
+#      ## or a timestamp
+#      ## Currently supported archive strategies are `incremental` and `timestamp`
+#      # archive = { type = "incremental" }
+#      ## Will name the file by appending an increasing number, e.g
+#      ##     sample.rolling_file.0.log
+#      ##     sample.rolling_file.1.log
+#      # archive = { type = "timestamp", tz = "local", pattern = "%Y%m%d" }
+#      ## Will name the file by appending a timestamp, e.g
+#      ##     sample.rolling_file.20210301.log
+#      ##     sample.rolling_file.20210302.log
+#      ## If the file already exists, it will first fall back to `incremental` e.g:
+#      ##     sample.rolling_file.20210301.0.log
+#      ##     sample.rolling_file.20210301.1.log
+#      ## `tz` is the timezone of the timestamp. `local` will use a timestamp
+#      ## expressed in local time. `utc` will used a timestamp expressed in UTC
+#      ## `pattern` is the format specification of the timestamp that will
+#      ## will be appended to the file name, in the `strftime` format
+
+#############################################
+#                  LOGGERS                  #
+#############################################
+
+# Section that configures loggers
 
 [loggers]
 [loggers.main]
+    ## Name of the logger
     name = "main"
+
+    ## Array of sinks
     sinks = [ "console" ]
+
+    ## Level of the logger
     level = "debug"

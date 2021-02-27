@@ -104,7 +104,7 @@ namespace logpp
                 formatter = std::make_shared<MonthDecimalFormatter>();
                 break;
             }
-            // writes day of the month as a decimal number (range [01,31])
+            // Writes day of the month as a decimal number (range [01,31])
             case 'd':
             {
                 ++it;
@@ -137,14 +137,14 @@ namespace logpp
                 formatter = std::make_shared<SecondsFormatter>();
                 break;
             }
-            // Writes milliseconds as a decimal number (range [000, 999])
+            // Writes millisecond as a decimal number (range [000, 999])
             case 'i':
             {
                 ++it;
                 formatter = std::make_shared<MillisecondsFormatter>();
                 break;
             }
-            // Writes microseconds as a decimal number (range [000, 999])
+            // Writes microsecond as a decimal number (range [000, 999])
             case 'u':
             {
                 ++it;

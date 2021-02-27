@@ -41,9 +41,5 @@ logpp_copy_file(
 )
 logpp_copy_file(
     TARGET sample_TomlConfig
-    FILE logpp.file.toml
-)
-logpp_copy_file(
-    TARGET sample_TomlConfig
     FILE logpp.file.custom.toml
 )
