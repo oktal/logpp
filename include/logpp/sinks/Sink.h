@@ -16,18 +16,18 @@ namespace logpp::sink
     {
     public:
         using Array = std::vector<std::string>;
-        using Dict = std::unordered_map<std::string, std::string>;
+        using Dict  = std::unordered_map<std::string, std::string>;
 
         struct Value
         {
             using Type = std::variant<std::string, Array, Dict>;
 
-            template<typename T>
+            template <typename T>
             Value(T&& val)
                 : m_val(std::forward<T>(val))
-            {}
+            { }
 
-            template<typename T>
+            template <typename T>
             std::optional<T> as() const
             {
                 auto* val = std::get_if<T>(&m_val);
@@ -56,9 +56,9 @@ namespace logpp::sink
             Type m_val;
         };
 
-        using Key = std::string;
-        using Values = std::unordered_map<Key, Value>;
-        using Iterator = Values::iterator;
+        using Key           = std::string;
+        using Values        = std::unordered_map<Key, Value>;
+        using Iterator      = Values::iterator;
         using ConstIterator = Values::const_iterator;
 
         bool add(std::string key, Value value)
@@ -102,26 +102,28 @@ namespace logpp::sink
     class Sink
     {
     public:
-        virtual bool activateOptions(const Options& options) = 0;
+        virtual bool activateOptions(const Options& options)                                   = 0;
         virtual void sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer) = 0;
     };
 
     namespace details
     {
-        template<typename Sink> using Name = decltype(&Sink::Name);
+        template <typename Sink>
+        using Name = decltype(&Sink::Name);
 
-        template<typename Sink> constexpr bool HasName = logpp::is_detected_v<Name, Sink>;
+        template <typename Sink>
+        constexpr bool HasName = logpp::is_detected_v<Name, Sink>;
     }
 
     namespace concepts
     {
-        template<typename T> using Sink = std::integral_constant<
+        template <typename T>
+        using Sink = std::integral_constant<
             bool,
-            std::is_base_of_v<Sink, T> &&
-            details::HasName<T>
-        >;
+            std::is_base_of_v<Sink, T> && details::HasName<T>>;
 
-        template<typename T> constexpr bool IsSink = Sink<T>::value;
+        template <typename T>
+        constexpr bool IsSink = Sink<T>::value;
     }
 
 }

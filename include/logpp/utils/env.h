@@ -10,7 +10,7 @@ namespace logpp
 {
     namespace env_utils
     {
-        std::string expandEnvironmentVariables(std::string_view str)
+        inline std::string expandEnvironmentVariables(std::string_view str)
         {
             static std::regex varRegex("\\$\\{([^}]+)\\}");
 
@@ -27,7 +27,7 @@ namespace logpp
         }
 
         #if defined(LOGPP_COMPILER_MSVC)
-            int setenv(const char* name, const char* value, int overwrite)
+            inline int setenv(const char* name, const char* value, int overwrite)
             {
                 int err = 0;
                 if (!overwrite)
@@ -40,7 +40,7 @@ namespace logpp
                 return _putenv_s(name, value);
             }
         #else
-            int setenv(const char* name, const char* value, int overwrite)
+            inline int setenv(const char* name, const char* value, int overwrite)
             {
                 return ::setenv(name, value, overwrite);
             }
