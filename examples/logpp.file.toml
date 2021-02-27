@@ -1,6 +1,6 @@
 [sinks]
 [sinks.file]
-    type = "FileSink"
+    type = "File"
     options = { format = "logfmt", file = "sample.file.log" }
 
 [loggers]

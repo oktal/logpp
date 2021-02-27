@@ -11,7 +11,7 @@ namespace logpp::sink
     class FileSink : public FormatSink
     {
     public:
-        static constexpr std::string_view Name = "FileSink";
+        static constexpr std::string_view Name = "File";
 
         FileSink();
         FileSink(std::string_view filePath);
