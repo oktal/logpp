@@ -31,7 +31,7 @@ int main(int argc, const char* argv[])
     // [sinks.file]
     //     type = "HeaderFileSink"
     //     options = { format = "logfmt", file = "sample.file.custom.log" }
-    registry.registerSink<HeaderFileSink>();
+    registry.registerSinkFactory<HeaderFileSink>();
 
     // Which file do we want to configure from ?
     std::string file = "logpp.file.custom.toml";

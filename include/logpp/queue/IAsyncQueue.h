@@ -10,6 +10,6 @@ namespace logpp
         virtual ~IAsyncQueue() = default;
 
         virtual size_t pollOne() = 0;
-        virtual size_t poll() = 0;
+        virtual size_t poll()    = 0;
     };
 }

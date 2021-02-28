@@ -1,5 +1,6 @@
 #include "logpp/core/LoggerRegistry.h"
 
+#include "logpp/sinks/AsyncSink.h"
 #include "logpp/sinks/ColoredConsole.h"
 #include "logpp/sinks/file/FileSink.h"
 #include "logpp/sinks/file/RollingFileSink.h"
@@ -10,13 +11,14 @@ namespace logpp
 {
     LoggerRegistry::LoggerRegistry()
     {
-        auto sink = std::make_shared<sink::ColoredOutputConsole>();
-        setDefaultLogger(std::make_shared<Logger>("logpp", LogLevel::Debug, sink));
+        auto defaultSink = std::make_shared<sink::ColoredOutputConsole>();
+        setDefaultLogger(std::make_shared<Logger>("logpp", LogLevel::Debug, defaultSink));
 
-        registerSink<sink::ColoredOutputConsole>();
-        registerSink<sink::ColoredErrorConsole>();
-        registerSink<sink::FileSink>();
-        registerSink<sink::RollingFileSink>();
+        registerSinkFactory<sink::AsyncSink>();
+        registerSinkFactory<sink::ColoredOutputConsole>();
+        registerSinkFactory<sink::ColoredErrorConsole>();
+        registerSinkFactory<sink::FileSink>();
+        registerSinkFactory<sink::RollingFileSink>();
     }
 
     bool LoggerRegistry::matches(const LoggerKey& key, std::string_view name)
@@ -83,21 +85,19 @@ namespace logpp
         m_defaultLogger = std::move(logger);
     }
 
-
     std::shared_ptr<sink::Sink> LoggerRegistry::createSink(std::string_view name)
     {
-        auto sinkIt = m_sinks.find(name);
-        if (sinkIt == std::end(m_sinks))
-        {
-            auto factoryIt = m_sinkFactories.find(name);
-            if (factoryIt == std::end(m_sinkFactories))
-                return nullptr;
+        auto factoryIt = m_sinkFactories.find(name);
+        if (factoryIt == std::end(m_sinkFactories))
+            return nullptr;
 
-            auto factory = factoryIt->second;
-            sinkIt = m_sinks.insert(std::make_pair(std::string(name), factory())).first;
-        }
+        auto factory = factoryIt->second;
+        return factory();
+    }
 
-        return sinkIt->second;
+    bool LoggerRegistry::registerSink(std::string name, std::shared_ptr<sink::Sink> sink)
+    {
+        return m_sinks.insert(std::make_pair(std::move(name), std::move(sink))).second;
     }
 
     std::shared_ptr<sink::Sink> LoggerRegistry::findSink(std::string_view name) const

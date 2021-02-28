@@ -157,7 +157,7 @@ namespace logpp
         void setDefaultLogger(std::shared_ptr<Logger> logger);
 
         template<typename Sink>
-        bool registerSink()
+        bool registerSinkFactory()
         {
             static_assert(sink::concepts::IsSink<Sink>, "Sink must be satisfy the Sink concept");
 
@@ -166,17 +166,9 @@ namespace logpp
             return it.second;
         }
 
-        template<typename Sink>
-        bool hasSink()
-        {
-            static_assert(sink::concepts::IsSink<Sink>, "Sink must be satisfy the Sink concept");
+        std::shared_ptr<sink::Sink> createSink(std::string_view type);
 
-            return hasSink(Sink::Name);
-        }
-
-        bool hasSink(std::string_view type) const;
-
-        std::shared_ptr<sink::Sink> createSink(std::string_view name);
+        bool registerSink(std::string name, std::shared_ptr<sink::Sink> sink);
         std::shared_ptr<sink::Sink> findSink(std::string_view name) const;
 
         template<typename Sink, typename SinkFunc>

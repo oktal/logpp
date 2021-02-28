@@ -6,6 +6,8 @@
 
 #include "logpp/utils/detect.h"
 
+#include <fmt/format.h>
+
 #include <unordered_map>
 #include <variant>
 #include <vector>
@@ -99,6 +101,22 @@ namespace logpp::sink
         Values m_values;
     };
 
+    class ConfigurationError : public std::runtime_error
+    {
+    public:
+        explicit ConfigurationError(const char* reason)
+            : runtime_error(reason)
+        { }
+
+        explicit ConfigurationError(std::string reason)
+            : runtime_error(std::move(reason))
+        { }
+
+        explicit ConfigurationError(std::string_view reason)
+            : runtime_error(std::string(reason))
+        { }
+    };
+
     class Sink
     {
     public:
@@ -106,6 +124,21 @@ namespace logpp::sink
 
         virtual bool activateOptions(const Options& options)                                   = 0;
         virtual void sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer) = 0;
+    };
+
+    class SinkBase : public Sink
+    {
+    protected:
+        static void raiseConfigurationError(std::string_view reason)
+        {
+            throw ConfigurationError(reason);
+        }
+
+        template <typename... Args>
+        static void raiseConfigurationError(const char* formatStr, Args&&... args)
+        {
+            throw ConfigurationError(fmt::format(formatStr, std::forward<Args>(args)...));
+        }
     };
 
     namespace details

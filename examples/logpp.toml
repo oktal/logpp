@@ -96,6 +96,20 @@
 #      ## `pattern` is the format specification of the timestamp that will
 #      ## will be appended to the file name, in the `strftime` format
 
+# Sink that logs events asynchronously
+# [sinks.async]
+#     ## The type of the sink
+#     type = "Async"
+#
+#     ## The options of the sink
+#     [sinks.async.options]
+#         ## The kind of queue to use
+#         queue = { type = "bounded", size = 512 }
+#         ## Will use a bounded queue of size 512
+#
+#         ## Array of sinks
+#         sinks = [ "console" ]
+
 #############################################
 #                  LOGGERS                  #
 #############################################
