@@ -40,6 +40,12 @@ namespace logpp
                     writeFmt("{}={}", key, value);
             }
 
+            template <typename Val>
+            void write(std::string_view key, Val&& value)
+            {
+                writeFmt("{}={}", key, std::forward<Val>(value));
+            }
+
             template <typename... Args>
             void writeFmt(const char* formatStr, Args&&... args)
             {
@@ -87,65 +93,65 @@ namespace logpp
             void visit(std::string_view key, uint8_t value) override
             {
 
-                m_writer.writeFmt("{}={}", key, value);
+                m_writer.write(key, value);
             }
 
             void visit(std::string_view key, uint16_t value) override
             {
 
-                m_writer.writeFmt("{}={}", key, value);
+                m_writer.write(key, value);
             }
 
             void visit(std::string_view key, uint32_t value) override
             {
 
-                m_writer.writeFmt("{}={}", key, value);
+                m_writer.write(key, value);
             }
 
             void visit(std::string_view key, uint64_t value) override
             {
 
-                m_writer.writeFmt("{}={}", key, value);
+                m_writer.write(key, value);
             }
 
             void visit(std::string_view key, int8_t value) override
             {
 
-                m_writer.writeFmt("{}={}", key, value);
+                m_writer.write(key, value);
             }
 
             void visit(std::string_view key, int16_t value) override
             {
 
-                m_writer.writeFmt("{}={}", key, value);
+                m_writer.write(key, value);
             }
 
             void visit(std::string_view key, int32_t value) override
             {
 
-                m_writer.writeFmt("{}={}", key, value);
+                m_writer.write(key, value);
             }
 
             void visit(std::string_view key, int64_t value) override
             {
 
-                m_writer.writeFmt("{}={}", key, value);
+                m_writer.write(key, value);
             }
 
             void visit(std::string_view key, bool value) override
             {
-                m_writer.writeFmt("{}={}", key, value);
+                m_writer.write(key, value);
             }
 
             void visit(std::string_view key, float value) override
             {
 
-                m_writer.writeFmt("{}={}", key, value);
+                m_writer.write(key, value);
             }
 
             void visit(std::string_view key, double value) override
             {
-                m_writer.writeFmt("{}={}", key, value);
+                m_writer.write(key, value);
             }
 
             void visitEnd() override { }
