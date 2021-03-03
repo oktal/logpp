@@ -4,6 +4,7 @@
 #include "logpp/core/LogFieldVisitor.h"
 
 #include "logpp/utils/date.h"
+#include "logpp/utils/thread.h"
 
 #include <chrono>
 #include <fmt/format.h>
@@ -168,6 +169,7 @@ namespace logpp
 
         writer.write("level", levelString(level));
         writer.write("logger", name);
+        writer.write("thread", thread_utils::toInteger(buffer.threadId()));
 
         fmt::memory_buffer formatBuf;
         buffer.formatText(formatBuf);

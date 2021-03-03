@@ -6,6 +6,7 @@
 #include "logpp/format/flag/LiteralFormatter.h"
 #include "logpp/format/flag/NameFormatter.h"
 #include "logpp/format/flag/TextFormatter.h"
+#include "logpp/format/flag/ThreadFormatter.h"
 #include "logpp/format/flag/TimeFormatter.h"
 
 namespace logpp
@@ -147,6 +148,13 @@ namespace logpp
         case 'u': {
             ++it;
             formatter = std::make_shared<MicrosecondsFormatter>();
+            break;
+        }
+
+        // Thread id
+        case 't': {
+            ++it;
+            formatter = std::make_shared<ThreadFormatter>();
             break;
         }
 
