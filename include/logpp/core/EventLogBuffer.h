@@ -6,9 +6,11 @@
 #include "logpp/core/LogFieldVisitor.h"
 #include "logpp/core/StringLiteral.h"
 
+#include "logpp/utils/thread.h"
 #include "logpp/utils/tuple.h"
 
 #include <cstddef>
+#include <thread>
 
 #include <fmt/format.h>
 
@@ -151,6 +153,7 @@ namespace logpp
         struct Header
         {
             TimePoint timePoint;
+            thread_utils::id threadId;
 
             uint16_t textBlockIndex;
             TextFormatFunc formatFunc;
@@ -169,6 +172,11 @@ namespace logpp
         void writeTime(TimePoint timePoint)
         {
             decodeHeader()->timePoint = timePoint;
+        }
+
+        void writeThreadId(thread_utils::id threadId)
+        {
+            decodeHeader()->threadId = threadId;
         }
 
         template<typename Str>
@@ -215,6 +223,11 @@ namespace logpp
         TimePoint time() const
         {
             return decodeHeader()->timePoint;
+        }
+
+        thread_utils::id threadId() const
+        {
+            return decodeHeader()->threadId;
         }
 
         void formatText(fmt::memory_buffer& buffer) const

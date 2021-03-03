@@ -5,6 +5,7 @@
 #include "logpp/core/LogLevel.h"
 
 #include "logpp/sinks/Sink.h"
+#include "logpp/utils/thread.h"
 
 #include <atomic>
 
@@ -61,6 +62,7 @@ namespace logpp
             EventLogBuffer buffer;
 
             buffer.writeTime(Clock::now());
+            buffer.writeThreadId(getThreadId());
             buffer.writeText(text);
             buffer.writeFields(std::forward<Fields>(fields)...);
 
@@ -127,5 +129,11 @@ namespace logpp
         std::atomic<LogLevel> m_level;
 
         std::shared_ptr<sink::Sink> m_sink;
+
+        static thread_utils::id getThreadId()
+        {
+            static thread_local auto tid = thread_utils::getCurrentId();
+            return tid;
+        }
     };
 }
