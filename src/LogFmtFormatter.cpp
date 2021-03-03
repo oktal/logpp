@@ -15,7 +15,7 @@ namespace logpp
     public:
         explicit Writer(fmt::memory_buffer& buffer)
             : m_buf(buffer)
-        {}
+        { }
 
         void write(std::string_view key, std::string_view value)
         {
@@ -25,14 +25,14 @@ namespace logpp
                 writeFmt(key, "{}", value);
         }
 
-        template<typename Val>
+        template <typename Val>
         void write(std::string_view key, Val&& value)
         {
             writeFmt(key, "{}", std::forward<Val>(value));
         }
 
-        template<typename... Args>
-        void writeFmt(std::string_view key, const char* valueFormatStr, Args&& ...args)
+        template <typename... Args>
+        void writeFmt(std::string_view key, const char* valueFormatStr, Args&&... args)
         {
             if (m_count > 0)
                 m_buf.push_back(' ');
@@ -63,9 +63,9 @@ namespace logpp
     public:
         Visitor(Writer& writer)
             : m_writer(writer)
-        {}
+        { }
 
-        void visitStart(size_t) override {}
+        void visitStart(size_t) override { }
 
         void visit(std::string_view key, std::string_view value) override
         {
@@ -112,6 +112,11 @@ namespace logpp
             m_writer.write(key, value);
         }
 
+        void visit(std::string_view key, bool value) override
+        {
+            m_writer.write(key, value);
+        }
+
         void visit(std::string_view key, float value) override
         {
             m_writer.write(key, value);
@@ -122,7 +127,7 @@ namespace logpp
             m_writer.write(key, value);
         }
 
-        void visitEnd() override {}
+        void visitEnd() override { }
 
     private:
         Writer& m_writer;
@@ -130,12 +135,11 @@ namespace logpp
 
     void LogFmtFormatter::doFormat(std::string_view name, LogLevel level, const EventLogBuffer& buffer, fmt::memory_buffer& dest) const
     {
-        auto tp = buffer.time();
+        auto tp   = buffer.time();
         auto date = date_utils::date(tp);
         auto time = date_utils::time(tp);
 
-        auto getFractionTime = [](TimePoint tp) -> std::pair<std::chrono::milliseconds, std::chrono::microseconds>
-        {
+        auto getFractionTime = [](TimePoint tp) -> std::pair<std::chrono::milliseconds, std::chrono::microseconds> {
             auto epochTp = tp.time_since_epoch();
 
             epochTp -= std::chrono::duration_cast<std::chrono::seconds>(epochTp);
@@ -160,8 +164,7 @@ namespace logpp
             time.minutes().count(),
             time.seconds().count(),
             ms.count(),
-            us.count()
-        );
+            us.count());
 
         writer.write("level", levelString(level));
         writer.write("logger", name);

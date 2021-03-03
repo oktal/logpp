@@ -136,6 +136,11 @@ private:
             writer.write(key, value);
         }
 
+        void visit(std::string_view key, bool value) override
+        {
+            writer.write(key, value);
+        }
+
         void visit(std::string_view key, float value) override
         {
             writer.write(key, value);

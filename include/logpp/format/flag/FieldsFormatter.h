@@ -9,7 +9,7 @@ namespace logpp
     public:
         explicit FieldsFormatter(std::string prefix)
             : m_prefix(prefix)
-        {}
+        { }
 
         void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
@@ -25,7 +25,7 @@ namespace logpp
         public:
             explicit Writer(fmt::memory_buffer& buffer)
                 : m_buf(buffer)
-            {}
+            { }
 
             void writeRaw(std::string_view str)
             {
@@ -40,8 +40,8 @@ namespace logpp
                     writeFmt("{}={}", key, value);
             }
 
-            template<typename... Args>
-            void writeFmt(const char* formatStr, Args&& ...args)
+            template <typename... Args>
+            void writeFmt(const char* formatStr, Args&&... args)
             {
                 if (m_count > 0)
                     m_buf.push_back(' ');
@@ -71,7 +71,7 @@ namespace logpp
             Visitor(Writer& writer, std::string_view prefix)
                 : m_writer(writer)
                 , m_prefix(prefix)
-            {}
+            { }
 
             void visitStart(size_t count) override
             {
@@ -132,6 +132,11 @@ namespace logpp
                 m_writer.writeFmt("{}={}", key, value);
             }
 
+            void visit(std::string_view key, bool value) override
+            {
+                m_writer.writeFmt("{}={}", key, value);
+            }
+
             void visit(std::string_view key, float value) override
             {
 
@@ -143,7 +148,8 @@ namespace logpp
                 m_writer.writeFmt("{}={}", key, value);
             }
 
-            void visitEnd() override {}
+            void visitEnd() override { }
+
         private:
             Writer& m_writer;
             std::string_view m_prefix;
