@@ -11,6 +11,7 @@ endfunction()
 
 logpp_test(EnvironmentTests)
 logpp_test(LogBufferTests)
+logpp_test(LogFmtFormatterTests)
 logpp_test(LoggerRegistryTests)
 logpp_test(PatternFormatterTests)
 logpp_test(RollingOfstreamTests)
