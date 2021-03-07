@@ -23,8 +23,8 @@ namespace logpp
     class LogFmtKeyValueFormatter : public FlagFormatter
     {
     public:
-        LogFmtKeyValueFormatter(std::string_view key, std::shared_ptr<FlagFormatter> valueFormatter)
-            : m_key(key)
+        LogFmtKeyValueFormatter(std::string key, std::shared_ptr<FlagFormatter> valueFormatter)
+            : m_key(std::move(key))
             , m_valueFormatter(std::move(valueFormatter))
         { }
 
@@ -49,7 +49,7 @@ namespace logpp
         }
 
     private:
-        std::string_view m_key;
+        std::string m_key;
         std::shared_ptr<FlagFormatter> m_valueFormatter;
     };
 
@@ -434,7 +434,7 @@ namespace logpp
                     throwParseError(context, "expected value, got EOF");
 
                 auto flag = matchFlag(context);
-                formatter->add<LogFmtKeyValueFormatter>(key, std::move(flag));
+                formatter->add<LogFmtKeyValueFormatter>(std::string(key), std::move(flag));
             }
 
             while (!context.eof() && *context == ' ')
