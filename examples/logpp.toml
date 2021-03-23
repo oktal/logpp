@@ -13,6 +13,10 @@
    # type = "ColoredErrorConsole"
    ## Write to stderr and enable colors
 
+   ## The level of the sink.
+   ## If no level is specified, the sink will accept any message level.
+   # level = "info"
+
    ## The options of the sink
    options = { format = "logfmt" }
    ## Will use the `logfmt` formatter.
@@ -41,6 +45,10 @@
 #   ## The type of the sink
 #   # type = "File"
 #
+#   ## The level of the sink.
+#   ## If no level is specified, the sink will accept any message level.
+#   # level = "info"
+#
 #   ## The options of the sink
 #   # options = { format = "logfmt", file = "sample.file.log" }
 #   ## `file` is the name of the file to write to.
@@ -51,6 +59,10 @@
 # [sinks.rolling_file]
 #   ## The type of the sink
 #   # type = "RollingFile"
+#
+#   ## The level of the sink.
+#   ## If no level is specified, the sink will accept any message level.
+#   # level = "info"
 #
 #   ## The options of the sink
 #   # [sinks.rolling_file.options]
@@ -101,6 +113,10 @@
 # [sinks.async]
 #     ## The type of the sink
 #     type = "Async"
+#
+#     ## The level of the sink.
+#     ## If no level is specified, the sink will accept any message level.
+#     # level = "info"
 #
 #     ## The options of the sink
 #     [sinks.async.options]

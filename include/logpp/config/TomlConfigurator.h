@@ -78,6 +78,7 @@ namespace logpp
         {
             std::string name;
             std::string type;
+            std::optional<LogLevel> level;
             sink::Options options;
 
             toml::source_region sourceRegion;

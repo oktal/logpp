@@ -3,6 +3,7 @@
 #include "logpp/core/LogLevel.h"
 #include "logpp/core/Logger.h"
 
+#include "logpp/sinks/LevelSink.h"
 #include "logpp/sinks/MultiSink.h"
 #include "logpp/sinks/Sink.h"
 
@@ -204,6 +205,20 @@ namespace logpp
         if (err)
             return std::make_pair(std::nullopt, err);
 
+        std::optional<LogLevel> level;
+        if (table.contains("level"))
+        {
+            auto levelString = table["level"].value<std::string>();
+            if (!levelString)
+                return std::make_pair(std::nullopt, Error { "sink.level: expected string", table.source() });
+
+            auto levelValue = parseLevel(*levelString);
+            if (!levelValue)
+                return std::make_pair(std::nullopt, Error { "sink.level: unknown level", table.source() });
+
+            level = levelValue;
+        }
+
         sink::Options sinkOptions;
         if (auto* options = table["options"].as_table())
         {
@@ -218,7 +233,7 @@ namespace logpp
             }
         }
 
-        return std::make_pair(Sink { std::move(name), *type, std::move(sinkOptions), table.source() }, std::nullopt);
+        return std::make_pair(Sink { std::move(name), *type, level, std::move(sinkOptions), table.source() }, std::nullopt);
     }
 
     std::pair<std::vector<TomlConfigurator::Logger>, std::optional<TomlConfigurator::Error>>
@@ -304,6 +319,9 @@ namespace logpp
             auto sink = registry.createSink(sinkConfig.type);
             if (!sink)
                 return Error { "sink: unknown type", sinkConfig.sourceRegion };
+
+            if (sinkConfig.level)
+                sink = std::make_shared<sink::LevelSink>(std::move(sink), *sinkConfig.level);
 
             try
             {
