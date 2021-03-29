@@ -39,9 +39,11 @@ target_compile_options(logpp PRIVATE
         $<$<CONFIG:Debug>:/Od /Wall /Zi>>
 )
 
+get_filename_component(PARENT_DIR ${CMAKE_CURRENT_SOURCE_DIR} PATH)
+
 target_include_directories(logpp
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${PARENT_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
         $<INSTALL_INTERFACE:include>
     PRIVATE
@@ -49,14 +51,17 @@ target_include_directories(logpp
 )
 
 target_link_libraries(logpp
- PUBLIC
-  ${CONAN_LIBS_FMT}
-  ${CONAN_LIBS_TOMLPLUSPLUS}
+    PUBLIC
+        ${LOGPP_LIBS_FMT}
+        ${LOGPP_LIBS_TOMLPLUSPLUS}
 
-  Threads::Threads
-  $<$<CXX_COMPILER_ID:GNU>:
-    stdc++fs>
+        Threads::Threads
+        $<$<CXX_COMPILER_ID:GNU>:
+            stdc++fs
+        >
 )
+
+set_property(TARGET logpp PROPERTY DBG_POSTFIX d)
 
 set_target_properties(logpp PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
