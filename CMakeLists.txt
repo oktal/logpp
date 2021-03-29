@@ -7,7 +7,7 @@ if (EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
   conan_basic_setup()
 
   set(LOGPP_LIBS_FMT ${CONAN_LIBS_FMT})
-  set(LOGPP_LIBS_TOMLPLUSPLUS ${CONAN_LIBS_TOMLPLUSPLUS)
+  set(LOGPP_LIBS_TOMLPLUSPLUS ${CONAN_LIBS_TOMLPLUSPLUS})
 else()
   if(LOGPP_DEPS_FMT)
     message(STATUS "[Deps] Using ${LOGPP_DEPS_FMT}")
