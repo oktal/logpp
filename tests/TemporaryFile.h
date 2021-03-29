@@ -6,9 +6,9 @@
 #include <fmt/format.h>
 
 #if defined(LOGPP_PLATFORM_WINDOWS)
+#include <windows.h>
 #include <fileapi.h>
 #include <rpc.h>
-#include <windows.h>
 #pragma comment(lib, "Rpcrt4.lib")
 #endif
 

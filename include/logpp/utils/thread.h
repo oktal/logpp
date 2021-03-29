@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #elif defined(LOGPP_PLATFORM_WINDOWS)
+#include <windows.h>
 #include <processthreadsapi.h>
 #endif
 
@@ -27,7 +28,7 @@ namespace logpp::thread_utils
 #elif defined(LOGPP_PLATFORM_WINDOWS)
     using id = DWORD;
 
-    inline id GetCurrentId()
+    inline id getCurrentId()
     {
         return GetCurrentThreadId();
     }
