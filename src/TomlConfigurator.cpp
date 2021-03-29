@@ -279,6 +279,10 @@ namespace logpp
         if (!level)
             return error(Error { "logger: unknown level", table["level"].as_string()->source() });
 
+        auto [isDefault, err3] = tryReadOr<bool>(table, "default", "logger.default: expected bool", false);
+        if (err3)
+            return error(*err3);
+
         auto sinksNode  = table["sinks"];
         auto sinksArray = sinksNode.as_array();
         if (!sinksArray)
@@ -302,7 +306,7 @@ namespace logpp
             loggerSinks.push_back(sink);
         }
 
-        return std::make_pair(Logger { *name, *level, std::move(loggerSinks), table.source() }, std::nullopt);
+        return std::make_pair(Logger { *name, *level, std::move(loggerSinks), *isDefault, table.source() }, std::nullopt);
     }
 
     std::optional<TomlConfigurator::Error>
@@ -360,7 +364,7 @@ namespace logpp
             auto sink = sinks.size() > 1 ? std::make_shared<sink::MultiSink>(sinks) : sinks[0];
             auto res  = registry.registerLoggerFunc(logger.name, [=](std::string name) {
                 return std::make_shared<logpp::Logger>(std::move(name), logger.level, sink);
-            });
+            }, logger.isDefault);
 
             if (!res)
                 return Error { "logger: logger already exists", logger.sourceRegion };

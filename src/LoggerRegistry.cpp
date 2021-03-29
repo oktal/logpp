@@ -38,15 +38,18 @@ namespace logpp
         return instance;
     }
 
-    bool LoggerRegistry::registerLogger(std::shared_ptr<Logger> logger)
+    bool LoggerRegistry::registerLogger(std::shared_ptr<Logger> logger, bool isDefault)
     {
         return registerLoggerFunc(std::string(logger->name()), [=](std::string_view) {
             return logger;
-        });
+        }, isDefault);
     }
 
-    bool LoggerRegistry::registerLoggerFunc(std::string name, LoggerRegistry::LoggerFactory factory)
+    bool LoggerRegistry::registerLoggerFunc(std::string name, LoggerRegistry::LoggerFactory factory, bool isDefault)
     {
+        if (isDefault)
+            m_defaultLoggerFactory = factory;
+
         auto it = m_loggerFactories.insert(std::make_pair(std::move(name), std::move(factory)));
         return it.second;
     }
@@ -70,6 +73,13 @@ namespace logpp
                 m_loggers.insert(std::make_pair(std::string(name), logger));
                 return logger;
             }
+        }
+
+        if (m_defaultLoggerFactory)
+        {
+            auto logger = std::invoke(m_defaultLoggerFactory, std::string(name));
+            m_loggers.insert(std::make_pair(std::string(name), logger));
+            return logger;
         }
 
         return m_defaultLogger;

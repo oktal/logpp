@@ -194,3 +194,39 @@ TEST(TomlConfigurator, should_error_on_loggers_with_same_name)
     auto err = TomlConfigurator::configure(Config, registry);
     ASSERT_TRUE(err);
 }
+
+TEST(TomlConfigurator, should_register_default_logger)
+{
+    static constexpr auto Config = R"TOML(
+        [sinks]
+        [sinks.console]
+           type = "ColoredOutputConsole" 
+           options = { pattern = "%+" }
+
+        [loggers]
+        [loggers.default]
+           name = "default"
+           sinks = [ "console" ]
+           level = "info"
+           default = true
+
+        [loggers.Tests]
+           name = "TomlConfiguratorTests"
+           sinks = [ "console" ]
+           level = "debug"
+    )TOML"sv;
+
+    LoggerRegistry registry;
+    auto err = TomlConfigurator::configure(Config, registry);
+    ASSERT_FALSE(err) << *err;
+
+    auto unregisteredLogger = registry.get("UnregisteredLogger");
+    ASSERT_TRUE(unregisteredLogger);
+    ASSERT_EQ(unregisteredLogger->name(), "UnregisteredLogger");
+    ASSERT_EQ(unregisteredLogger->level(), LogLevel::Info);
+
+    auto registeredLogger = registry.get("TomlConfiguratorTests");
+    ASSERT_TRUE(registeredLogger);
+    ASSERT_EQ(registeredLogger->name(), "TomlConfiguratorTests");
+    ASSERT_EQ(registeredLogger->level(), LogLevel::Debug);
+}

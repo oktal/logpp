@@ -90,6 +90,8 @@ namespace logpp
             LogLevel level;
             std::vector<Sink> sinks;
 
+            bool isDefault;
+
             toml::source_region sourceRegion;
         };
 
@@ -134,6 +136,21 @@ namespace logpp
         static std::pair<std::optional<T>, std::optional<Error>>
         tryRead(const toml::table& table, std::string_view key, std::string_view error)
         {
+            auto val = table[key].value<T>();
+
+            if (!val)
+                return std::make_pair(std::nullopt, Error { std::string(error), table.source() });
+
+            return std::make_pair(std::move(val), std::nullopt);
+        }
+
+        template <typename T>
+        static std::pair<std::optional<T>, std::optional<Error>>
+        tryReadOr(const toml::table& table, std::string_view key, std::string_view error, T defaultValue)
+        {
+            if (!table.contains(key))
+                return std::make_pair(defaultValue, std::nullopt);
+
             auto val = table[key].value<T>();
 
             if (!val)

@@ -143,3 +143,6 @@
 
     ## Level of the logger
     level = "debug"
+
+    ## If set to true, this logger will be used as a default logger
+    # default = true

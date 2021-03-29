@@ -139,8 +139,8 @@ namespace logpp
 
         static bool matches(const LoggerKey& key, std::string_view name);
 
-        bool registerLogger(std::shared_ptr<Logger> logger);
-        bool registerLoggerFunc(std::string name, LoggerFactory factory);
+        bool registerLogger(std::shared_ptr<Logger> logger, bool isDefault = false);
+        bool registerLoggerFunc(std::string name, LoggerFactory factory, bool isDefault = false);
 
         std::shared_ptr<Logger> get(std::string_view name);
 
@@ -202,8 +202,15 @@ namespace logpp
         }
 
         static LoggerRegistry& defaultRegistry();
+
     private:
+        // Default logger used by logpp::info(), logpp::debug(), ... free functions
+        // or as a final fallback.
         std::shared_ptr<Logger> m_defaultLogger;
+
+        // Default factory logger used as a fallback when attempting to get a
+        // non-registered logger. Fallback to default logger if null
+        LoggerFactory m_defaultLoggerFactory;
 
         // note: We are explicitely using std::less<> as a comparator
         // to benefit from the c++14 is_transparent heterogenous feature
