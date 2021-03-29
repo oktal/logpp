@@ -37,9 +37,48 @@ namespace logpp
     }
 
     template<typename Str, typename... Args>
+    void log(const std::shared_ptr<Logger>& logger, LogLevel level, Str text, Args&&... args)
+    {
+        if (!logger)
+            return;
+
+        logger->log(text, level, std::forward<Args>(args)...);
+    }
+
+    template<typename Str, typename... Args>
+    void trace(const std::shared_ptr<Logger>& logger, const Str& text, Args&&... args)
+    {
+        log(logger, LogLevel::Trace, text, std::forward<Args>(args)...);
+    }
+
+    template<typename Str, typename... Args>
+    void debug(const std::shared_ptr<Logger>& logger, const Str& text, Args&&... args)
+    {
+        log(logger, LogLevel::Debug, text, std::forward<Args>(args)...);
+    }
+
+    template<typename Str, typename... Args>
+    void info(const std::shared_ptr<Logger>& logger, const Str& text, Args&&... args)
+    {
+        log(logger, LogLevel::Info, text, std::forward<Args>(args)...);
+    }
+
+    template<typename Str, typename... Args>
+    void warn(const std::shared_ptr<Logger>& logger, const Str& text, Args&&... args)
+    {
+        log(logger, LogLevel::Warning, text, std::forward<Args>(args)...);
+    }
+
+    template<typename Str, typename... Args>
+    void error(const std::shared_ptr<Logger>& logger, const Str& text, Args&&... args)
+    {
+        log(LogLevel::Error, text, std::forward<Args>(args)...);
+    }
+
+    template<typename Str, typename... Args>
     void log(LogLevel level, Str text, Args&&... args)
     {
-        defaultLogger()->log(text, level, std::forward<Args>(args)...);
+        log(defaultLogger(), level, text, std::forward<Args>(args)...);
     }
 
     template<typename Str, typename... Args>
