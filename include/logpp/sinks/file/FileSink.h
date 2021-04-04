@@ -17,7 +17,7 @@ namespace logpp::sink
         FileSink(std::string_view filePath);
         FileSink(std::string_view filePath, std::shared_ptr<Formatter> formatter);
 
-        bool activateOptions(const Options& options) override;
+        void activateOptions(const Options& options) override;
 
         bool open(std::string_view filePath);
         bool isOpen() const;

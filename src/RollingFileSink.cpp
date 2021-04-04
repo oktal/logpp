@@ -14,89 +14,76 @@ namespace logpp::sink
     namespace
     {
         template <typename Func>
-        bool parseRolling(const Options::Value& options, Func&& onParsed)
+        void parseRolling(const Options::Value& options, Func&& onParsed)
         {
             if (auto opts = options.asDict())
             {
                 auto typeIt = opts->find("type");
                 if (typeIt == std::end(*opts))
-                    return false;
+                    SinkBase::raiseConfigurationError("strategy: missing `type`");
 
                 auto type = typeIt->second;
                 if (string_utils::iequals(type, "size"))
                 {
                     auto sizeIt = opts->find("size");
                     if (sizeIt == std::end(*opts))
-                        return false;
+                        SinkBase::raiseConfigurationError("strategy: missing `size` for size rolling strategy");
 
                     auto size = string_utils::parseSize(sizeIt->second);
                     if (!size)
-                        return false;
+                        SinkBase::raiseConfigurationError("strategy: invalid size {}", sizeIt->second);
 
                     onParsed(RollBySize { *size });
-                    return true;
                 }
                 else if (string_utils::iequals(type, "date"))
                 {
                     auto intervalIt = opts->find("interval");
                     if (intervalIt == std::end(*opts))
-                        return false;
+                        SinkBase::raiseConfigurationError("strategy: missing `interval` for date rolling strategy");
 
                     auto kindIt = opts->find("kind");
                     if (kindIt == std::end(*opts))
-                        return false;
+                        SinkBase::raiseConfigurationError("strategy: missing `kind` for date rolling strategy");
 
-                    bool ok = false;
-
-                    ok = string_utils::parseDuration(intervalIt->second, [&](auto duration) {
+                    auto ok = string_utils::parseDuration(intervalIt->second, [&](auto duration) {
                         if (string_utils::iequals(kindIt->second, "precise"))
-                        {
                             onParsed(RollEvery { PreciseInterval { duration } });
-                            ok = true;
-                        }
                         else if (string_utils::iequals(kindIt->second, "round"))
-                        {
                             onParsed(RollEvery { RoundInterval { duration } });
-                            ok = true;
-                        }
+                        else
+                            SinkBase::raiseConfigurationError("strategy: invalid `kind` {}", kindIt->second);
                     });
 
-                    return ok;
+                    if (!ok)
+                        SinkBase::raiseConfigurationError("strategy: invalid `duration` {}", intervalIt->second);
                 }
             }
-            return false;
+
+            SinkBase::raiseConfigurationError("strategy: invalid strategy options");
         }
 
         template <typename Func>
-        bool parseArchive(const Options::Value& options, Func&& onParsed)
+        void parseArchive(const Options::Value& options, Func&& onParsed)
         {
             if (auto opts = options.asString())
             {
                 if (string_utils::iequals(*opts, "incremental"))
-                {
                     onParsed(ArchiveIncremental {});
-                    return true;
-                }
                 else if (string_utils::iequals(*opts, "timestamp"))
-                {
                     onParsed(ArchiveTimestamp<UTCTime> {});
-                    return true;
-                }
 
-                return false;
+                SinkBase::raiseConfigurationError("archive: invalid type {}", *opts);
             }
             else if (auto opts = options.asDict())
             {
                 auto typeIt = opts->find("type");
                 if (typeIt == std::end(*opts))
-                    return false;
+                    SinkBase::raiseConfigurationError("archive: missing `type`");
 
                 auto type = typeIt->second;
-
                 if (string_utils::iequals(type, "incremental"))
                 {
                     onParsed(ArchiveIncremental {});
-                    return true;
                 }
                 else if (string_utils::iequals(type, "timestamp"))
                 {
@@ -109,46 +96,38 @@ namespace logpp::sink
                     if (tzIt == std::end(*opts))
                     {
                         onParsed(ArchiveTimestamp<UTCTime> { std::move(pattern) });
-                        return true;
+                        return;
                     }
 
                     auto tz = tzIt->second;
                     if (string_utils::iequals(tz, "utc"))
-                    {
                         onParsed(ArchiveTimestamp<UTCTime> { std::move(pattern) });
-                        return true;
-                    }
                     else if (string_utils::iequals(tz, "local"))
-                    {
                         onParsed(ArchiveTimestamp<LocalTime> { std::move(pattern) });
-                        return true;
-                    }
-
-                    return false;
+                    else
+                        SinkBase::raiseConfigurationError("archive: invalid `tz` {}", tz);
                 }
             }
 
-            return false;
+            SinkBase::raiseConfigurationError("archive: invalid archive options");
         }
 
         template <typename Func>
-        bool parseRollingAndArchive(const Options& options, Func&& onParsed)
+        void parseRollingAndArchive(const Options& options, Func&& onParsed)
         {
             auto rollingOpts = options.tryGet("strategy");
+            if (!rollingOpts)
+                SinkBase::raiseConfigurationError("missing `strategy` options");
+
             auto archiveOpts = options.tryGet("archive");
+            if (!archiveOpts)
+                SinkBase::raiseConfigurationError("missing `archive` options");
 
-            if (!rollingOpts || !archiveOpts)
-                return false;
-
-            auto parsed = false;
             parseRolling(*rollingOpts, [&](auto rollingStrategy) {
                 parseArchive(*archiveOpts, [&](auto archiveStrategy) {
                     onParsed(rollingStrategy, archiveStrategy);
-                    parsed = true;
                 });
             });
-
-            return parsed;
         }
     }
 
@@ -249,27 +228,21 @@ namespace logpp::sink
         , m_baseFilePath(baseFilePath)
     { }
 
-    bool RollingFileSink::activateOptions(const Options& options)
+    void RollingFileSink::activateOptions(const Options& options)
     {
-        if (!FormatSink::activateOptions(options))
-            return false;
+        FormatSink::activateOptions(options);
 
         auto fileOption = options.tryGet("file");
         if (!fileOption)
-            return false;
+            raiseConfigurationError("missing `file`");
 
         auto file = fileOption->asString();
         if (!file)
-            return false;
-
-        bool isOpen = false;
+            raiseConfigurationError("file: expected string");
 
         parseRollingAndArchive(options, [&](auto rollingStrategy, auto archiveStrategy) {
             m_file.reset(new FileImpl(env_utils::expandEnvironmentVariables(*file), std::ios_base::out | std::ios_base::app, rollingStrategy, archiveStrategy));
-            isOpen = m_file->isOpen();
         });
-
-        return isOpen;
     }
 
     void RollingFileSink::sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer)

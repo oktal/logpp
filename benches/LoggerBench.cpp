@@ -18,9 +18,8 @@
 class NoopSink : public logpp::sink::Sink
 {
 public:
-    bool activateOptions(const logpp::sink::Options& options) override
+    void activateOptions(const logpp::sink::Options&) override
     {
-        return false;
     }
 
     void sink(std::string_view, logpp::LogLevel, const logpp::EventLogBuffer&) override

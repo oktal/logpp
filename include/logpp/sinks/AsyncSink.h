@@ -27,7 +27,7 @@ namespace logpp::sink
             configureQueue(m_queue);
         }
 
-        bool activateOptions(const Options& options) override
+        void activateOptions(const Options& options) override
         {
             auto sinksOptions = options.tryGet("sinks");
             if (!sinksOptions)
@@ -97,8 +97,6 @@ namespace logpp::sink
             m_queuePoller = AsyncQueuePoller::create();
             m_queuePoller->addQueue(m_queue);
             m_queuePoller->start();
-
-            return true;
         }
 
         void sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer) override

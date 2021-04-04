@@ -13,9 +13,9 @@ namespace logpp::sink
             , m_level(level)
         {}
 
-        bool activateOptions(const Options& options) override
+        void activateOptions(const Options& options) override
         {
-            return m_inner->activateOptions(options);
+            m_inner->activateOptions(options);
         }
 
         void sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer) override

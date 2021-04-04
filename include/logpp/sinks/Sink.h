@@ -122,13 +122,13 @@ namespace logpp::sink
     public:
         virtual ~Sink() = default;
 
-        virtual bool activateOptions(const Options& options)                                   = 0;
+        virtual void activateOptions(const Options& options)                                   = 0;
         virtual void sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer) = 0;
     };
 
     class SinkBase : public Sink
     {
-    protected:
+    public:
         static void raiseConfigurationError(std::string_view reason)
         {
             throw ConfigurationError(reason);

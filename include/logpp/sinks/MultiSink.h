@@ -22,9 +22,8 @@ namespace logpp::sink
             m_innerSinks.push_back(std::move(sink));
         }
 
-        bool activateOptions(const Options&) override
+        void activateOptions(const Options&) override
         {
-            return false;
         }
 
         void sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer) override

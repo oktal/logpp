@@ -11,7 +11,7 @@
 namespace logpp::sink
 {
 
-    class FormatSink : public Sink
+    class FormatSink : public SinkBase
     {
     public:
         explicit FormatSink(std::shared_ptr<Formatter> formatter)
@@ -23,7 +23,7 @@ namespace logpp::sink
             createFormatter<PatternFormatter>(std::move(pattern));
         }
 
-        bool activateOptions(const Options& options) override
+        void activateOptions(const Options& options) override
         {
             for (auto&& [key, value]: options)
             {
@@ -31,31 +31,24 @@ namespace logpp::sink
                 {
                     auto formatStr = value.asString();
                     if (!formatStr)
-                        return false;
+                        raiseConfigurationError("format: expected string");
 
                     if (string_utils::iequals(*formatStr, "pattern"))
-                    {
                         createFormatter<PatternFormatter>();
-                        return true;
-                    }
                     else if (string_utils::iequals(*formatStr, "logfmt"))
-                    {
                         createFormatter<LogFmtFormatter>();
-                        return true;
-                    }
+                    else
+                        raiseConfigurationError("format: unknown formatter {}", *formatStr);
                 }
                 else if (string_utils::iequals(key, "pattern"))
                 {
                     auto patternStr = value.asString();
                     if (!patternStr)
-                        return false;
+                        raiseConfigurationError("pattern: expected string");
 
                     setPattern(std::move(*patternStr));
-                    return true;
                 }
             }
-
-            return false;
         }
 
         void setFormatter(std::shared_ptr<Formatter> formatter)
@@ -85,7 +78,5 @@ namespace logpp::sink
         {
             m_formatter->format(name, level, buffer, out);
         }
-
     };
-
 }

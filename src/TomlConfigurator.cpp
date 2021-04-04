@@ -329,8 +329,7 @@ namespace logpp
 
             try
             {
-                if (!sink->activateOptions(sinkConfig.options))
-                    return Error { "sink: invalid configuration", sinkConfig.sourceRegion };
+                sink->activateOptions(sinkConfig.options);
             }
             catch (const sink::ConfigurationError& e)
             {

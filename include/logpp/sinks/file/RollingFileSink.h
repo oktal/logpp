@@ -18,7 +18,7 @@ namespace logpp::sink
             std::string_view baseFilePath,
             std::shared_ptr<Formatter> formatter);
 
-        bool activateOptions(const Options& options) override;
+        void activateOptions(const Options& options) override;
 
         void sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer) override;
     private:

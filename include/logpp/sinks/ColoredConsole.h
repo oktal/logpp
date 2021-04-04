@@ -46,6 +46,7 @@ namespace logpp::sink
             ::fwrite(formatBuf.data(), 1, formatBuf.size(), m_file);
             ::fputc('\n', m_file);
         }
+
     private:
         FILE *m_file;
 

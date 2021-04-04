@@ -101,21 +101,19 @@ namespace logpp::sink
         open(filePath);
     }
 
-    bool FileSink::activateOptions(const Options& options)
+    void FileSink::activateOptions(const Options& options)
     {
-        if (!FormatSink::activateOptions(options))
-            return false;
+        FormatSink::activateOptions(options);
 
         auto fileOption = options.tryGet("file");
         if (!fileOption)
-            return false;
+            raiseConfigurationError("missing `file`");
 
         auto file = fileOption->asString();
         if (!file)
-            return false;
+            raiseConfigurationError("file: expected string");
 
         open(env_utils::expandEnvironmentVariables(*file));
-        return true;
     }
 
     bool FileSink::open(std::string_view filePath)
