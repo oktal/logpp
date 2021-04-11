@@ -32,7 +32,7 @@ namespace logpp::sink
         }
 
     private:
-        LogLevel m_level;
         std::shared_ptr<Sink> m_inner;
+        LogLevel m_level;
     };
 }
