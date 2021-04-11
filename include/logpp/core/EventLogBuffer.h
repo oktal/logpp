@@ -4,12 +4,14 @@
 #include "logpp/core/FormatArgs.h"
 #include "logpp/core/LogBuffer.h"
 #include "logpp/core/LogFieldVisitor.h"
+#include "logpp/core/SourceLocation.h"
 #include "logpp/core/StringLiteral.h"
 
 #include "logpp/utils/thread.h"
 #include "logpp/utils/tuple.h"
 
 #include <cstddef>
+#include <optional>
 #include <thread>
 
 #include <fmt/format.h>
@@ -127,6 +129,12 @@ namespace logpp
         {
             return { textOffset, argsOffsets };
         }
+
+        struct SourceLocationBlock
+        {
+            StringLiteralOffset file;
+            Offset<size_t> line;
+        };
     }
 
     template<typename KeyOffset, typename OffsetT>
@@ -158,6 +166,8 @@ namespace logpp
             uint16_t textBlockIndex;
             TextFormatFunc formatFunc;
 
+            int16_t sourceLocationBlockIndex;
+
             uint8_t fieldsCount;
             uint16_t fieldsBlockIndex;
             FieldsVisitFunc fieldsVisitFunc;
@@ -165,7 +175,9 @@ namespace logpp
 
         EventLogBuffer()
         {
-            decodeHeader()->fieldsCount = 0;
+            auto* header = decodeHeader();
+            header->sourceLocationBlockIndex = -1;
+            header->fieldsCount = 0;
             advance(HeaderOffset + sizeof(Header));
         }
 
@@ -202,6 +214,18 @@ namespace logpp
             encodeTextBlock(block, blockOffset);
         }
 
+        void writeSourceLocation(const SourceLocation& location)
+        {
+            auto fileOffset = this->write(StringLiteral { location.file.data() });
+            auto lineOffset = this->write(location.line);
+
+            details::SourceLocationBlock block { fileOffset, lineOffset };
+            auto blockOffset = this->encode(block);
+
+            auto* header = overlayAt<Header>(HeaderOffset);
+            header->sourceLocationBlockIndex = blockOffset;
+        }
+
         template<typename... Fields>
         void writeFields(Fields&&... fields)
         {
@@ -234,6 +258,22 @@ namespace logpp
         {
             const auto* header = decodeHeader();
             std::invoke(header->formatFunc, *this, header->textBlockIndex, buffer);
+        }
+
+        std::optional<SourceLocation> location() const
+        {
+            const auto* header = decodeHeader();
+            auto index = header->sourceLocationBlockIndex;
+            if (index < 0)
+                return std::nullopt;
+
+            LogBufferView view {*this};
+            const auto* block = view.overlayAs<details::SourceLocationBlock>(index);
+
+            return SourceLocation {
+                block->file.get(view),
+                block->line.get(view)
+            };
         }
 
     private:

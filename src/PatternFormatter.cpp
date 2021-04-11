@@ -5,6 +5,7 @@
 #include "logpp/format/flag/LevelFormatter.h"
 #include "logpp/format/flag/LiteralFormatter.h"
 #include "logpp/format/flag/NameFormatter.h"
+#include "logpp/format/flag/SourceLocationFormatter.h"
 #include "logpp/format/flag/TextFormatter.h"
 #include "logpp/format/flag/ThreadFormatter.h"
 #include "logpp/format/flag/TimeFormatter.h"
@@ -174,6 +175,18 @@ namespace logpp
         case 'n': {
             ++it;
             formatter = std::make_shared<NameFormatter>();
+            break;
+        }
+        // Writes source location file (path)
+        case 'p': {
+            ++it;
+            formatter = std::make_shared<SourceFileFormatter>();
+            break;
+        }
+        // Writes source location line
+        case 'o': {
+            ++it;
+            formatter = std::make_shared<SourceLineFormatter>();
             break;
         }
         // Log event fields

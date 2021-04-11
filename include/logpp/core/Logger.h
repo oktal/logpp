@@ -3,6 +3,7 @@
 #include "logpp/core/FormatArgs.h"
 #include "logpp/core/LogFieldVisitor.h"
 #include "logpp/core/LogLevel.h"
+#include "logpp/core/SourceLocation.h"
 
 #include "logpp/sinks/Sink.h"
 #include "logpp/utils/thread.h"
@@ -11,37 +12,38 @@
 
 namespace logpp
 {
-    template<typename KeyStr, typename T>
+
+    template <typename KeyStr, typename T>
     struct LogField
     {
-        using Key = KeyStr;
+        using Key  = KeyStr;
         using Type = T;
 
         LogField(KeyStr key, T& value)
             : key(std::move(key))
             , value(value)
-        {}
+        { }
 
         KeyStr key;
         T& value;
     };
 
-    template<typename KeyStr, typename T>
+    template <typename KeyStr, typename T>
     LogField<KeyStr, T> field(KeyStr key, T&& value)
     {
         return { std::move(key), value };
     }
 
-    template<size_t N, typename T>
+    template <size_t N, typename T>
     LogField<StringLiteral, T> field(const char (&key)[N], T&& value)
     {
         return { StringLiteral { key }, value };
     }
 
-    template<typename... Args>
-    FormatArgsHolder<std::decay_t<Args>...> format(std::string_view formatStr, Args&& ...args)
+    template <typename... Args>
+    FormatArgsHolder<std::decay_t<Args>...> format(std::string_view formatStr, Args&&... args)
     {
-        return { formatStr, std::make_tuple(std::forward<Args>(args)...)};
+        return { formatStr, std::make_tuple(std::forward<Args>(args)...) };
     }
 
     class Logger
@@ -51,9 +53,9 @@ namespace logpp
             : m_name(std::move(name))
             , m_level(level)
             , m_sink(std::move(sink))
-        {}
+        { }
 
-        template<typename Str, typename... Fields>
+        template <typename Str, typename... Fields>
         void log(const Str& text, LogLevel level, Fields&&... fields)
         {
             if (!is(level))
@@ -69,31 +71,48 @@ namespace logpp
             m_sink->sink(name(), level, buffer);
         }
 
-        template<typename Str, typename... Args>
+        template <typename Str, typename... Fields>
+        void log(const Str& text, LogLevel level, SourceLocation location, Fields&&... fields)
+        {
+            if (!is(level))
+                return;
+
+            EventLogBuffer buffer;
+
+            buffer.writeTime(Clock::now());
+            buffer.writeThreadId(getThreadId());
+            buffer.writeText(text);
+            buffer.writeSourceLocation(location);
+            buffer.writeFields(std::forward<Fields>(fields)...);
+
+            m_sink->sink(name(), level, buffer);
+        }
+
+        template <typename Str, typename... Args>
         void trace(Str text, Args&&... args)
         {
             log(text, LogLevel::Trace, std::forward<Args>(args)...);
         }
 
-        template<typename Str, typename... Args>
+        template <typename Str, typename... Args>
         void debug(Str text, Args&&... args)
         {
             log(text, LogLevel::Debug, std::forward<Args>(args)...);
         }
 
-        template<typename Str, typename... Args>
+        template <typename Str, typename... Args>
         void info(Str text, Args&&... args)
         {
             log(text, LogLevel::Info, std::forward<Args>(args)...);
         }
 
-        template<typename Str, typename... Args>
+        template <typename Str, typename... Args>
         void warn(Str text, Args&&... args)
         {
             log(text, LogLevel::Warning, std::forward<Args>(args)...);
         }
 
-        template<typename Str, typename... Args>
+        template <typename Str, typename... Args>
         void error(Str text, Args&&... args)
         {
             log(text, LogLevel::Error, std::forward<Args>(args)...);

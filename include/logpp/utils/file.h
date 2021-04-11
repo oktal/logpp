@@ -47,6 +47,12 @@ namespace logpp::file_utils
         return p.parent_path().string();
     }
 
+    inline std::string fileName(std::string_view path)
+    {
+        std::filesystem::path p { path };
+        return p.filename().string();
+    }
+
 #else
 #error "Unknown compiler version for filesystem utilities"
 #endif

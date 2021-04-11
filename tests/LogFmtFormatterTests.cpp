@@ -116,6 +116,17 @@ TEST_F(LogFmtFormatterTest, should_format_name)
     ASSERT_EQ(data(), "logger=\"MyLogger with spaces\"");
 }
 
+TEST_F(LogFmtFormatterTest, should_format_source_location)
+{
+    setPattern("src=%p:%o");
+
+    EventLogBuffer buffer;
+    buffer.writeSourceLocation(SourceLocation { "my/test/directory/LogFmtFormatterTests.cpp", 124 });
+
+    format("", LogLevel::Info, buffer);
+    ASSERT_EQ(data(), "src=LogFmtFormatterTests.cpp:124");
+}
+
 TEST_F(LogFmtFormatterTest, should_format_full)
 {
     using namespace std::chrono;

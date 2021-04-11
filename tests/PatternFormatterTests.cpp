@@ -116,6 +116,18 @@ TEST_F(PatternFormatterTest, should_format_name)
     ASSERT_EQ(data(), "[MyLogger]");
 }
 
+TEST_F(PatternFormatterTest, should_format_source_location)
+{
+    setPattern("%p:%o");
+
+    EventLogBuffer buffer;
+    buffer.writeSourceLocation(SourceLocation { "my/test/directory/PatternFormatterTests.cpp", 124 });
+
+    format("", LogLevel::Info, buffer);
+
+    ASSERT_EQ(data(), "PatternFormatterTests.cpp:124");
+}
+
 TEST_F(PatternFormatterTest, should_format_full)
 {
     using namespace std::chrono;
