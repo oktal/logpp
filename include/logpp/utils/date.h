@@ -48,7 +48,7 @@ namespace logpp
             return time(tp).seconds().count();
         }
 
-        template<typename Clock, typename Dur>
+        template <typename Clock, typename Dur>
         constexpr auto ceil_month(const std::chrono::time_point<Clock, Dur>& tp)
         {
             auto r = std::chrono::floor<date::days>(tp);
@@ -60,11 +60,11 @@ namespace logpp
             else
                 ++month;
 
-            date::year_month_day firstOfNextMonth { ymd.year(), month, date::day{1} };
+            date::year_month_day firstOfNextMonth { ymd.year(), month, date::day { 1 } };
             return static_cast<date::sys_days>(firstOfNextMonth);
         }
 
-        template<typename Clock, typename Dur>
+        template <typename Clock, typename Dur>
         constexpr auto ceil_year(const std::chrono::time_point<Clock, Dur>& tp)
         {
             auto r = std::chrono::floor<date::days>(tp);
@@ -73,7 +73,7 @@ namespace logpp
             auto year = ymd.year();
             ++year;
 
-            date::year_month_day firstOfNextYear { year, date::January, date::day{1} };
+            date::year_month_day firstOfNextYear { year, date::January, date::day { 1 } };
             return static_cast<date::sys_days>(firstOfNextYear);
         }
     }

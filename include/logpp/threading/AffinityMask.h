@@ -4,7 +4,7 @@
 
 namespace logpp::threading
 {
-    template<size_t N>
+    template <size_t N>
     using AffinityMaskN = std::bitset<N>;
 
 #if defined(LOGPP_CORES)

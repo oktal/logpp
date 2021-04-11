@@ -17,7 +17,7 @@ namespace logpp::sink
         }
 
         virtual bool isOpen() const = 0;
-        virtual bool close() = 0;
+        virtual bool close()        = 0;
 
         size_t write(std::string_view str)
         {
@@ -25,10 +25,11 @@ namespace logpp::sink
         }
 
         virtual size_t write(const char* data, size_t size) = 0;
-        virtual size_t write(const char c) = 0;
-        virtual void flush() = 0;
+        virtual size_t write(const char c)                  = 0;
+        virtual void flush()                                = 0;
 
         virtual size_t size() const = 0;
+
     protected:
         std::string m_path;
     };

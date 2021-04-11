@@ -14,7 +14,7 @@ namespace logpp
         explicit LogFmtPatternError(std::string_view what, size_t column)
             : runtime_error(formatError(what, column))
             , m_column(column)
-        {}
+        { }
 
         size_t column() const
         {

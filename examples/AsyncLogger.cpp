@@ -11,16 +11,15 @@
 void doBid(std::shared_ptr<logpp::Logger> logger, uint64_t id, double price)
 {
     logger->debug("Submitting bid",
-        logpp::field("id", id),
-        logpp::field("price", price)
-    );
+                  logpp::field("id", id),
+                  logpp::field("price", price));
 }
 
 int main()
 {
     auto poller = logpp::AsyncQueuePoller::create();
 
-    auto logFmt = std::make_shared<logpp::sink::ColoredOutputConsole>();
+    auto logFmt    = std::make_shared<logpp::sink::ColoredOutputConsole>();
     auto asyncSink = std::make_shared<logpp::sink::AsyncSink>(poller, logFmt);
 
     auto logger = logpp::LoggerFactory::getLogger("main", asyncSink);

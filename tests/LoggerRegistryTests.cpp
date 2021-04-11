@@ -27,7 +27,7 @@ TEST(LoggerKey, should_iterate_over_key)
     LoggerKey key("My.Namespace.Class"sv);
 
     auto it = key.begin();
-    for (auto fragment: { "My"sv, "My.Namespace"sv, "My.Namespace.Class"sv })
+    for (auto fragment : { "My"sv, "My.Namespace"sv, "My.Namespace.Class"sv })
     {
         ASSERT_EQ(*it, fragment);
         ++it;
@@ -42,7 +42,7 @@ TEST(LoggerKey, should_iterate_over_key_in_reverse_order)
     LoggerKey key("My.Namespace.Class"sv);
 
     auto it = key.rbegin();
-    for (auto fragment: { "My.Namespace.Class"sv, "My.Namespace"sv, "My"sv })
+    for (auto fragment : { "My.Namespace.Class"sv, "My.Namespace"sv, "My"sv })
     {
         ASSERT_EQ(*it, fragment);
         ++it;

@@ -40,9 +40,11 @@ namespace logpp
 
     bool LoggerRegistry::registerLogger(std::shared_ptr<Logger> logger, bool isDefault)
     {
-        return registerLoggerFunc(std::string(logger->name()), [=](std::string_view) {
-            return logger;
-        }, isDefault);
+        return registerLoggerFunc(
+            std::string(logger->name()), [=](std::string_view) {
+                return logger;
+            },
+            isDefault);
     }
 
     bool LoggerRegistry::registerLoggerFunc(std::string name, LoggerRegistry::LoggerFactory factory, bool isDefault)

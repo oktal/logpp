@@ -9,7 +9,7 @@ namespace logpp
     public:
         explicit LiteralFormatter(std::string str)
             : m_str(str)
-        {}
+        { }
 
         virtual void format(std::string_view, LogLevel, const EventLogBuffer&, fmt::memory_buffer& out) const override
         {
@@ -20,4 +20,3 @@ namespace logpp
         std::string m_str;
     };
 }
-

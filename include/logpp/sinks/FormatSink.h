@@ -1,8 +1,8 @@
 #pragma once
 
 #include "logpp/format/Formatter.h"
-#include "logpp/format/PatternFormatter.h"
 #include "logpp/format/LogFmtFormatter.h"
+#include "logpp/format/PatternFormatter.h"
 
 #include "logpp/sinks/Sink.h"
 
@@ -25,7 +25,7 @@ namespace logpp::sink
 
         void activateOptions(const Options& options) override
         {
-            for (auto&& [key, value]: options)
+            for (auto&& [key, value] : options)
             {
                 if (string_utils::iequals(key, "format"))
                 {
@@ -65,8 +65,8 @@ namespace logpp::sink
     private:
         std::shared_ptr<Formatter> m_formatter;
 
-        template<typename Formatter, typename... Args>
-        void createFormatter(Args&& ...args)
+        template <typename Formatter, typename... Args>
+        void createFormatter(Args&&... args)
         {
             setFormatter(std::make_shared<Formatter>(std::forward<Args>(args)...));
         }

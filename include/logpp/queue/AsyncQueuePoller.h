@@ -39,12 +39,13 @@ namespace logpp
     private:
         AsyncQueuePoller(Options options);
 
-        enum class ControlAction
-        {
-            Add, Remove
+        enum class ControlAction {
+            Add,
+            Remove
         };
 
-        struct StopEntry {};
+        struct StopEntry
+        { };
         struct QueueEntry
         {
             std::shared_ptr<IAsyncQueue> queue;
@@ -59,7 +60,7 @@ namespace logpp
         std::shared_ptr<ITypedAsyncQueue<Entry>> m_internalQueue;
         std::vector<std::shared_ptr<IAsyncQueue>> m_queues;
 
-        std::atomic<bool> m_running{ false };
+        std::atomic<bool> m_running { false };
         std::thread m_thread;
 
         std::atomic<bool> m_stopSignal { false };

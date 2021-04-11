@@ -3,12 +3,12 @@
 
 #include <chrono>
 #include <limits>
-#include <thread>
 #include <stdexcept>
+#include <thread>
 
 #if defined(LOGPP_PLATFORM_WINDOWS)
-  #define NOMINMAX
-  #include <Windows.h>
+#define NOMINMAX
+#include <Windows.h>
 #endif
 
 namespace logpp
@@ -49,8 +49,8 @@ namespace logpp
         {
             spinWaitInternal(4 << m_count);
         }
-        
-        m_count = m_count == std::numeric_limits< int32_t >::max() ? YIELD_THRESHOLD : m_count + 1;
+
+        m_count = m_count == std::numeric_limits<int32_t>::max() ? YIELD_THRESHOLD : m_count + 1;
     }
 
     void SpinWait::reset()
@@ -58,12 +58,12 @@ namespace logpp
         m_count = 0;
     }
 
-    void SpinWait::spinUntil(const std::function< bool() >& condition)
+    void SpinWait::spinUntil(const std::function<bool()>& condition)
     {
         spinUntil(condition, -1);
     }
 
-    bool SpinWait::spinUntil(const std::function< bool() >& condition, int32_t millisecondsTimeout)
+    bool SpinWait::spinUntil(const std::function<bool()>& condition, int32_t millisecondsTimeout)
     {
         if (millisecondsTimeout < -1)
             throw std::out_of_range("millisecondsTimeout must be > 0");
@@ -103,20 +103,20 @@ namespace logpp
 
     uint32_t SpinWait::tickCount()
     {
-        #if defined(LOGPP_PLATFORM_WINDOWS)
-            return static_cast< uint32_t >(GetTickCount());
-        #elif defined(LOGPP_PLATFORM_LINUX)
-            #if CLOCK_MONOTONIC
-                    struct timespec ts;
-                    clock_gettime(CLOCK_MONOTONIC, &ts);
-                    return static_cast< uint32_t >((ts.tv_sec * 1000) + (ts.tv_nsec / 1000));
-            #else
-                    struct timeval tv;
-                    gettimeofday(&tv, 0);
-                    return static_cast< uint32_t >((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
-            #endif
-        #else
-            #error Tick count not available on current platform !
-        #endif
+#if defined(LOGPP_PLATFORM_WINDOWS)
+        return static_cast<uint32_t>(GetTickCount());
+#elif defined(LOGPP_PLATFORM_LINUX)
+#if CLOCK_MONOTONIC
+        struct timespec ts;
+        clock_gettime(CLOCK_MONOTONIC, &ts);
+        return static_cast<uint32_t>((ts.tv_sec * 1000) + (ts.tv_nsec / 1000));
+#else
+        struct timeval tv;
+        gettimeofday(&tv, 0);
+        return static_cast<uint32_t>((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
+#endif
+#else
+#error Tick count not available on current platform !
+#endif
     }
 }

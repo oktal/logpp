@@ -21,6 +21,7 @@ namespace logpp::sink
         void activateOptions(const Options& options) override;
 
         void sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer) override;
+
     private:
         std::string m_baseFilePath;
     };

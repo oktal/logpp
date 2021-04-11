@@ -11,11 +11,11 @@ namespace logpp::sink
 
         explicit MultiSink(std::vector<SinkPtr> sinks)
             : m_innerSinks(std::move(sinks))
-        {}
+        { }
 
         explicit MultiSink(std::initializer_list<SinkPtr> sinks)
             : m_innerSinks(std::begin(sinks), std::end(sinks))
-        {}
+        { }
 
         void addSink(SinkPtr sink)
         {
@@ -28,7 +28,7 @@ namespace logpp::sink
 
         void sink(std::string_view name, LogLevel level, const EventLogBuffer& buffer) override
         {
-            for (auto& sink: m_innerSinks)
+            for (auto& sink : m_innerSinks)
             {
                 sink->sink(name, level, buffer);
             }

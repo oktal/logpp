@@ -1,28 +1,27 @@
 #pragma once
 
 #include "logpp/core/Logger.h"
-#include "logpp/sinks/Sink.h"
 #include "logpp/format/Formatter.h"
+#include "logpp/sinks/Sink.h"
 
-#include <map>
 #include <iostream>
+#include <map>
 
 namespace logpp
 {
     struct LoggerKey
     {
-        template<typename Strategy>
+        template <typename Strategy>
         struct BasicIterator
         {
             explicit BasicIterator(
                 std::string_view key,
                 std::string_view fragment,
-                std::string_view::size_type pos
-            )
+                std::string_view::size_type pos)
                 : key(key)
                 , fragment(fragment)
                 , pos(pos)
-            {}
+            { }
 
             std::string_view operator*() const
             {
@@ -44,9 +43,7 @@ namespace logpp
 
             bool operator==(BasicIterator other) const
             {
-                return key == other.key &&
-                       fragment == other.fragment &&
-                       pos == other.pos;
+                return key == other.key && fragment == other.fragment && pos == other.pos;
             }
 
             bool operator!=(BasicIterator other) const
@@ -64,13 +61,13 @@ namespace logpp
             static std::pair<std::string_view, std::string_view::size_type> next(std::string_view key, std::string_view::size_type pos)
             {
                 if (pos == key.size())
-                    return { std::string_view{}, std::string_view::npos };
+                    return { std::string_view {}, std::string_view::npos };
 
                 auto separatorPos = key.find('.', pos);
                 if (separatorPos == std::string_view::npos)
                     return { key, key.size() };
                 else
-                    return { key.substr(0, separatorPos), separatorPos + 1};
+                    return { key.substr(0, separatorPos), separatorPos + 1 };
             }
         };
 
@@ -80,18 +77,18 @@ namespace logpp
             {
                 auto separatorPos = key.rfind('.', pos);
                 if (separatorPos == std::string_view::npos)
-                    return { std::string_view{}, std::string_view::npos };
+                    return { std::string_view {}, std::string_view::npos };
                 else
-                    return { key.substr(0, separatorPos), separatorPos - 1};
+                    return { key.substr(0, separatorPos), separatorPos - 1 };
             }
         };
 
-        using Iterator = BasicIterator<ForwardStrategy>;
+        using Iterator        = BasicIterator<ForwardStrategy>;
         using ReverseIterator = BasicIterator<ReverseStrategy>;
 
         explicit LoggerKey(std::string_view value)
             : m_value(value)
-        {}
+        { }
 
         Iterator begin() const
         {
@@ -107,7 +104,7 @@ namespace logpp
 
         Iterator end() const
         {
-            return Iterator { m_value,  std::string_view{}, std::string_view::npos };
+            return Iterator { m_value, std::string_view {}, std::string_view::npos };
         }
 
         ReverseIterator rbegin() const
@@ -117,7 +114,7 @@ namespace logpp
 
         ReverseIterator rend() const
         {
-            return ReverseIterator { m_value, std::string_view{}, std::string_view::npos };
+            return ReverseIterator { m_value, std::string_view {}, std::string_view::npos };
         }
 
         std::string_view value() const
@@ -132,7 +129,7 @@ namespace logpp
     class LoggerRegistry
     {
     public:
-        using SinkFactory = std::function<std::shared_ptr<sink::Sink>()>;
+        using SinkFactory   = std::function<std::shared_ptr<sink::Sink>()>;
         using LoggerFactory = std::function<std::shared_ptr<Logger>(std::string)>;
 
         LoggerRegistry();
@@ -144,10 +141,10 @@ namespace logpp
 
         std::shared_ptr<Logger> get(std::string_view name);
 
-        template<typename LoggerFunc>
+        template <typename LoggerFunc>
         void forEachLogger(LoggerFunc&& loggerFunc) const
         {
-            for (const auto& [name, logger]: m_loggers)
+            for (const auto& [name, logger] : m_loggers)
             {
                 std::invoke(loggerFunc, name, logger);
             }
@@ -156,13 +153,13 @@ namespace logpp
         std::shared_ptr<Logger> defaultLogger();
         void setDefaultLogger(std::shared_ptr<Logger> logger);
 
-        template<typename Sink>
+        template <typename Sink>
         bool registerSinkFactory()
         {
             static_assert(sink::concepts::IsSink<Sink>, "Sink must be satisfy the Sink concept");
 
             auto factory = [] { return std::make_shared<Sink>(); };
-            auto it = m_sinkFactories.insert(std::make_pair(std::string(Sink::Name), std::move(factory)));
+            auto it      = m_sinkFactories.insert(std::make_pair(std::string(Sink::Name), std::move(factory)));
             return it.second;
         }
 
@@ -171,31 +168,31 @@ namespace logpp
         bool registerSink(std::string name, std::shared_ptr<sink::Sink> sink);
         std::shared_ptr<sink::Sink> findSink(std::string_view name) const;
 
-        template<typename Sink, typename SinkFunc>
+        template <typename Sink, typename SinkFunc>
         void forEachSinkOfType(SinkFunc&& func) const
         {
             static_assert(sink::concepts::IsSink<Sink>, "Sink must be satisfy the Sink concept");
 
-            for (const auto& [name, sink]: m_sinks)
+            for (const auto& [name, sink] : m_sinks)
             {
                 if (auto s = std::dynamic_pointer_cast<Sink>(sink))
                     std::invoke(func, name, s);
             }
         }
 
-        template<typename SinkFunc>
+        template <typename SinkFunc>
         void forEachSink(SinkFunc&& func)
         {
-            for (auto& [name, sink]: m_sinks)
+            for (auto& [name, sink] : m_sinks)
             {
                 std::invoke(func, name, sink);
             }
         }
 
-        template<typename SinkFunc>
+        template <typename SinkFunc>
         void forEachSink(SinkFunc&& func) const
         {
-            for (const auto& [name, sink]: m_sinks)
+            for (const auto& [name, sink] : m_sinks)
             {
                 std::invoke(func, name, sink);
             }

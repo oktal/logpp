@@ -16,7 +16,7 @@ TEST(LogBuffer, should_write_basic_types_to_log_buffer)
     auto off5 = buffer.write(static_cast<char>('A'));
     auto off6 = buffer.write(true);
 
-    LogBufferView view{ buffer };
+    LogBufferView view { buffer };
 
     ASSERT_EQ(off1.get(view), 12);
     ASSERT_EQ(off2.get(view), 345);
@@ -30,12 +30,12 @@ TEST(LogBuffer, should_write_string_to_log_buffer)
 {
     LogBuffer<255> buffer;
 
-    auto off1 = buffer.write("Literal");
-    auto off2 = buffer.write(std::string("Standard"));
+    auto off1       = buffer.write("Literal");
+    auto off2       = buffer.write(std::string("Standard"));
     const char* raw = "Raw";
-    auto off3 = buffer.write(raw);
+    auto off3       = buffer.write(raw);
 
-    LogBufferView view{ buffer };
+    LogBufferView view { buffer };
 
     ASSERT_EQ(off1.get(view), "Literal");
     ASSERT_EQ(off2.get(view), "Standard");
@@ -51,7 +51,7 @@ TEST(LogBuffer, should_copy_and_keep_offsets)
     auto off3 = buffer.write('B');
 
     LogBuffer<255> bufferCopy(buffer);
-    LogBufferView view{ bufferCopy };
+    LogBufferView view { bufferCopy };
 
     ASSERT_EQ(off1.get(view), 0xDEADBEEF);
     ASSERT_EQ(off2.get(view), "Literal string");
@@ -67,7 +67,7 @@ TEST(LogBuffer, should_move_and_keep_offsets)
     auto off3 = buffer.write('B');
 
     LogBuffer<255> bufferMove { std::move(buffer) };
-    LogBufferView view{ bufferMove };
+    LogBufferView view { bufferMove };
 
     ASSERT_EQ(off1.get(view), 0xDEADBEEF);
     ASSERT_EQ(off2.get(view), "Literal string");
@@ -83,7 +83,7 @@ TEST(LogBuffer, should_grow_when_small_and_full)
     auto off3 = buffer.write(static_cast<uint64_t>(0xDEADBEEF));
     auto off4 = buffer.write("The beef is dead");
 
-    LogBufferView view{ buffer };
+    LogBufferView view { buffer };
 
     ASSERT_EQ(off1.get(view), 0xDEAD);
     ASSERT_EQ(off2.get(view), 0xBEEF);
@@ -100,8 +100,8 @@ TEST(LogBuffer, should_copy_and_keep_offsets_after_growing)
     auto off3 = buffer.write(static_cast<uint64_t>(0xDEADBEEF));
     auto off4 = buffer.write("The beef is dead");
 
-    LogBuffer<8> bufferCopy{ buffer };
-    LogBufferView view{ bufferCopy };
+    LogBuffer<8> bufferCopy { buffer };
+    LogBufferView view { bufferCopy };
 
     ASSERT_EQ(off1.get(view), 0xDEAD);
     ASSERT_EQ(off2.get(view), 0xBEEF);
@@ -118,8 +118,8 @@ TEST(LogBuffer, should_move_and_keep_offsets_after_growing)
     auto off3 = buffer.write(static_cast<uint64_t>(0xDEADBEEF));
     auto off4 = buffer.write("The beef is dead");
 
-    LogBuffer<8> bufferMove{ std::move(buffer) };
-    LogBufferView view{ bufferMove };
+    LogBuffer<8> bufferMove { std::move(buffer) };
+    LogBufferView view { bufferMove };
 
     ASSERT_EQ(off1.get(view), 0xDEAD);
     ASSERT_EQ(off2.get(view), 0xBEEF);

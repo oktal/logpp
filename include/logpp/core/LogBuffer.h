@@ -17,13 +17,13 @@ namespace logpp
 
         virtual ~LogBufferBase() = default;
 
-        template< typename T >
-        Offset< T > write(T value)
+        template <typename T>
+        Offset<T> write(T value)
         {
-            return offsetAt< T >(encode(value));
+            return offsetAt<T>(encode(value));
         }
 
-        template< size_t N >
+        template <size_t N>
         StringOffset write(const char (&str)[N])
         {
             return writeString(str, N - 1);
@@ -36,16 +36,16 @@ namespace logpp
 
         StringLiteralOffset write(StringLiteral str);
 
-        template< typename Return, typename... Args >
-        FunctionOffset write(Return (*func)(Args ...))
+        template <typename Return, typename... Args>
+        FunctionOffset write(Return (*func)(Args...))
         {
-            return offsetAt< tag::Function >(encode(func));
+            return offsetAt<tag::Function>(encode(func));
         }
 
         size_t size() const;
 
     private:
-        size_t m_cursor{0};
+        size_t m_cursor { 0 };
 
         StringOffset writeString(const char* str, size_t size);
         virtual void reserve(size_t capacity) = 0;
@@ -55,24 +55,24 @@ namespace logpp
 
         const char* dataAt(size_t index) const;
 
-        template< typename T >
+        template <typename T>
         T* overlayAt(size_t offset)
         {
-            return reinterpret_cast< T* >(dataAt(offset));
+            return reinterpret_cast<T*>(dataAt(offset));
         }
 
-        template< typename T >
+        template <typename T>
         const T* overlayAt(size_t offset) const
         {
-            return reinterpret_cast< const T* >(dataAt(offset));
+            return reinterpret_cast<const T*>(dataAt(offset));
         }
 
-        template< typename T >
+        template <typename T>
         size_t encode(T value)
         {
             reserve(size() + sizeof(value));
-            auto index             = m_cursor;
-            *overlayAt< T >(index) = value;
+            auto index           = m_cursor;
+            *overlayAt<T>(index) = value;
             m_cursor += sizeof(T);
             return index;
         }
@@ -83,20 +83,20 @@ namespace logpp
         void advance(size_t size);
         size_t cursor() const;
 
-        template< typename T >
-        Offset< T > offsetAt(size_t index) const
+        template <typename T>
+        Offset<T> offsetAt(size_t index) const
         {
-            return Offset< T >{static_cast< uint16_t >(index)};
+            return Offset<T> { static_cast<uint16_t>(index) };
         }
     };
 
-    template< size_t N >
+    template <size_t N>
     class LogBuffer : public LogBufferBase
     {
     public:
         LogBuffer()
             : m_data(&m_inlineData[0])
-        {}
+        { }
 
         ~LogBuffer()
         {
@@ -142,8 +142,8 @@ namespace logpp
                 m_data       = other.m_data;
                 other.m_data = nullptr;
             }
-                // The other is small, which means that we will also be small, so memcpy the bytes
-                // over
+            // The other is small, which means that we will also be small, so memcpy the bytes
+            // over
             else
             {
                 // Cleanup our buffer if we were not small
@@ -161,12 +161,12 @@ namespace logpp
         }
 
     private:
-        using InlineStorage = std::array< char, N >;
+        using InlineStorage = std::array<char, N>;
 
-        InlineStorage m_inlineData{};
-        char* m_data{nullptr};
+        InlineStorage m_inlineData {};
+        char* m_data { nullptr };
 
-        size_t m_capacity{N};
+        size_t m_capacity { N };
 
         bool isSmall() const
         {
@@ -180,7 +180,7 @@ namespace logpp
 
             auto newCapacity = std::max(m_capacity * 2, capacity);
 
-            auto* data = static_cast< char* >(malloc(newCapacity * sizeof(char)));
+            auto* data = static_cast<char*>(malloc(newCapacity * sizeof(char)));
             if (data == nullptr)
                 throw std::bad_alloc();
 

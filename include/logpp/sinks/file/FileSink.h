@@ -29,7 +29,7 @@ namespace logpp::sink
     protected:
         std::unique_ptr<File> m_file;
 
-        virtual void onAfterOpened(const std::unique_ptr<File>&) {}
-        virtual void onBeforeClosing(const std::unique_ptr<File>&) {}
+        virtual void onAfterOpened(const std::unique_ptr<File>&) { }
+        virtual void onBeforeClosing(const std::unique_ptr<File>&) { }
     };
 }

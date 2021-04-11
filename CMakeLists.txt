@@ -35,3 +35,10 @@ if (BUILD_BENCHES)
   add_subdirectory(benches)
 endif()
 add_subdirectory(examples)
+
+add_custom_target(format
+    COMMAND
+        ./tools/format.sh
+    WORKING_DIRECTORY
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)

@@ -361,9 +361,11 @@ namespace logpp
             }
 
             auto sink = sinks.size() > 1 ? std::make_shared<sink::MultiSink>(sinks) : sinks[0];
-            auto res  = registry.registerLoggerFunc(logger.name, [=](std::string name) {
-                return std::make_shared<logpp::Logger>(std::move(name), logger.level, sink);
-            }, logger.isDefault);
+            auto res  = registry.registerLoggerFunc(
+                logger.name, [=](std::string name) {
+                    return std::make_shared<logpp::Logger>(std::move(name), logger.level, sink);
+                },
+                logger.isDefault);
 
             if (!res)
                 return Error { "logger: logger already exists", logger.sourceRegion };

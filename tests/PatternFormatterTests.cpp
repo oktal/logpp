@@ -38,7 +38,7 @@ TEST_F(PatternFormatterTest, should_format_date)
 {
     setPattern("%Y-%m-%d");
 
-    auto ymd = jan/8/2021;
+    auto ymd     = jan / 8 / 2021;
     TimePoint tp = sys_days(ymd);
 
     EventLogBuffer buffer;
@@ -54,10 +54,10 @@ TEST_F(PatternFormatterTest, should_format_time)
     using namespace std::chrono;
     setPattern("%H:%M:%S");
 
-    auto time = make_time(hours{15} + minutes{20} + seconds{10});
+    auto time = make_time(hours { 15 } + minutes { 20 } + seconds { 10 });
 
     EventLogBuffer buffer;
-    buffer.writeTime(TimePoint{seconds(time)});
+    buffer.writeTime(TimePoint { seconds(time) });
 
     format("", LogLevel::Debug, buffer);
 
@@ -133,8 +133,8 @@ TEST_F(PatternFormatterTest, should_format_full)
     using namespace std::chrono;
     setPattern("%+");
 
-    auto ymd = jan/8/2021;
-    TimePoint tp = sys_days(ymd) + hours{15} + minutes{20} + seconds{10};
+    auto ymd     = jan / 8 / 2021;
+    TimePoint tp = sys_days(ymd) + hours { 15 } + minutes { 20 } + seconds { 10 };
 
     EventLogBuffer buffer;
     buffer.writeTime(tp);
@@ -144,6 +144,5 @@ TEST_F(PatternFormatterTest, should_format_full)
 
     ASSERT_EQ(
         data(),
-        fmt::format("2021-01-08 15:20:10 [{}] (MyLogger) Test result: Pass (0)", levelString(LogLevel::Info))
-    );
+        fmt::format("2021-01-08 15:20:10 [{}] (MyLogger) Test result: Pass (0)", levelString(LogLevel::Info)));
 }

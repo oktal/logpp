@@ -28,23 +28,23 @@
 #define ios_hpp
 
 #if __APPLE__
-# include <TargetConditionals.h>
-# if TARGET_OS_IPHONE
-#   include <string>
+#include <TargetConditionals.h>
+#if TARGET_OS_IPHONE
+#include <string>
 
-    namespace date
-    {
+namespace date
+{
     namespace iOSUtils
     {
-    
-    std::string get_tzdata_path();
-    std::string get_current_timezone();
-    
-    }  // namespace iOSUtils
-    }  // namespace date
 
-# endif  // TARGET_OS_IPHONE
-#else   // !__APPLE__
-# define TARGET_OS_IPHONE 0
-#endif  // !__APPLE__
+        std::string get_tzdata_path();
+        std::string get_current_timezone();
+
+    } // namespace iOSUtils
+} // namespace date
+
+#endif // TARGET_OS_IPHONE
+#else // !__APPLE__
+#define TARGET_OS_IPHONE 0
+#endif // !__APPLE__
 #endif // ios_hpp

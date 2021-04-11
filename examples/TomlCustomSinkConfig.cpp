@@ -1,6 +1,6 @@
-#include "logpp/sinks/file/FileSink.h"
 #include "logpp/config/TomlConfigurator.h"
 #include "logpp/logpp.h"
+#include "logpp/sinks/file/FileSink.h"
 
 #include <iostream>
 
@@ -53,6 +53,5 @@ int main(int argc, const char* argv[])
 
     // Log something.
     logger->info("This is an informational message",
-        logpp::field("exe_name", argv[0])
-    );
+                 logpp::field("exe_name", argv[0]));
 }

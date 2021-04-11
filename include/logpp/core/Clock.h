@@ -7,7 +7,7 @@
 
 namespace logpp
 {
-    using Clock = std::chrono::system_clock;
+    using Clock     = std::chrono::system_clock;
     using TimePoint = typename Clock::time_point;
 
     // A Clock that represents system wall clock and measures time in UTC
@@ -27,7 +27,7 @@ namespace logpp
     public:
         using Clock = SystemClock;
 
-        using duration = Clock::duration;
+        using duration   = Clock::duration;
         using time_point = date::local_time<duration>;
 
         static std::tm* toTm(const time_point& tp)

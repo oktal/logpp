@@ -35,10 +35,11 @@ namespace logpp
         if (!m_running.compare_exchange_strong(expected, true))
             return;
 
-        m_internalQueue->setHandler([self=shared_from_this()](const Entry& entry) {
+        m_internalQueue->setHandler([self = shared_from_this()](const Entry& entry) {
             std::visit([self](const auto& e) {
                 self->handleEntry(e);
-            }, entry);
+            },
+                       entry);
         });
 
         m_thread = std::thread([=] { this->run(m_options); });
@@ -50,7 +51,7 @@ namespace logpp
         if (!m_running.compare_exchange_strong(expected, false))
             return;
 
-        m_internalQueue->push(StopEntry{});
+        m_internalQueue->push(StopEntry {});
     }
 
     void AsyncQueuePoller::addQueue(std::shared_ptr<IAsyncQueue> queue)
@@ -62,13 +63,12 @@ namespace logpp
     std::future<size_t> AsyncQueuePoller::removeQueue(std::shared_ptr<IAsyncQueue> queue)
     {
         auto handlePromise = std::make_shared<std::promise<size_t>>();
-        auto future = handlePromise->get_future();
+        auto future        = handlePromise->get_future();
 
         if (!m_running.load(std::memory_order_relaxed))
         {
             handlePromise->set_exception(
-                std::make_exception_ptr(std::runtime_error("Poller is not started. Attempting to remove and wait from the future might deadlock."))
-            );
+                std::make_exception_ptr(std::runtime_error("Poller is not started. Attempting to remove and wait from the future might deadlock.")));
         }
         else
         {
@@ -81,7 +81,8 @@ namespace logpp
 
     void AsyncQueuePoller::handleEntry(StopEntry)
     {
-        m_stopSignal.store(true, std::memory_order_relaxed);;
+        m_stopSignal.store(true, std::memory_order_relaxed);
+        ;
     }
 
     void AsyncQueuePoller::handleEntry(QueueEntry entry)
@@ -91,7 +92,7 @@ namespace logpp
 
     void AsyncQueuePoller::handleQueue(QueueEntry entry)
     {
-        auto queue = entry.queue;
+        auto queue  = entry.queue;
         auto action = entry.action;
 
         auto queueIt = std::find(std::begin(m_queues), std::end(m_queues), queue);
@@ -115,10 +116,10 @@ namespace logpp
 
     void AsyncQueuePoller::run(Options options)
     {
-       // ThreadHelper::setThreadName("AsyncQueuePoller");
-       // ThreadHelper::setThreadPriority(options.priority);
-       // if (options.affinity)
-       //     ThreadHelper::setThreadAffinity(*options.affinity);
+        // ThreadHelper::setThreadName("AsyncQueuePoller");
+        // ThreadHelper::setThreadPriority(options.priority);
+        // if (options.affinity)
+        //     ThreadHelper::setThreadAffinity(*options.affinity);
 
         SpinWait spinWait;
 
@@ -127,7 +128,7 @@ namespace logpp
             size_t totalCount = 0;
             totalCount += m_internalQueue->poll();
 
-            for (auto& queue: m_queues)
+            for (auto& queue : m_queues)
             {
                 totalCount += queue->poll();
             }

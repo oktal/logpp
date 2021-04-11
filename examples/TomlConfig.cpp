@@ -33,8 +33,7 @@ int main(int argc, const char* argv[])
 
     // Log something.
     logger->info("This is an informational message",
-        logpp::field("exe_name", argv[0])
-    );
+                 logpp::field("exe_name", argv[0]));
 
     std::cout << "Press a key to exit.\n";
     std::cin.get();

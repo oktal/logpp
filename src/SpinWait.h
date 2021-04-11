@@ -13,16 +13,16 @@ namespace logpp
 
         int32_t count() const;
         bool nextSpinWillYield() const;
-        
+
         void spinOnce();
 
         void reset();
 
-        static void spinUntil(const std::function< bool() >& condition);
-        static bool spinUntil(const std::function< bool() >& condition, int32_t millisecondsTimeout);
+        static void spinUntil(const std::function<bool()>& condition);
+        static bool spinUntil(const std::function<bool()>& condition, int32_t millisecondsTimeout);
 
     private:
-        static constexpr int32_t YIELD_THRESHOLD = 10;
+        static constexpr int32_t YIELD_THRESHOLD              = 10;
         static constexpr int32_t SLEEP_0_EVERY_HOW_MANY_TIMES = 5;
         static constexpr int32_t SLEEP_1_EVERY_HOW_MANY_TIMES = 20;
 

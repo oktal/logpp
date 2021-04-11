@@ -6,7 +6,7 @@ namespace logpp
     {
         explicit StringLiteral(const char* value)
             : value(value)
-        {}
+        { }
 
         const char* value;
     };

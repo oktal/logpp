@@ -11,7 +11,7 @@ namespace logpp::sink
         explicit LevelSink(std::shared_ptr<Sink> inner, LogLevel level)
             : m_inner(std::move(inner))
             , m_level(level)
-        {}
+        { }
 
         void activateOptions(const Options& options) override
         {

@@ -33,7 +33,7 @@ namespace logpp
     {
         void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
-            auto time = buffer.time();
+            auto time  = buffer.time();
             auto epoch = time.time_since_epoch();
 
             epoch -= std::chrono::duration_cast<std::chrono::seconds>(epoch);
@@ -46,7 +46,7 @@ namespace logpp
     {
         void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
-            auto time = buffer.time();
+            auto time  = buffer.time();
             auto epoch = time.time_since_epoch();
 
             epoch -= std::chrono::duration_cast<std::chrono::seconds>(epoch);

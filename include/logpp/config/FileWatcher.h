@@ -12,7 +12,7 @@ namespace logpp
     class FileWatcher
     {
     public:
-        using OnEvent = std::function<void (std::string_view)>;
+        using OnEvent = std::function<void(std::string_view)>;
 
         struct WatchId
         {
@@ -21,7 +21,7 @@ namespace logpp
 
             explicit WatchId(uint64_t value)
                 : value(value)
-            {}
+            { }
 
             explicit operator uint64_t() const { return value; }
 

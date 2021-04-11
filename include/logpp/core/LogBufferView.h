@@ -10,21 +10,21 @@ namespace logpp
     {
     public:
         explicit LogBufferView(const LogBufferBase& buffer)
-            : buffer{buffer}
-        {}
+            : buffer { buffer }
+        { }
 
         const char* read(size_t index) const;
 
-        template< typename T >
+        template <typename T>
         T readAs(size_t index) const
         {
-            return *reinterpret_cast< const T* >(read(index));
+            return *reinterpret_cast<const T*>(read(index));
         }
 
-        template< typename T >
+        template <typename T>
         const T* overlayAs(size_t index) const
         {
-            return reinterpret_cast< const T* >(read(index));
+            return reinterpret_cast<const T*>(read(index));
         }
 
     private:

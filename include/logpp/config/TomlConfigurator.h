@@ -49,10 +49,10 @@ namespace logpp
         {
             try
             {
-                auto table          = std::invoke(parseFunc);
+                auto table = std::invoke(parseFunc);
 
                 auto result = parseConfiguration(table);
-                auto err = result.error;
+                auto err    = result.error;
 
                 if (err)
                     return err;
@@ -64,7 +64,6 @@ namespace logpp
                 err = configureLoggers(registry, result.loggers);
                 if (err)
                     return err;
-
             }
             catch (const toml::parse_error& e)
             {

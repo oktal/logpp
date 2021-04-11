@@ -1,7 +1,7 @@
 #include "logpp/logpp.h"
 
-#include "logpp/format/flag/Formatter.h"
 #include "logpp/format/PatternFormatter.h"
+#include "logpp/format/flag/Formatter.h"
 
 #include "logpp/sinks/ColoredConsole.h"
 
@@ -13,7 +13,7 @@ class JsonFormatter : public FlagFormatter
 public:
     explicit JsonFormatter(std::string prefix)
         : m_prefix(std::move(prefix))
-    {}
+    { }
 
     void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
     {
@@ -27,14 +27,14 @@ private:
     {
         explicit Writer(fmt::memory_buffer& out)
             : out(out)
-        {}
+        { }
 
         void writeRaw(std::string_view str)
         {
             out.append(str);
         }
 
-        template<typename T>
+        template <typename T>
         void write(std::string_view key, T&& value)
         {
             writeKey(key);
@@ -51,7 +51,7 @@ private:
             ++count;
         }
 
-        template<typename T>
+        template <typename T>
         void writeValue(T&& value)
         {
             fmt::format_to(out, "{}", value);
@@ -79,7 +79,7 @@ private:
         Visitor(Writer& writer, std::string_view prefix)
             : writer(writer)
             , prefix(prefix)
-        {}
+        { }
 
         void visitStart(size_t fieldsCount) override
         {
@@ -181,8 +181,7 @@ int main()
 
     // Log a message with some fields
     logger->info("Something happened.",
-        logpp::field("Id", 1234),
-        logpp::field("IsValid", true),
-        logpp::field("Name", "Something")
-    );
+                 logpp::field("Id", 1234),
+                 logpp::field("IsValid", true),
+                 logpp::field("Name", "Something"));
 }

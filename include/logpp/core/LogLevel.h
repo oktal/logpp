@@ -2,13 +2,12 @@
 
 #include "logpp/utils/string.h"
 
-#include <string_view>
 #include <optional>
+#include <string_view>
 
 namespace logpp
 {
-    enum class LogLevel
-    {
+    enum class LogLevel {
         Trace,
         Debug,
         Info,
@@ -22,16 +21,16 @@ namespace logpp
 
         switch (level)
         {
-            case LogLevel::Trace:
-                return "trace"sv;
-            case LogLevel::Debug:
-                return "debug"sv;
-            case LogLevel::Info:
-                return "info"sv;
-            case LogLevel::Warning:
-                return "warn"sv;
-            case LogLevel::Error:
-                return "error"sv;
+        case LogLevel::Trace:
+            return "trace"sv;
+        case LogLevel::Debug:
+            return "debug"sv;
+        case LogLevel::Info:
+            return "info"sv;
+        case LogLevel::Warning:
+            return "warn"sv;
+        case LogLevel::Error:
+            return "error"sv;
         }
 
         return "none";

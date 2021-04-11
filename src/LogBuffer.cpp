@@ -32,12 +32,12 @@ namespace logpp
 
     StringOffset LogBufferBase::writeString(const char* str, size_t size)
     {
-        return offsetAt< tag::String >(encodeString(str, size));
+        return offsetAt<tag::String>(encodeString(str, size));
     }
 
     const char* LogBufferBase::dataAt(size_t index) const
     {
-        return const_cast< LogBufferBase* >(this)->dataAt(index);
+        return const_cast<LogBufferBase*>(this)->dataAt(index);
     }
 
     size_t LogBufferBase::encodeRaw(const char* bytes, size_t size)
@@ -51,7 +51,7 @@ namespace logpp
 
     size_t LogBufferBase::encodeString(const char* str, size_t size)
     {
-        auto index = encode(static_cast< uint16_t >(size));
+        auto index = encode(static_cast<uint16_t>(size));
         encodeRaw(str, size);
 
         return index;

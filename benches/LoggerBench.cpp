@@ -2,16 +2,16 @@
 
 #include "logpp/logpp.h"
 
-#include "logpp/core/LoggerFactory.h"
 #include "logpp/core/Logger.h"
+#include "logpp/core/LoggerFactory.h"
 
 #include "logpp/format/PatternFormatter.h"
 
 #include "logpp/queue/AsyncQueuePoller.h"
 
 #include "logpp/sinks/AsyncSink.h"
-#include "logpp/sinks/Sink.h"
 #include "logpp/sinks/FormatSink.h"
+#include "logpp/sinks/Sink.h"
 
 #include <random>
 
@@ -23,7 +23,7 @@ public:
     }
 
     void sink(std::string_view, logpp::LogLevel, const logpp::EventLogBuffer&) override
-    {}
+    { }
 };
 
 class PatternFormatSink : public logpp::sink::FormatSink
@@ -31,7 +31,7 @@ class PatternFormatSink : public logpp::sink::FormatSink
 public:
     PatternFormatSink()
         : FormatSink(std::make_shared<logpp::PatternFormatter>("%+"))
-    {}
+    { }
 
     void sink(std::string_view name, logpp::LogLevel level, const logpp::EventLogBuffer& buffer) override
     {
@@ -64,7 +64,7 @@ static void LoggerBench_NoopSink_Empty(benchmark::State& state)
 {
     auto logger = logpp::create<NoopSink>("LoggerBench_NoopSink_Empty", logpp::LogLevel::Debug);
 
-    for (auto _: state)
+    for (auto _ : state)
     {
         logger->debug("Looping");
     }
@@ -72,10 +72,10 @@ static void LoggerBench_NoopSink_Empty(benchmark::State& state)
 
 static void LoggerBench_NoopSink_StringLiteral_1(benchmark::State& state)
 {
-    auto logger = logpp::create<NoopSink>("LoggerBench_NoopSink_StringLiteral_1", logpp::LogLevel::Debug);
+    auto logger    = logpp::create<NoopSink>("LoggerBench_NoopSink_StringLiteral_1", logpp::LogLevel::Debug);
     uint64_t count = 0;
 
-    for (auto _: state)
+    for (auto _ : state)
     {
         logger->debug("Looping", logpp::field("Iteration", count));
         ++count;
@@ -84,10 +84,10 @@ static void LoggerBench_NoopSink_StringLiteral_1(benchmark::State& state)
 
 static void LoggerBench_NoopSink_FormatStr_1(benchmark::State& state)
 {
-    auto logger = logpp::create<NoopSink>("LoggerBench_NoopSink_FormatStr_1", logpp::LogLevel::Debug);
+    auto logger    = logpp::create<NoopSink>("LoggerBench_NoopSink_FormatStr_1", logpp::LogLevel::Debug);
     uint64_t count = 0;
 
-    for (auto _: state)
+    for (auto _ : state)
     {
         logger->debug(logpp::format("Looping iteration number {}", count), logpp::field("Iteration", count));
         ++count;
@@ -96,10 +96,10 @@ static void LoggerBench_NoopSink_FormatStr_1(benchmark::State& state)
 
 static void LoggerBench_NoopSink_1(benchmark::State& state)
 {
-    auto logger = logpp::create<NoopSink>("LoggerBench_NoopSink_1", logpp::LogLevel::Debug);
+    auto logger    = logpp::create<NoopSink>("LoggerBench_NoopSink_1", logpp::LogLevel::Debug);
     uint64_t count = 0;
 
-    for (auto _: state)
+    for (auto _ : state)
     {
         logger->debug(std::string_view("Looping"), logpp::field("Iteration", count));
         ++count;
@@ -109,14 +109,13 @@ static void LoggerBench_NoopSink_1(benchmark::State& state)
 static void LoggerBench_NoopSink_StringLiteral_2(benchmark::State& state)
 {
     auto logger = logpp::create<NoopSink>("LoggerBench_NoopSink_StringLiteral_2", logpp::LogLevel::Debug);
-    uint64_t i = 0;
+    uint64_t i  = 0;
 
-    for (auto _: state)
+    for (auto _ : state)
     {
         logger->debug("Looping",
-            logpp::field("Int", i),
-            logpp::field("Double", double(i))
-        );
+                      logpp::field("Int", i),
+                      logpp::field("Double", double(i)));
 
         ++i;
     }
@@ -125,17 +124,16 @@ static void LoggerBench_NoopSink_StringLiteral_2(benchmark::State& state)
 static void LoggerBench_NoopSink_StringLiteral_3(benchmark::State& state)
 {
     auto logger = logpp::create<NoopSink>("LoggerBench_NoopSink_StringLiteral_3", logpp::LogLevel::Debug);
-    uint64_t i = 0;
+    uint64_t i  = 0;
 
     std::string name = "LoggerBench_NoopSink3";
 
-    for (auto _: state)
+    for (auto _ : state)
     {
         logger->debug("Looping",
-            logpp::field("Int", i),
-            logpp::field("Double", double(i)),
-            logpp::field("BenchmarkName", name)
-        );
+                      logpp::field("Int", i),
+                      logpp::field("Double", double(i)),
+                      logpp::field("BenchmarkName", name));
 
         ++i;
     }
@@ -150,14 +148,13 @@ static void LoggerBench_NoopSink_StringLiteral_LargeLogBuffer(benchmark::State& 
     auto str3 = generateRandomString(40);
     auto str4 = generateRandomString(512);
 
-    for (auto _: state)
+    for (auto _ : state)
     {
         logger->debug("This is a long log message from benchmark",
-            logpp::field("Str1", str1),
-            logpp::field("Str2", str2),
-            logpp::field("Str3", str3),
-            logpp::field("Str4", str4)
-        );
+                      logpp::field("Str1", str1),
+                      logpp::field("Str2", str2),
+                      logpp::field("Str3", str3),
+                      logpp::field("Str4", str4));
     }
 }
 
@@ -167,33 +164,31 @@ static void LoggerBench_FormatSink_FormatStr_3(benchmark::State& state)
 
     const std::string& loggerType = "async";
 
-    for (auto _: state)
+    for (auto _ : state)
     {
         logger->debug(logpp::format("This is a log-formatted message {} {}", 0xBAD, loggerType),
-            logpp::field("IntField", 0xBAD),
-            logpp::field("FloatField", M_PI),
-            logpp::field("StrField", loggerType)
-        );
+                      logpp::field("IntField", 0xBAD),
+                      logpp::field("FloatField", M_PI),
+                      logpp::field("StrField", loggerType));
     }
 }
 
 static void LoggerBench_AsyncNoopSink_FormatStr_3(benchmark::State& state)
 {
-    auto poller = logpp::AsyncQueuePoller::create();
+    auto poller   = logpp::AsyncQueuePoller::create();
     auto noopSink = std::make_shared<NoopSink>();
-    auto logger = logpp::create<logpp::sink::AsyncSink>("BM_BenchAsyncLoggerNoopSink", logpp::LogLevel::Debug, poller, noopSink);
+    auto logger   = logpp::create<logpp::sink::AsyncSink>("BM_BenchAsyncLoggerNoopSink", logpp::LogLevel::Debug, poller, noopSink);
 
     poller->start();
 
     const std::string& loggerType = "async";
 
-    for (auto _: state)
+    for (auto _ : state)
     {
         logger->debug(logpp::format("This is a log-formatted message {} {}", 0xBAD, loggerType),
-            logpp::field("IntField", 0xBAD),
-            logpp::field("FloatField", M_PI),
-            logpp::field("StrField", loggerType)
-        );
+                      logpp::field("IntField", 0xBAD),
+                      logpp::field("FloatField", M_PI),
+                      logpp::field("StrField", loggerType));
     }
 }
 

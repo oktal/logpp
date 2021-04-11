@@ -48,21 +48,21 @@ namespace logpp::sink
         }
 
     private:
-        FILE *m_file;
+        FILE* m_file;
 
         std::array<std::string_view, 5> m_colors;
 
-        static constexpr std::string_view Bold = "\033[1m";
+        static constexpr std::string_view Bold  = "\033[1m";
         static constexpr std::string_view Reset = "\033[m";
 
-        static constexpr std::string_view FgBlack = "\033[30m";
-        static constexpr std::string_view FgRed = "\033[31m";
-        static constexpr std::string_view FgGreen = "\033[32m";
-        static constexpr std::string_view FgYellow = "\033[33m";
-        static constexpr std::string_view FgBlue = "\033[34m";
+        static constexpr std::string_view FgBlack   = "\033[30m";
+        static constexpr std::string_view FgRed     = "\033[31m";
+        static constexpr std::string_view FgGreen   = "\033[32m";
+        static constexpr std::string_view FgYellow  = "\033[33m";
+        static constexpr std::string_view FgBlue    = "\033[34m";
         static constexpr std::string_view FgMagenta = "\033[35m";
-        static constexpr std::string_view FgCyan = "\033[36m";
-        static constexpr std::string_view FgWhite = "\033[37m";
+        static constexpr std::string_view FgCyan    = "\033[36m";
+        static constexpr std::string_view FgWhite   = "\033[37m";
 
         void configureFormatter(const std::shared_ptr<Formatter>& formatter)
         {
@@ -83,11 +83,11 @@ namespace logpp::sink
 
         ColoredOutputConsole()
             : ColoredConsole(stdout)
-        {}
+        { }
 
         explicit ColoredOutputConsole(std::shared_ptr<Formatter> formatter)
             : ColoredConsole(stdout, std::move(formatter))
-        {}
+        { }
     };
 
     class ColoredErrorConsole : public ColoredConsole
@@ -97,10 +97,10 @@ namespace logpp::sink
 
         ColoredErrorConsole()
             : ColoredConsole(stderr)
-        {}
+        { }
 
         ColoredErrorConsole(std::shared_ptr<Formatter> formatter)
             : ColoredConsole(stderr, std::move(formatter))
-        {}
+        { }
     };
 }

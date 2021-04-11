@@ -10,7 +10,7 @@ namespace logpp
     class Formatter
     {
     public:
-        using OnFormat = std::function<void (std::string_view, LogLevel level, const EventLogBuffer&, fmt::memory_buffer&)>;
+        using OnFormat = std::function<void(std::string_view, LogLevel level, const EventLogBuffer&, fmt::memory_buffer&)>;
 
         virtual ~Formatter() = default;
 
@@ -44,11 +44,12 @@ namespace logpp
 
     namespace concepts
     {
-        template<typename T> using Formatter = std::integral_constant<
+        template <typename T>
+        using Formatter = std::integral_constant<
             bool,
-            std::is_base_of_v<Formatter, T>
-        >;
+            std::is_base_of_v<Formatter, T>>;
 
-        template<typename T> constexpr bool IsFormatter = Formatter<T>::value;
+        template <typename T>
+        constexpr bool IsFormatter = Formatter<T>::value;
     }
 }

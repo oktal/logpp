@@ -72,7 +72,7 @@ namespace logpp::sink
             if (!m_ofs || !m_ofs->rdbuf())
                 return 0;
 
-            return  m_ofs->rdbuf()->pubseekoff(0, std::ios_base::cur, std::ios_base::out);
+            return m_ofs->rdbuf()->pubseekoff(0, std::ios_base::cur, std::ios_base::out);
         }
 
         void flush() override
