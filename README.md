@@ -112,8 +112,8 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 [contributors-shield]: https://img.shields.io/github/contributors/oktal/logpp.svg?style=for-the-badge
 [contributors-url]: https://github.com/oktal/logpp/graphs/contributors
-[ci-shield]: https://github.com/oktal/logpp/workflows/CI/badge.svg
-[ci-url]: https://github.com/oktal/logpp/actions/workflows/main.yml
+[ci-shield]: https://img.shields.io/github/workflow/status/oktal/logpp/CI?style=for-the-badge
+[ci-url]: https://github.com/oktal/logpp/workflows/CI/badge.svg
 [forks-shield]: https://img.shields.io/github/forks/oktal/logpp.svg?style=for-the-badge
 [forks-url]: https://github.com/oktal/logpp/network/members
 [stars-shield]: https://img.shields.io/github/stars/oktal/logpp.svg?style=for-the-badge
