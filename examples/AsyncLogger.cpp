@@ -1,5 +1,3 @@
-#include "logpp/core/LoggerFactory.h"
-
 #include "logpp/queue/AsyncQueuePoller.h"
 #include "logpp/sinks/AsyncSink.h"
 #include "logpp/sinks/ColoredConsole.h"
@@ -22,7 +20,7 @@ int main()
     auto logFmt    = std::make_shared<logpp::sink::ColoredOutputConsole>();
     auto asyncSink = std::make_shared<logpp::sink::AsyncSink>(poller, logFmt);
 
-    auto logger = logpp::LoggerFactory::getLogger("main", asyncSink);
+    auto logger = std::make_shared<logpp::Logger>("main", logpp::LogLevel::Debug, asyncSink);
 
     poller->start();
     asyncSink->start();

@@ -38,6 +38,31 @@ namespace logpp
 #define LOGPP_FIELD(key, val) \
     logpp::field(key, val)
 
+    namespace details
+    {
+       template <typename T>
+        static constexpr auto nameOf() noexcept
+        {
+            std::string_view name = "Error: unsupported compiler", prefix, suffix;
+#ifdef LOGPP_COMPILER_CLANG
+            name   = __PRETTY_FUNCTION__;
+            prefix = "auto logpp::details::nameOf() [T = ";
+            suffix = "]";
+#elif defined(LOGPP_COMPILER_GCC)
+            name   = __PRETTY_FUNCTION__;
+            prefix = "constexpr auto logpp::details::nameOf() [with T = ";
+            suffix = "]";
+#elif defined(LOGPP_COMPILER_MSVC)
+            name   = __FUNCSIG__;
+            prefix = "auto __cdecl logpp::details::nameOf<";
+            suffix = ">(void) noexcept";
+#endif
+            name.remove_prefix(prefix.size());
+            name.remove_suffix(suffix.size());
+            return name;
+        }
+    }
+
     inline LoggerRegistry& defaultRegistry()
     {
         return LoggerRegistry::defaultRegistry();
@@ -168,10 +193,8 @@ namespace logpp
         return defaultRegistry().get(name);
     }
 
-    template <typename Sink, typename... SinkArgs>
-    std::shared_ptr<Logger> create(std::string name, LogLevel level, SinkArgs&&... args)
+    template<typename T> std::shared_ptr<Logger> getLogger()
     {
-        auto sink = std::make_shared<Sink>(std::forward<SinkArgs>(args)...);
-        return std::make_shared<Logger>(std::move(name), level, std::move(sink));
+        return defaultRegistry().get(details::nameOf<T>());
     }
 }
