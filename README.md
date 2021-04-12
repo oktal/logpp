@@ -51,6 +51,26 @@
 
 ## About The Project
 
+The logging framework you've always dreamed of.<br /><br />
+Log events are first recorded from a `Logger`, formatted with a `Formatter` like [logfmt](https://github.com/oktal/logpp/blob/master/include/logpp/format/LogFmtFormatter.h) or [pattern](https://github.com/oktal/logpp/blob/master/include/logpp/format/PatternFormatter.h) and sent to a `Sink` for persistence or visualization like [console](https://github.com/oktal/logpp/blob/master/include/logpp/sinks/ColoredConsole.h), [file](https://github.com/oktal/logpp/blob/master/include/logpp/sinks/file/FileSink.h) and [others](https://github.com/oktal/logpp/tree/master/include/logpp/sinks)
+
+Unlike other well-known logging frameworks, `logpp` has been designed with the idea of enriching log events with information called *structured data*.
+The act of adding data to log messages is called [structured logging](https://stackify.com/what-is-structured-logging-and-why-developers-need-it/).
+
+For example, with logpp, a typical structured log event looks like this:
+
+```cpp
+logpp::info("Handling http request",
+    logpp::field("path", path),
+    logpp::field("method", method));
+ ```
+ 
+ and will yield the following string rendered into [logfmt format](https://www.brandur.org/logfmt):
+ 
+ `lvl=Info msg="Handling http request" path=/v1/ping method=GET`
+
+At its core, logpp has been designed with a zero-allocation approach, meaning that it will avoid memory allocations for small log events.
+Combined with [asynchronocity](https://github.com/oktal/logpp/blob/master/include/logpp/sinks/AsyncSink.h), logpp is a perfect fit for logging in critical code paths.
 
 ### Built With
 
@@ -87,6 +107,89 @@ To retrieve logpp external dependencies, make sure to install and configure [con
 
 <!-- USAGE EXAMPLES -->
 ## Usage
+
+### Namespace
+
+The logpp api is located in the `logpp` namespace
+
+### Basic
+
+```cpp
+#include "logpp/logpp.h"
+
+int main(int argc, char* argv[])
+{
+    logpp::info("This is a log message",
+        logpp::field("exe_name", argv[0]));
+}
+```
+
+```console
+2021-04-12 13:28:50 [info] (logpp) This is a log message - exe_name=./bin/sample_BasicLogger
+```
+
+logpp provides a default logger that will log all messages into the standard output. logpp `trace`, `debug`, `info`, `warn` and `error` functions will all use
+the default logger provided by logpp.
+
+### Manual setup
+
+This example demonstrates how to setup a manual logger to log to a file.
+
+```cpp
+#include "logpp/sinks/file/FileSink.h"
+#include "logpp/core/Logger.h"
+
+using namespace logpp;
+
+int main()
+{
+    auto sink = std::make_shared<sink::FileSink>("main.log");
+    auto logger = std::make_shared<Logger>("main", LogLevel::Info, sink);
+
+    logger->info("Hello from main");
+}
+```
+
+```console
+> cat main.log 
+2021-04-12 13:34:35 [info] (main) Hello from main
+```
+
+### Configuration file
+
+Logpp registry can be configured from a [TOML](https://toml.io/en/) configuration file. The following example demonstrates how to do it:
+
+```cpp
+#include "logpp/config/TomlConfigurator.h"
+#include "logpp/logpp.h"
+
+#include <iostream>
+
+int main(int argc, const char* argv[])
+{
+    std::string file = "logpp.toml";
+    if (argc == 2)
+        file = argv[1];
+
+    std::cout << "Configuring logger with " << file << std::endl;
+    auto err = logpp::TomlConfigurator::configureFile(file);
+
+    if (err)
+    {
+        std::cerr << "Error configuring logger: " << *err << std::endl;
+        return 0;
+    }
+
+    auto logger = logpp::getLogger("main");
+
+    logger->info("This is an informational message",
+                 logpp::field("exe_name", argv[0]));
+}
+```
+
+For a detailed description of logpp configuration format, please refer to [logpp.toml](https://github.com/oktal/logpp/blob/master/examples/logpp.toml)
+
+### Examples
 
 _For more examples, please refer to the [examples](https://github.com/oktal/logpp/examples) folder_
 
