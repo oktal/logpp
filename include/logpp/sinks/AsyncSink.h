@@ -40,7 +40,7 @@ namespace logpp::sink
             if (sinksArray->empty())
                 raiseConfigurationError("sinks: got empty array");
 
-            auto registry = LoggerRegistry::defaultRegistry();
+            auto& registry = LoggerRegistry::defaultRegistry();
 
             std::vector<std::shared_ptr<Sink>> innerSinks;
             for (const auto& sinkName : *sinksArray)

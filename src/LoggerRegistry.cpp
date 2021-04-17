@@ -49,6 +49,8 @@ namespace logpp
 
     bool LoggerRegistry::registerLoggerFunc(std::string name, LoggerRegistry::LoggerFactory factory, bool isDefault)
     {
+        std::lock_guard guard(m_mutex);
+
         if (isDefault)
             m_defaultLoggerFactory = factory;
 
@@ -58,6 +60,8 @@ namespace logpp
 
     std::shared_ptr<Logger> LoggerRegistry::get(std::string_view name)
     {
+        std::lock_guard guard(m_mutex);
+
         LoggerKey key(name);
 
         for (auto fragmentIt = key.rbegin(); fragmentIt != key.rend(); ++fragmentIt)
@@ -89,16 +93,20 @@ namespace logpp
 
     std::shared_ptr<Logger> LoggerRegistry::defaultLogger()
     {
+        std::lock_guard guard(m_mutex);
         return m_defaultLogger;
     }
 
     void LoggerRegistry::setDefaultLogger(std::shared_ptr<Logger> logger)
     {
+        std::lock_guard guard(m_mutex);
         m_defaultLogger = std::move(logger);
     }
 
     std::shared_ptr<sink::Sink> LoggerRegistry::createSink(std::string_view name)
     {
+        std::lock_guard guard(m_mutex);
+
         auto factoryIt = m_sinkFactories.find(name);
         if (factoryIt == std::end(m_sinkFactories))
             return nullptr;
@@ -109,11 +117,15 @@ namespace logpp
 
     bool LoggerRegistry::registerSink(std::string name, std::shared_ptr<sink::Sink> sink)
     {
+        std::lock_guard guard(m_mutex);
+
         return m_sinks.insert(std::make_pair(std::move(name), std::move(sink))).second;
     }
 
     std::shared_ptr<sink::Sink> LoggerRegistry::findSink(std::string_view name) const
     {
+        std::lock_guard guard(m_mutex);
+
         auto it = m_sinks.find(name);
         if (it == std::end(m_sinks))
             return nullptr;

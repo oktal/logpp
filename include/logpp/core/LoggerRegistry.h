@@ -4,8 +4,8 @@
 #include "logpp/format/Formatter.h"
 #include "logpp/sinks/Sink.h"
 
-#include <iostream>
 #include <map>
+#include <mutex>
 
 namespace logpp
 {
@@ -144,6 +144,8 @@ namespace logpp
         template <typename LoggerFunc>
         void forEachLogger(LoggerFunc&& loggerFunc) const
         {
+            std::lock_guard guard(m_mutex);
+
             for (const auto& [name, logger] : m_loggers)
             {
                 std::invoke(loggerFunc, name, logger);
@@ -157,6 +159,7 @@ namespace logpp
         bool registerSinkFactory()
         {
             static_assert(sink::concepts::IsSink<Sink>, "Sink must be satisfy the Sink concept");
+            std::lock_guard guard(m_mutex);
 
             auto factory = [] { return std::make_shared<Sink>(); };
             auto it      = m_sinkFactories.insert(std::make_pair(std::string(Sink::Name), std::move(factory)));
@@ -172,6 +175,7 @@ namespace logpp
         void forEachSinkOfType(SinkFunc&& func) const
         {
             static_assert(sink::concepts::IsSink<Sink>, "Sink must be satisfy the Sink concept");
+            std::lock_guard guard(m_mutex);
 
             for (const auto& [name, sink] : m_sinks)
             {
@@ -183,6 +187,8 @@ namespace logpp
         template <typename SinkFunc>
         void forEachSink(SinkFunc&& func)
         {
+            std::lock_guard guard(m_mutex);
+
             for (auto& [name, sink] : m_sinks)
             {
                 std::invoke(func, name, sink);
@@ -192,6 +198,8 @@ namespace logpp
         template <typename SinkFunc>
         void forEachSink(SinkFunc&& func) const
         {
+            std::lock_guard guard(m_mutex);
+
             for (const auto& [name, sink] : m_sinks)
             {
                 std::invoke(func, name, sink);
@@ -201,6 +209,8 @@ namespace logpp
         static LoggerRegistry& defaultRegistry();
 
     private:
+        mutable std::mutex m_mutex;
+
         // Default logger used by logpp::info(), logpp::debug(), ... free functions
         // or as a final fallback.
         std::shared_ptr<Logger> m_defaultLogger;
