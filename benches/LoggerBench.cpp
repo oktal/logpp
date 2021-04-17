@@ -57,8 +57,8 @@ std::string generateRandomString(size_t size)
     return ret;
 }
 
-template<typename Sink, typename... Args>
-std::shared_ptr<logpp::Logger> create(std::string name, logpp::LogLevel level, Args&& ...args)
+template <typename Sink, typename... Args>
+std::shared_ptr<logpp::Logger> create(std::string name, logpp::LogLevel level, Args&&... args)
 {
     auto sink = std::make_shared<Sink>(std::forward<Args>(args)...);
     return std::make_shared<logpp::Logger>(std::move(name), level, std::move(sink));

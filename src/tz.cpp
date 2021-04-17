@@ -2852,9 +2852,9 @@ namespace date
         cmd += folder;
         cmd += '\"';
         return std::system(cmd.c_str()) == EXIT_SUCCESS;
-#else // !USE_SHELL_API
-        // Create a buffer containing the path to delete. It must be terminated
-        // by two nuls. Who designs these API's...
+#else // !USE_SHELL_API                                                     \
+    // Create a buffer containing the path to delete. It must be terminated \
+    // by two nuls. Who designs these API's...
         std::vector<char> from;
         from.assign(folder.begin(), folder.end());
         from.push_back('\0');
@@ -3209,8 +3209,8 @@ namespace date
 
 #ifdef _WIN32
         // Download folder should be always available for Windows
-#else // !_WIN32
-        // Create download folder if it does not exist on UNIX system
+#else // !_WIN32 \
+    // Create download folder if it does not exist on UNIX system
         auto download_folder = get_install();
         if (!file_exists(download_folder))
         {

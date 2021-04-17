@@ -40,7 +40,7 @@ namespace logpp
 
     namespace details
     {
-       template <typename T>
+        template <typename T>
         static constexpr auto nameOf() noexcept
         {
             std::string_view name = "Error: unsupported compiler", prefix, suffix;
@@ -193,7 +193,8 @@ namespace logpp
         return defaultRegistry().get(name);
     }
 
-    template<typename T> std::shared_ptr<Logger> getLogger()
+    template <typename T>
+    std::shared_ptr<Logger> getLogger()
     {
         return defaultRegistry().get(details::nameOf<T>());
     }
