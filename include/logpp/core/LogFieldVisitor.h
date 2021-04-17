@@ -1,5 +1,7 @@
 #pragma once
 
+#include "logpp/utils/detect.h"
+
 #include <string_view>
 
 namespace logpp
@@ -27,4 +29,36 @@ namespace logpp
 
         virtual void visitEnd() = 0;
     };
+
+    template <typename T>
+    using HasVisit = decltype(std::declval<LogFieldVisitor>().visit(std::declval<std::string_view>(), std::declval<T>()));
+
+    template <typename T>
+    constexpr bool IsVisitable = is_detected_v<HasVisit, T>;
+
+    template <>
+    constexpr bool IsVisitable<std::string> = true;
+
+#define VISIT_STATIC_CHECK(Type) \
+    static_assert(IsVisitable<Type>, "Type is not visitable")
+
+    VISIT_STATIC_CHECK(std::string_view);
+    VISIT_STATIC_CHECK(const char*);
+    VISIT_STATIC_CHECK(std::string);
+
+    VISIT_STATIC_CHECK(uint8_t);
+    VISIT_STATIC_CHECK(uint16_t);
+    VISIT_STATIC_CHECK(uint32_t);
+    VISIT_STATIC_CHECK(uint64_t);
+
+    VISIT_STATIC_CHECK(int8_t);
+    VISIT_STATIC_CHECK(int16_t);
+    VISIT_STATIC_CHECK(int32_t);
+    VISIT_STATIC_CHECK(int64_t);
+
+    VISIT_STATIC_CHECK(bool);
+    VISIT_STATIC_CHECK(float);
+    VISIT_STATIC_CHECK(double);
+
+#undef VISIT_STATIC_CHECK
 }

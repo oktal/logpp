@@ -18,17 +18,56 @@
 
 namespace logpp
 {
+    template <typename Key, typename Value, typename Enable = void>
+    struct FieldWriter
+    {
+        FieldWriter() = delete;
+    };
+
+    template <typename Key, typename Value>
+    constexpr bool HasFieldWriter = std::is_constructible_v<FieldWriter<Key, Value>>;
+
     namespace details
     {
-
         template <typename T>
         using OffsetT = decltype(static_cast<LogBufferBase*>(nullptr)->write(std::declval<T>()));
+
+        // Type-dependent for static_assert in if constexpr else branch
+        template <typename...>
+        constexpr std::false_type always_false {};
+
+        template <typename Key, typename Value>
+        struct DefaultFieldWriter
+        {
+            using ValueType = std::decay_t<Value>;
+
+            static_assert(logpp::IsVisitable<ValueType>,
+                          "Unsupported field value type. "
+                          "If your field value provides an ostream<< operator, "
+                          "you can include logpp/core/Ostream.h");
+
+            template <typename Buffer>
+            auto write(Buffer& buffer, const Key& key, const Value& value)
+            {
+                return std::make_pair(buffer.write(key), buffer.write(value));
+            }
+        };
 
         template <typename Arg>
         auto write(LogBufferBase& buffer, const Arg& arg)
         {
-            auto keyOffset   = buffer.write(arg.key);
-            auto valueOffset = buffer.write(arg.value);
+            using Key   = std::decay_t<typename Arg::Key>;
+            using Value = std::decay_t<typename Arg::Type>;
+
+            using Writer = std::conditional_t<
+                IsVisitable<Value>,
+                DefaultFieldWriter<Key, Value>,
+                std::conditional_t<
+                    HasFieldWriter<Key, Value>,
+                    FieldWriter<Key, Value>,
+                    DefaultFieldWriter<Key, Value>>>;
+
+            auto [keyOffset, valueOffset] = Writer().write(buffer, arg.key, arg.value);
 
             return fieldOffset(keyOffset, valueOffset);
         }
