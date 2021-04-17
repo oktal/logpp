@@ -67,7 +67,10 @@ namespace logpp
             void formatTo(fmt::memory_buffer& buffer, LogBufferView view) const
             {
                 auto formatStr = formatStrOffset.get(view);
-                formatImpl(view, buffer, formatStr, std::make_index_sequence<sizeof...(Args)> {});
+                if constexpr (sizeof...(Args) == 0)
+                    buffer.append(formatStr);
+                else
+                    formatImpl(view, buffer, formatStr, std::make_index_sequence<sizeof...(Args)> {});
             }
 
         private:

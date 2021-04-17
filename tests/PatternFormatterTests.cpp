@@ -90,6 +90,19 @@ TEST_F(PatternFormatterTest, should_format_text_formatted)
     ASSERT_EQ(data(), "Test result: Pass (0)");
 }
 
+TEST_F(PatternFormatterTest, should_format_text_with_bracket)
+{
+    setPattern("%v");
+
+    EventLogBuffer buffer;
+    buffer.writeTime(Clock::now());
+    buffer.writeText("PatternFormatterTest { should_format_text_with_bracket }");
+
+    format("", LogLevel::Debug, buffer);
+
+    ASSERT_EQ(data(), "PatternFormatterTest { should_format_text_with_bracket }");
+}
+
 TEST_F(PatternFormatterTest, should_format_level)
 {
     setPattern("[%l]");
