@@ -9,75 +9,89 @@
 
 using namespace logpp;
 
+struct Field
+{
+    virtual ~Field() = default;
+
+    explicit Field(std::string key)
+        : key(std::move(key))
+    { }
+
+    std::string key;
+};
+
+template <typename T>
+struct TypedField : Field
+{
+    TypedField(std::string key, T value)
+        : Field(std::move(key))
+        , value(std::move(value))
+    { }
+
+    T value;
+};
+
+template <>
+struct TypedField<std::string_view> : Field
+{
+    TypedField(std::string key, std::string_view value)
+        : Field(std::move(key))
+        , value(std::string(value))
+    { }
+
+    std::string value;
+};
+
+struct LogEntry
+{
+    LogEntry(std::string name, LogLevel level, std::string text,
+             std::vector<std::shared_ptr<Field>> fields)
+        : name(std::move(name))
+        , level(level)
+        , text(std::move(text))
+        , fields(std::move(fields))
+    { }
+
+    std::string name;
+    LogLevel level;
+
+    std::string text;
+    std::vector<std::shared_ptr<Field>> fields;
+
+    template <typename T>
+    std::vector<std::shared_ptr<TypedField<T>>> findFields() const
+    {
+        std::vector<std::shared_ptr<TypedField<T>>> res;
+
+        for (const auto& field : fields)
+        {
+            if (auto typedField = std::dynamic_pointer_cast<TypedField<T>>(field);
+                typedField != nullptr)
+                res.push_back(typedField);
+        }
+        return res;
+    }
+
+    template <typename T>
+    std::shared_ptr<TypedField<T>> findField(std::string_view key) const
+    {
+        for (const auto& field : fields)
+        {
+            if (field->key != key)
+                continue;
+
+            if (auto typedField = std::dynamic_pointer_cast<TypedField<T>>(field);
+                typedField != nullptr)
+                return typedField;
+        }
+
+        return nullptr;
+    }
+};
+
 class MemorySink : public sink::Sink
 {
 public:
-    struct Field
-    {
-        virtual ~Field() = default;
-
-        explicit Field(std::string key)
-            : key(std::move(key))
-        { }
-
-        std::string key;
-    };
-
-    template <typename T>
-    struct TypedField : Field
-    {
-        TypedField(std::string key, T value)
-            : Field(std::move(key))
-            , value(std::move(value))
-        { }
-
-        T value;
-    };
-
-    struct Entry
-    {
-        Entry(std::string name, LogLevel level, std::string text, std::vector<std::shared_ptr<Field>> fields)
-            : name(std::move(name))
-            , level(level)
-            , text(std::move(text))
-            , fields(std::move(fields))
-        { }
-
-        std::string name;
-        LogLevel level;
-
-        std::string text;
-        std::vector<std::shared_ptr<Field>> fields;
-
-        template <typename T>
-        std::vector<std::shared_ptr<TypedField<T>>> findFields() const
-        {
-            std::vector<std::shared_ptr<TypedField<T>>> res;
-
-            for (const auto& field : fields)
-            {
-                if (auto typedField = std::dynamic_pointer_cast<TypedField<T>>(field); typedField != nullptr)
-                    res.push_back(typedField);
-            }
-            return res;
-        }
-
-        template <typename T>
-        std::shared_ptr<TypedField<T>> findField(std::string_view key) const
-        {
-            for (const auto& field : fields)
-            {
-                if (field->key != key)
-                    continue;
-
-                if (auto typedField = std::dynamic_pointer_cast<TypedField<T>>(field); typedField != nullptr)
-                    return typedField;
-            }
-
-            return nullptr;
-        }
-    };
-
     void activateOptions(const sink::Options&) override
     {
     }
@@ -93,11 +107,12 @@ public:
         m_entries.emplace_back(std::string(name), level, std::string(textBuf.data(), textBuf.size()), visitor.fields());
     }
 
-    const Entry* findEntry(std::string_view text, LogLevel level) const
+    const LogEntry* findEntry(std::string_view text, LogLevel level) const
     {
-        auto entryIt = std::find_if(std::begin(m_entries), std::end(m_entries), [&](const auto& entry) {
-            return entry.text == text && entry.level == level;
-        });
+        auto entryIt = std::find_if(
+            std::begin(m_entries), std::end(m_entries), [&](const auto& entry) {
+                return entry.text == text && entry.level == level;
+            });
 
         if (entryIt == std::end(m_entries))
             return nullptr;
@@ -153,7 +168,7 @@ private:
         std::vector<std::shared_ptr<Field>> m_fields;
     };
 
-    std::vector<Entry> m_entries;
+    std::vector<LogEntry> m_entries;
 };
 
 struct LoggerTest : public ::testing::Test
@@ -169,12 +184,12 @@ struct LoggerTest : public ::testing::Test
         return std::make_shared<Logger>(std::move(name), level, sink);
     }
 
-    const MemorySink::Entry* findEntry(std::string_view text, LogLevel level) const
+    const LogEntry* findEntry(std::string_view text, LogLevel level) const
     {
         return sink->findEntry(text, level);
     }
 
-    const MemorySink::Entry* checkEntry(std::string_view text, LogLevel level) const
+    const LogEntry* checkEntry(std::string_view text, LogLevel level) const
     {
         auto* entry = sink->findEntry(text, level);
         EXPECT_NE(entry, nullptr);
@@ -182,7 +197,7 @@ struct LoggerTest : public ::testing::Test
     }
 
     template <typename T>
-    std::shared_ptr<MemorySink::TypedField<T>> checkField(const MemorySink::Entry* entry, std::string_view key, T value)
+    std::shared_ptr<TypedField<T>> checkField(const LogEntry* entry, std::string_view key, T value)
     {
         auto field = entry->findField<T>(key);
 

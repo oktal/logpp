@@ -25,7 +25,7 @@ namespace logpp
     };
 
     template <typename Key, typename Value>
-    constexpr bool HasFieldWriter = std::is_constructible_v<FieldWriter<Key, Value>>;
+    static constexpr bool HasFieldWriter = std::is_constructible_v<FieldWriter<Key, Value>>;
 
     namespace details
     {

@@ -30,14 +30,26 @@ namespace logpp
         virtual void visitEnd() = 0;
     };
 
-    template <typename T>
-    using HasVisit = decltype(std::declval<LogFieldVisitor>().visit(std::declval<std::string_view>(), std::declval<T>()));
+    namespace details
+    {
+        template <typename T>
+        auto visit() -> decltype(std::declval<LogFieldVisitor>().visit(std::declval<std::string_view>(), std::declval<T>()));
+
+        template <typename T, typename Enable = void>
+        struct HasVisit : std::false_type
+        { };
+
+        template <typename T>
+        struct HasVisit<T, std::void_t<decltype(visit<T>())>> : std::true_type
+        { };
+
+        template <>
+        struct HasVisit<std::string, void> : std::true_type
+        { };
+    }
 
     template <typename T>
-    constexpr bool IsVisitable = is_detected_v<HasVisit, T>;
-
-    template <>
-    constexpr bool IsVisitable<std::string> = true;
+    static constexpr bool IsVisitable = details::HasVisit<T>::value;
 
 #define VISIT_STATIC_CHECK(Type) \
     static_assert(IsVisitable<Type>, "Type is not visitable")
