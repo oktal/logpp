@@ -29,6 +29,7 @@
     <li>
       <a href="#about-the-project">About The Project</a>
       <ul>
+        <li><a href="#features">Features</a></li>
         <li><a href="#built-with">Built With</a></li>
       </ul>
     </li>
@@ -71,6 +72,23 @@ logpp::info("Handling http request",
 
 At its core, logpp has been designed with a zero-allocation approach, meaning that it will avoid memory allocations for small log events.
 Combined with [asynchronocity](https://github.com/oktal/logpp/blob/master/include/logpp/sinks/AsyncSink.h), logpp is a perfect fit for logging in critical code paths.
+
+### Features
+
+* Level-based logging API with familiar levels like `debug`, `info`, `warn`, `error`
+* Hierarchical loggers. Loggers are organized in a tree-based hierarchy, e.g `Namespace`, `Namespace.Component`, `Namespace.Component.Class`
+* [TOML](http://toml.io) runtime configuration, see [logpp.toml](https://github.com/oktal/logpp/blob/master/examples/logpp.toml) example
+* Enrichment of log messages with contextual structured fields
+* Built-in support for a variety of [sinks](https://github.com/oktal/logpp/tree/master/include/logpp/sinks)
+    * Colored console
+    * File
+    * Rolling file
+    * Please [contribute](#contributing) yours !
+* Extandable and configurable log [formatters](https://github.com/oktal/logpp/tree/master/include/logpp/format)
+    * Pattern
+    * [logfmt](https://www.brandur.org/logfmt)
+* Asynchronous logging (optional)
+* Zero-allocation logging strategy for small log messages
 
 ### Built With
 
