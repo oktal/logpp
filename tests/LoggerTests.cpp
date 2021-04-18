@@ -257,26 +257,34 @@ TEST_F(LoggerTest, should_log_message_with_fields)
 
 struct TestId
 {
-    explicit TestId(std::string name)
+    explicit TestId(std::string name, uint32_t id)
         : name(std::move(name))
+        , id(id)
     { }
 
     std::string name;
+    uint32_t id;
 };
 
 std::ostream& operator<<(std::ostream& os, const TestId& id)
 {
     os << id.name;
+    os << ':';
+    os << id.id;
     return os;
 }
 
 TEST_F(LoggerTest, should_log_message_with_custom_streamable_fields)
 {
-    TestId id("LoggerTest.should_log_message_with_custom_streamable_fields");
+    TestId id("LoggerTest.should_log_message_with_custom_streamable_fields", 0xABC);
 
     logger->info("Test message",
                  logpp::field("test_id", id));
 
     auto* entry = checkEntry("Test message", LogLevel::Info);
-    checkField(entry, "test_id", std::string_view("LoggerTest.should_log_message_with_custom_streamable_fields"));
+
+    std::ostringstream oss;
+    oss << id;
+
+    checkField(entry, "test_id", std::string_view(oss.str()));
 }
