@@ -62,3 +62,41 @@ target_link_libraries(logpp
 )
 
 set_property(TARGET logpp PROPERTY DBG_POSTFIX d)
+
+install(
+    DIRECTORY "${CMAKE_SOURCE_DIR}/include/logpp"
+    DESTINATION include
+    FILES_MATCHING
+    PATTERN "*.h"
+)
+
+install(
+    TARGETS logpp
+    EXPORT logppTargets
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    INCLUDES DESTINATION include
+)
+
+install(
+    EXPORT logppTargets
+    FILE logppTargets.cmake
+    NAMESPACE logpp::
+    DESTINATION lib
+)
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    logppConfigVersion.cmake
+    VERSION ${PACKAGE_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+
+install(
+    FILES
+        "${CMAKE_SOURCE_DIR}/cmake/logpp-config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/logppConfigVersion.cmake"
+    DESTINATION
+        lib
+)
+
