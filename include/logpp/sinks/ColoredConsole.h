@@ -3,37 +3,38 @@
 #include "logpp/format/PatternFormatter.h"
 #include "logpp/format/flag/LevelFormatter.h"
 
+#include "logpp/utils/rang.hpp"
+
 #include <array>
-#include <cstdio>
+#include <iostream>
+#include <mutex>
 
 namespace logpp::sink
 {
     class ColoredConsole : public FormatSink
     {
     public:
-        explicit ColoredConsole(FILE* fp)
-            : ColoredConsole(fp, std::make_shared<PatternFormatter>("%+"))
+        explicit ColoredConsole(std::ostream& os)
+            : ColoredConsole(os, std::make_shared<PatternFormatter>("%+"))
         { }
 
-        explicit ColoredConsole(FILE* fp, const std::shared_ptr<Formatter>& formatter)
+        explicit ColoredConsole(std::ostream& os, const std::shared_ptr<Formatter>& formatter)
             : FormatSink(formatter)
-            , m_file(fp)
+            , m_os(os)
         {
-            setColor(LogLevel::Trace, FgWhite);
-            setColor(LogLevel::Debug, FgGreen);
-            setColor(LogLevel::Info, FgCyan);
-            setColor(LogLevel::Warning, FgYellow);
-            setColor(LogLevel::Error, FgRed);
-
-            configureFormatter(formatter);
+            setColor(LogLevel::Trace, rang::fg::gray);
+            setColor(LogLevel::Debug, rang::fg::green);
+            setColor(LogLevel::Info, rang::fg::cyan);
+            setColor(LogLevel::Warning, rang::fg::yellow);
+            setColor(LogLevel::Error, rang::fg::red);
         }
 
-        void setColor(LogLevel level, std::string_view code)
+        void setColor(LogLevel level, rang::fg color)
         {
-            m_colors[static_cast<size_t>(level)] = code;
+            m_colors[static_cast<size_t>(level)] = color;
         }
 
-        std::string_view getColor(LogLevel level) const
+        rang::fg getColor(LogLevel level) const
         {
             return m_colors[static_cast<size_t>(level)];
         }
@@ -43,37 +44,17 @@ namespace logpp::sink
             fmt::memory_buffer formatBuf;
             format(name, level, buffer, formatBuf);
 
-            ::fwrite(formatBuf.data(), 1, formatBuf.size(), m_file);
-            ::fputc('\n', m_file);
+            auto color = getColor(level);
+
+            std::lock_guard guard(m_mutex);
+            m_os << color << std::string_view(formatBuf.data(), formatBuf.size());
+            m_os.put('\n');
         }
 
     private:
-        FILE* m_file;
-
-        std::array<std::string_view, 5> m_colors;
-
-        static constexpr std::string_view Bold  = "\033[1m";
-        static constexpr std::string_view Reset = "\033[m";
-
-        static constexpr std::string_view FgBlack   = "\033[30m";
-        static constexpr std::string_view FgRed     = "\033[31m";
-        static constexpr std::string_view FgGreen   = "\033[32m";
-        static constexpr std::string_view FgYellow  = "\033[33m";
-        static constexpr std::string_view FgBlue    = "\033[34m";
-        static constexpr std::string_view FgMagenta = "\033[35m";
-        static constexpr std::string_view FgCyan    = "\033[36m";
-        static constexpr std::string_view FgWhite   = "\033[37m";
-
-        void configureFormatter(const std::shared_ptr<Formatter>& formatter)
-        {
-            formatter->setPreFormat([=](std::string_view, LogLevel level, const EventLogBuffer&, fmt::memory_buffer& out) {
-                auto color = getColor(level);
-                fmt::format_to(out, "{}", color);
-            });
-            formatter->setPostFormat([=](std::string_view, LogLevel, const EventLogBuffer&, fmt::memory_buffer& out) {
-                out.append(Reset.data(), Reset.data() + Reset.size());
-            });
-        }
+        std::mutex m_mutex;
+        std::ostream& m_os;
+        std::array<rang::fg, 5> m_colors;
     };
 
     class ColoredOutputConsole : public ColoredConsole
@@ -82,11 +63,11 @@ namespace logpp::sink
         static constexpr std::string_view Name = "ColoredOutputConsole";
 
         ColoredOutputConsole()
-            : ColoredConsole(stdout)
+            : ColoredConsole(std::cout)
         { }
 
         explicit ColoredOutputConsole(std::shared_ptr<Formatter> formatter)
-            : ColoredConsole(stdout, std::move(formatter))
+            : ColoredConsole(std::cout, std::move(formatter))
         { }
     };
 
@@ -96,11 +77,11 @@ namespace logpp::sink
         static constexpr std::string_view Name = "ColoredErrorConsole";
 
         ColoredErrorConsole()
-            : ColoredConsole(stderr)
+            : ColoredConsole(std::cerr)
         { }
 
         ColoredErrorConsole(std::shared_ptr<Formatter> formatter)
-            : ColoredConsole(stderr, std::move(formatter))
+            : ColoredConsole(std::cerr, std::move(formatter))
         { }
     };
 }
