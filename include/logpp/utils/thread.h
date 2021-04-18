@@ -7,8 +7,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 #elif defined(LOGPP_PLATFORM_WINDOWS)
-#include <processthreadsapi.h>
 #include <windows.h>
+#include <processthreadsapi.h>
 #endif
 
 namespace logpp::thread_utils

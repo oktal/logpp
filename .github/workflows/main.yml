@@ -56,3 +56,29 @@ jobs:
         working-directory: ${{github.workspace}}/build-${{ matrix.cc }}
         shell: bash
         run: conan build ..
+  build-windows:
+    runs-on: windows-latest
+    name: Windows - msvc
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install conan
+        uses: turtlebrowser/get-conan@v1.0
+
+      - name: Create conan profile
+        run: conan profile new msvc --detect
+
+      - name: Show conan profile
+        run: conan profile show msvc
+
+      - name: Create Build Environment
+        run: cmake -E make_directory ${{github.workspace}}/build-msvc
+
+      - name: Fetch dependencies
+        working-directory: ${{github.workspace}}/build-msvc
+        run: conan install .. -o build_tests=True -pr=msvc --build=missing
+
+      - name: Build
+        working-directory: ${{github.workspace}}/build-msvc
+        run: conan build ..
