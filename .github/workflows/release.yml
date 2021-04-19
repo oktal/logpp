@@ -75,10 +75,10 @@ jobs:
         shell: bash
         run: conan install .. -o build_tests=True ${{ matrix.conan_args }} -pr=${{ matrix.artifact }} --build=missing
 
-      - name: Check version
-        working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
-        shell: bash
-        run: ${{github.workspace}}/tools/check-version.sh ${{ env.RELEASE_TARGET_VERSION }} vt
+        # - name: Check version
+        #   working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
+        #   shell: bash
+        #   run: ${{github.workspace}}/tools/check-version.sh ${{ env.RELEASE_TARGET_VERSION }} vt
 
       - name: Build
         working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
