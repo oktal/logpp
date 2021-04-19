@@ -56,12 +56,14 @@ target_link_libraries(logpp
         ${LOGPP_LIBS_TOMLPLUSPLUS}
 
         Threads::Threads
-        $<$<CXX_COMPILER_ID:GNU>:
-            stdc++fs
-        >
 )
 
-set_property(TARGET logpp PROPERTY DBG_POSTFIX d)
+set_target_properties(logpp
+    PROPERTIES
+        DEBUG_POSTFIX d
+        VERSION ${PROJECT_VERSION}
+        SOVERSION ${PROJECT_VERSION_MAJOR}
+)
 
 install(
     DIRECTORY "${CMAKE_SOURCE_DIR}/include/logpp"

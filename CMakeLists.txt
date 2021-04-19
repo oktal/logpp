@@ -42,3 +42,48 @@ add_custom_target(format
     WORKING_DIRECTORY
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+add_custom_target(version
+    COMMAND
+        ${CMAKE_COMMAND} -E echo "${CMAKE_PROJECT_VERSION}"
+)
+
+get_target_property(_logpp_type logpp TYPE)
+if (_logpp_type STREQUAL STATIC_LIBRARY)
+    set(_type "static")
+elseif (_logpp_type STREQUAL SHARED_LIBRARY)
+    set(_type "shared")
+else()
+    message(FATAL_ERROR "Unknown library type")
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(_comp "GCC")
+else()
+    set(_comp "${CMAKE_CXX_COMPILER_ID}")
+endif()
+
+set(CPACK_GENERATOR "TGZ;ZIP")
+set(CPACK_SOURCE_GENERATOR "TGZ;ZIP")
+set(CPACK_SOURCE_IGNORE_FILES
+    /.git
+    /.vscode
+    /.clangd
+    .gitignore
+    /.*build.*
+    compile_commands.json
+)
+set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/package")
+set(CPACK_PACKAGE_DIRECTORY ${CMAKE_CURENT_BINARY_DIR})
+string(TOLOWER ${CMAKE_SYSTEM_NAME} _sys)
+string(TOLOWER ${PROJECT_NAME} _project_lower)
+string(TOLOWER ${_comp} _comp)
+set(CPACK_PACKAGE_FILE_NAME "${_project_lower}-${_sys}-${_comp}-${_type}-${PROJECT_VERSION}")
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "${_project_lower}-src-${PROJECT_VERSION}")
+
+include(CPack)
