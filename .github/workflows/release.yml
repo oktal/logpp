@@ -98,7 +98,7 @@ jobs:
           path: "${{ github.workspace }}/build-${{ matrix.artifact }}/package/${{ matrix.artifact }}-${{ env.LOGPP_VERSION }}.tar.gz"
 
       - name: Release
-        uses: softprops/actions-gh-release@v1
+        uses: softprops/action-gh-release@v1
         with:
           files: "${{ github.workspace }}/build-${{ matrix.artifact }}/package/${{ matrix.artifact }}-${{ env.LOGPP_VERSION }}.tar.gz"
         env:
@@ -141,7 +141,7 @@ jobs:
           path: "${{ github.workspace }}/build-windows-msvc/package/logpp-windows-msvc-static-0.1.0.zip"
 
       - name: Release
-        uses: softprops/actions-gh-release@v1
+        uses: softprops/action-gh-release@v1
         with:
           files: "${{ github.workspace }}/build-windows-msvc/package/logpp-windows-msvc-static-0.1.0.zip"
         env:
