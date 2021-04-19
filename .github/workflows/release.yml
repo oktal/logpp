@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+
+      - name: Setup environment
+        run: echo "RELEASE_VER=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
         
       - name: Check version matching
-        run: echo ${{ github.event.release.tag_name }}
+        run: echo ${{ env.RELEASE_VER }}
