@@ -93,7 +93,7 @@ jobs:
       - uses: actions/upload-artifact@v1
         with:
           name: ${{ matrix.artifact }}-${{ env.LOGPP_VERSION }}.tar.gz
-          path: "${{ github.workspace }}/build-${{ matrix.artifact }}/package/${{ matrix-artifact }}-${{ env.LOGPP_VERSION }}.tar.gz"
+          path: "${{ github.workspace }}/build-${{ matrix.artifact }}/package/${{ matrix.artifact }}-${{ env.LOGPP_VERSION }}.tar.gz"
 
   build-windows:
     runs-on: windows-latest
