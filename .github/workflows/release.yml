@@ -75,10 +75,11 @@ jobs:
         run: conan build ..
 
       - name: Setup release environment
+        working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
         shell: bash
         run: |
             echo "RELEASE_TARGET_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-            echo "LOGPP_VERSION=`bash tools/version.sh`" >> $GITHUB_ENV
+            echo "LOGPP_VERSION=`bash ${{ github.workspace }}/tools/version.sh`" >> $GITHUB_ENV
 
       - name: Check version
         working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
