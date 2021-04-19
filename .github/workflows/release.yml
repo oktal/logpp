@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - vt0.*
+      - v0.*
 
 jobs:
   build-linux:
@@ -84,7 +84,7 @@ jobs:
       - name: Check version
         working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
         shell: bash
-        run: ${{ github.workspace }}/tools/check-version.sh ${{ env.RELEASE_TARGET_VERSION }} vt
+        run: ${{ github.workspace }}/tools/check-version.sh ${{ env.RELEASE_TARGET_VERSION }}
 
       - name: Package
         working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
@@ -130,4 +130,4 @@ jobs:
       - uses: actions/upload-artifact@v1
         with:
           name: logpp-windows-msvc-0.1.0.zip
-          path: "${{ github.workspace }}/build-windows-msvc/package/logpp-windows-msvc-0.1.0.zip"
+          path: "${{ github.workspace }}/build-windows-msvc/package/logpp-windows-msvc-static-0.1.0.zip"
