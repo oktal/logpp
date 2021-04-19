@@ -1,0 +1,17 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - vt0.*
+
+  workflow_dispatch:
+
+jobs:
+  build-linux-shared-gcc:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        
+      - name: Check version matching
+        run: echo ${{ github.event.release.tag_name }}
