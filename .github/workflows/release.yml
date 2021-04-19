@@ -46,12 +46,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Setup environment
-        shell: bash
-        run: |
-            echo "RELEASE_TARGET_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-            echo "LOGPP_VERSION=`bash tools/version.sh`" >> $GITHUB_ENV
-
       - name: Install compiler
         run: sudo apt install ${{ matrix.packages }}
 
@@ -80,6 +74,12 @@ jobs:
         shell: bash
         run: conan build ..
 
+      - name: Setup release environment
+        shell: bash
+        run: |
+            echo "RELEASE_TARGET_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+            echo "LOGPP_VERSION=`bash tools/version.sh`" >> $GITHUB_ENV
+
       - name: Check version
         working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
         shell: bash
@@ -90,7 +90,8 @@ jobs:
         shell: bash
         run: cpack
 
-      - uses: actions/upload-artifact@v1
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1
         with:
           name: ${{ matrix.artifact }}-${{ env.LOGPP_VERSION }}.tar.gz
           path: "${{ github.workspace }}/build-${{ matrix.artifact }}/package/${{ matrix.artifact }}-${{ env.LOGPP_VERSION }}.tar.gz"
@@ -123,7 +124,9 @@ jobs:
         working-directory: ${{ github.workspace }}/build-windows-msvc
         run: cpack
 
+      # TODO: get version
+
       - uses: actions/upload-artifact@v1
         with:
-          name: logpp-windows-msvc-${{ env.LOGPP_VERSION }}.tar.gz
-          path: "${{ github.workspace }}/build-windows-msvc/package/logpp-windows-msvc-${{ env.LOGPP_VERSION }}.zip"
+          name: logpp-windows-msvc-0.1.0.zip
+          path: "${{ github.workspace }}/build-windows-msvc/package/logpp-windows-msvc-0.1.0.zip"
