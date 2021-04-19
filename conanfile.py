@@ -5,8 +5,16 @@ class LogppConan(ConanFile):
     requires = "fmt/7.1.3", "tomlplusplus/2.3.0"
     generators = "cmake"
 
-    options = { "build_tests": [True, False], "build_benches": [True, False]}
-    default_options = { "build_tests": False, "build_benches": False }
+    options = {
+        "build_tests": [True, False],
+        "build_benches": [True, False],
+        "shared": [True, False]
+    }
+    default_options = {
+        "build_tests": False,
+        "build_benches": False,
+        "shared": False
+    }
 
     def requirements(self):
         if self.options.build_tests:

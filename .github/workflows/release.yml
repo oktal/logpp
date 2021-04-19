@@ -3,15 +3,146 @@ name: Release
 on:
   push:
     tags:
-      - vt0.*
-
-  workflow_dispatch:
+      - v0.*
 
 jobs:
-  build-linux-shared-gcc:
-    runs-on: ubuntu-20.04
+  build-linux:
+    strategy:
+      matrix:
+        include:
+
+          # Static builds
+
+          - compiler: gcc
+            cc: gcc-9
+            cxx: g++-9
+            packages: gcc-9 g++-9
+            conan_args:
+            artifact: logpp-linux-gcc-static
+          - compiler: clang
+            cc: clang-10
+            cxx: clang++-10
+            packages: clang-10
+            conan_args:
+            artifact: logpp-linux-clang-static
+
+          # Shared builds
+
+          - compiler: gcc
+            cc: gcc-9
+            cxx: g++-9
+            packages: gcc-9 g++-9
+            conan_args: -o shared=True
+            artifact: logpp-linux-gcc-shared
+          - compiler: clang
+            cc: clang-10
+            cxx: clang++-10
+            packages: clang-10
+            conan_args: -o shared=True
+            artifact: logpp-linux-clang-shared
+
+    runs-on: ubuntu-latest
+    name: build-${{ matrix.artifact }}
     steps:
       - uses: actions/checkout@v2
-        
-      - name: Check version matching
-        run: echo ${{ github.event.release.tag_name }}
+
+      - name: Install compiler
+        run: sudo apt install ${{ matrix.packages }}
+
+      - name: Install conan
+        uses: turtlebrowser/get-conan@v1.0
+
+      - name: Create conan profile
+        run: |
+           conan profile new ${{ matrix.artifact }} --detect
+           conan profile update settings.compiler.libcxx=libstdc++11 ${{ matrix.artifact }}
+           conan profile update env.CXX=${{ matrix.cxx }} ${{ matrix.artifact }}
+        env:
+          CC:  ${{ matrix.cc }}
+          CXX: ${{ matrix.cxx }}
+
+      - name: Create Build Environment
+        run: cmake -E make_directory ${{ github.workspace }}/build-${{ matrix.artifact }}
+
+      - name: Fetch dependencies
+        working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
+        shell: bash
+        run: conan install .. -o build_tests=True ${{ matrix.conan_args }} -pr=${{ matrix.artifact }} --build=missing
+
+      - name: Build
+        working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
+        shell: bash
+        run: conan build ..
+
+      - name: Setup release environment
+        working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
+        shell: bash
+        run: |
+            echo "RELEASE_TARGET_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+            echo "LOGPP_VERSION=`bash ${{ github.workspace }}/tools/version.sh`" >> $GITHUB_ENV
+
+      - name: Check version
+        working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
+        shell: bash
+        run: ${{ github.workspace }}/tools/check-version.sh ${{ env.RELEASE_TARGET_VERSION }}
+
+      - name: Package
+        working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
+        shell: bash
+        run: cpack
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ matrix.artifact }}-${{ env.LOGPP_VERSION }}.tar.gz
+          path: "${{ github.workspace }}/build-${{ matrix.artifact }}/package/${{ matrix.artifact }}-${{ env.LOGPP_VERSION }}.tar.gz"
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "${{ github.workspace }}/build-${{ matrix.artifact }}/package/${{ matrix.artifact }}-${{ env.LOGPP_VERSION }}.tar.gz"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+  build-windows:
+    runs-on: windows-latest
+    name: build-windows-msvc
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install conan
+        uses: turtlebrowser/get-conan@v1.0
+
+      - name: Create conan profile
+        run: conan profile new msvc --detect
+
+      - name: Create Build Environment
+        run: cmake -E make_directory ${{ github.workspace }}/build-windows-msvc
+
+      - name: Fetch dependencies
+        working-directory: ${{ github.workspace }}/build-windows-msvc
+        run: conan install .. -o build_tests=True -pr=msvc --build=missing
+
+      - name: Build
+        working-directory: ${{ github.workspace }}/build-windows-msvc
+        run: conan build ..
+
+      - name: Package
+        working-directory: ${{ github.workspace }}/build-windows-msvc
+        run: cpack
+
+      # TODO: get version
+
+      - uses: actions/upload-artifact@v1
+        with:
+          name: logpp-windows-msvc-0.1.0.zip
+          path: "${{ github.workspace }}/build-windows-msvc/package/logpp-windows-msvc-static-0.1.0.zip"
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "${{ github.workspace }}/build-windows-msvc/package/logpp-windows-msvc-static-0.1.0.zip"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
