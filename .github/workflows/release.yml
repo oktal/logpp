@@ -8,94 +8,73 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-linux-shared-gcc:
-    runs-on: ubuntu-20.04
+  build-linux:
+    strategy:
+      matrix:
+        include:
+          - compiler: gcc
+            cc: gcc-9
+            cxx: g++-9
+            packages: gcc-9 g++-9
+            cmake_arguments:
+            artifact: logpp-linux-gcc-static
+          - compiler: clang
+            cc: clang-10
+            cxx: clang++-10
+            packages: clang-10
+            cmake_arguments:
+            artifact: logpp-linux-clang-static
+
+    runs-on: ubuntu-latest
+    name: build-${{ matrix.artifact }}
     steps:
       - uses: actions/checkout@v2
 
       - name: Setup environment
-        run: echo "RELEASE_VER=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+        shell: bash
+        run: |
+            echo "RELEASE_TARGET_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+            echo "LOGPP_VERSION=`bash tools/version.sh`" >> $GITHUB_ENV
+
+      - name: Install compiler
+        run: sudo apt install ${{ matrix.packages }}
 
       - name: Install conan
         uses: turtlebrowser/get-conan@v1.0
 
       - name: Create conan profile
         run: |
-           conan profile new gcc --detect
-           conan profile update settings.compiler.libcxx=libstdc++11 gcc
+           conan profile new ${{ matrix.artifact }} --detect
+           conan profile update settings.compiler.libcxx=libstdc++11 ${{ matrix.artifact }}
+           conan profile update env.CXX=${{ matrix.cxx }} ${{ matrix.artifact }}
         env:
-          CC:  gcc
-          CXX: g++
+          CC:  ${{ matrix.cc }}
+          CXX: ${{ matrix.cxx }}
 
       - name: Create Build Environment
-        run: cmake -E make_directory ${{github.workspace}}/build
+        run: cmake -E make_directory ${{ github.workspace }}/build-${{ matrix.artifact }}
 
       - name: Fetch dependencies
-        working-directory: ${{github.workspace}}/build
+        working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
         shell: bash
-        run: conan install .. -o build_tests=True -pr=gcc --build=missing
+        run: conan install .. -o build_tests=True -pr=${{ matrix.artifact }} --build=missing
 
       - name: Run CMake
-        working-directory: ${{github.workspace}}/build
+        working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
         shell: bash
-        run: cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON ..
+        run: cmake -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake_arguments }} ..
 
-      - name: Check version
-        run: ${{github.workspace}}/tools/check-version.sh ${{ env.RELEASE_VER }} vt
-        working-directory: ${{github.workspace}}/build
+        # - name: Check version
+        #   working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
+        #   shell: bash
+        #   run: ${{github.workspace}}/tools/check-version.sh ${{ env.RELEASE_TARGET_VERSION }} vt
 
       - name: Build
-        working-directory: ${{github.workspace}}/build
+        working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
         shell: bash
         run: conan build ..
 
       - name: Package
-        working-directory: ${{github.workspace}}/build
-        shell: bash
-        run: cpack
-
-  build-linux-static-gcc:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Setup environment
-        run: echo "RELEASE_VER=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-
-      - name: Install conan
-        uses: turtlebrowser/get-conan@v1.0
-
-      - name: Create conan profile
-        run: |
-           conan profile new gcc --detect
-           conan profile update settings.compiler.libcxx=libstdc++11 gcc
-        env:
-          CC:  gcc
-          CXX: g++
-
-      - name: Create Build Environment
-        run: cmake -E make_directory ${{github.workspace}}/build
-
-      - name: Fetch dependencies
-        working-directory: ${{github.workspace}}/build
-        shell: bash
-        run: conan install .. -o build_tests=True -pr=gcc --build=missing
-
-      - name: Run CMake
-        working-directory: ${{github.workspace}}/build
-        shell: bash
-        run: cmake -DCMAKE_BUILD_TYPE=Release ..
-
-      - name: Check version
-        run: ${{github.workspace}}/tools/check-version.sh ${{ env.RELEASE_VER }} vt
-        working-directory: ${{github.workspace}}/build
-
-      - name: Build
-        working-directory: ${{github.workspace}}/build
-        shell: bash
-        run: conan build ..
-
-      - name: Package
-        working-directory: ${{github.workspace}}/build
+        working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
         shell: bash
         run: cpack
