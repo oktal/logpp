@@ -5,13 +5,14 @@ on:
     tags:
       - vt0.*
 
-  workflow_dispatch:
-
 jobs:
   build-linux:
     strategy:
       matrix:
         include:
+
+          # Static builds
+
           - compiler: gcc
             cc: gcc-9
             cxx: g++-9
@@ -24,6 +25,21 @@ jobs:
             packages: clang-10
             conan_args:
             artifact: logpp-linux-clang-static
+
+          # Shared builds
+
+          - compiler: gcc
+            cc: gcc-9
+            cxx: g++-9
+            packages: gcc-9 g++-9
+            conan_args: -o shared=True
+            artifact: logpp-linux-gcc-shared
+          - compiler: clang
+            cc: clang-10
+            cxx: clang++-10
+            packages: clang-10
+            conan_args: -o shared=True
+            artifact: logpp-linux-clang-shared
 
     runs-on: ubuntu-latest
     name: build-${{ matrix.artifact }}
@@ -59,10 +75,10 @@ jobs:
         shell: bash
         run: conan install .. -o build_tests=True ${{ matrix.conan_args }} -pr=${{ matrix.artifact }} --build=missing
 
-        # - name: Check version
-        #   working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
-        #   shell: bash
-        #   run: ${{github.workspace}}/tools/check-version.sh ${{ env.RELEASE_TARGET_VERSION }} vt
+      - name: Check version
+        working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
+        shell: bash
+        run: ${{github.workspace}}/tools/check-version.sh ${{ env.RELEASE_TARGET_VERSION }} vt
 
       - name: Build
         working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
