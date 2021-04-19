@@ -15,6 +15,10 @@ jobs:
 
       - name: Setup environment
         run: echo "RELEASE_VER=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-        
-      - name: Check version matching
-        run: echo ${{ env.RELEASE_VER }}
+
+      - name: Create Build Environment
+        run: cmake -E make_directory ${{github.workspace}}/build
+
+      - name: Check version
+        run: ${{github.workspace}}/tools/check-version.sh ${{ env.RELEASE_VER }} vt
+        working-directory: ${{github.workspace}}/build
