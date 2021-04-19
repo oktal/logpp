@@ -53,3 +53,49 @@ jobs:
         working-directory: ${{github.workspace}}/build
         shell: bash
         run: cpack
+
+  build-linux-static-gcc:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup environment
+        run: echo "RELEASE_VER=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+      - name: Install conan
+        uses: turtlebrowser/get-conan@v1.0
+
+      - name: Create conan profile
+        run: |
+           conan profile new gcc --detect
+           conan profile update settings.compiler.libcxx=libstdc++11 gcc
+        env:
+          CC:  gcc
+          CXX: g++
+
+      - name: Create Build Environment
+        run: cmake -E make_directory ${{github.workspace}}/build
+
+      - name: Fetch dependencies
+        working-directory: ${{github.workspace}}/build
+        shell: bash
+        run: conan install .. -o build_tests=True -pr=gcc --build=missing
+
+      - name: Run CMake
+        working-directory: ${{github.workspace}}/build
+        shell: bash
+        run: cmake -DCMAKE_BUILD_TYPE=Release ..
+
+      - name: Check version
+        run: ${{github.workspace}}/tools/check-version.sh ${{ env.RELEASE_VER }} vt
+        working-directory: ${{github.workspace}}/build
+
+      - name: Build
+        working-directory: ${{github.workspace}}/build
+        shell: bash
+        run: conan build ..
+
+      - name: Package
+        working-directory: ${{github.workspace}}/build
+        shell: bash
+        run: cpack
