@@ -16,8 +16,29 @@ jobs:
       - name: Setup environment
         run: echo "RELEASE_VER=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
+      - name: Install conan
+        uses: turtlebrowser/get-conan@v1.0
+
+      - name: Create conan profile
+        run: |
+           conan profile new gcc --detect
+           conan profile update settings.compiler.libcxx=libstdc++11 gcc
+        env:
+          CC:  gcc
+          CXX: g++
+
       - name: Create Build Environment
         run: cmake -E make_directory ${{github.workspace}}/build
+
+      - name: Fetch dependencies
+        working-directory: ${{github.workspace}}/build-${{ matrix.cc }}
+        shell: bash
+        run: conan install .. -o build_tests=True -pr=${{ matrix.cc }} --build=missing
+
+      - name: Run CMake
+        working-directory: ${{github.workspace}}/build-${{ matrix.cc }}
+        shell: bash
+        run: cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON ..
 
       - name: Check version
         run: ${{github.workspace}}/tools/check-version.sh ${{ env.RELEASE_VER }} vt
