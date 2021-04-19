@@ -59,11 +59,6 @@ jobs:
         shell: bash
         run: conan install .. -o build_tests=True ${{ matrix.conan_args }} -pr=${{ matrix.artifact }} --build=missing
 
-      - name: Run CMake
-        working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
-        shell: bash
-        run: cmake -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake_arguments }} ..
-
         # - name: Check version
         #   working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
         #   shell: bash
