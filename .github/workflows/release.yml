@@ -90,6 +90,11 @@ jobs:
         shell: bash
         run: cpack
 
+      - uses: actions/upload-artifact@v1
+        with:
+          name: ${{ matrix.artifact }}-${{ env.LOGPP_VERSION }}.tar.gz
+          path: "${{ github.workspace }}/build-${{ matrix.artifact }}/package/${{ matrix-artifact }}-${{ env.LOGPP_VERSION }}.tar.gz"
+
   build-windows:
     runs-on: windows-latest
     name: build-windows-msvc
@@ -117,3 +122,8 @@ jobs:
       - name: Package
         working-directory: ${{ github.workspace }}/build-windows-msvc
         run: cpack
+
+      - uses: actions/upload-artifact@v1
+        with:
+          name: logpp-windows-msvc-${{ env.LOGPP_VERSION }}.tar.gz
+          path: "${{ github.workspace }}/build-windows-msvc/package/logpp-windows-msvc-${{ env.LOGPP_VERSION }}.zip"
