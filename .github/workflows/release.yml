@@ -75,17 +75,45 @@ jobs:
         shell: bash
         run: conan install .. -o build_tests=True ${{ matrix.conan_args }} -pr=${{ matrix.artifact }} --build=missing
 
-        # - name: Check version
-        #   working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
-        #   shell: bash
-        #   run: ${{github.workspace}}/tools/check-version.sh ${{ env.RELEASE_TARGET_VERSION }} vt
-
       - name: Build
         working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
         shell: bash
         run: conan build ..
 
+      - name: Check version
+        working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
+        shell: bash
+        run: ${{ github.workspace }}/tools/check-version.sh ${{ env.RELEASE_TARGET_VERSION }} vt
+
       - name: Package
         working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
         shell: bash
+        run: cpack
+
+  build-windows:
+    runs-on: windows-latest
+    name: build-windows-msvc
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install conan
+        uses: turtlebrowser/get-conan@v1.0
+
+      - name: Create conan profile
+        run: conan profile new msvc --detect
+
+      - name: Create Build Environment
+        run: cmake -E make_directory ${{ github.workspace }}/build-windows-msvc
+
+      - name: Fetch dependencies
+        working-directory: ${{ github.workspace }}/build-windows-msvc
+        run: conan install .. -o build_tests=True -pr=msvc --build=missing
+
+      - name: Build
+        working-directory: ${{ github.workspace }}/build-windows-msvc
+        run: conan build ..
+
+      - name: Package
+        working-directory: ${{ github.workspace }}/build-windows-msvc
         run: cpack
