@@ -31,7 +31,7 @@ jobs:
         run: cmake -E make_directory ${{github.workspace}}/build
 
       - name: Fetch dependencies
-        working-directory: ${{github.workspace}}/build-${{ matrix.cc }}
+        working-directory: ${{github.workspace}}/build
         shell: bash
         run: conan install .. -o build_tests=True -pr=${{ matrix.cc }} --build=missing
 
