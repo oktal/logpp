@@ -33,10 +33,10 @@ jobs:
       - name: Fetch dependencies
         working-directory: ${{github.workspace}}/build
         shell: bash
-        run: conan install .. -o build_tests=True -pr=${{ matrix.cc }} --build=missing
+        run: conan install .. -o build_tests=True -pr=gcc --build=missing
 
       - name: Run CMake
-        working-directory: ${{github.workspace}}/build-${{ matrix.cc }}
+        working-directory: ${{github.workspace}}/build
         shell: bash
         run: cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON ..
 
