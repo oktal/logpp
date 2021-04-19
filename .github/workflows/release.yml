@@ -43,3 +43,13 @@ jobs:
       - name: Check version
         run: ${{github.workspace}}/tools/check-version.sh ${{ env.RELEASE_VER }} vt
         working-directory: ${{github.workspace}}/build
+
+      - name: Build
+        working-directory: ${{github.workspace}}/build
+        shell: bash
+        run: conan build ..
+
+      - name: Package
+        working-directory: ${{github.workspace}}/build
+        shell: bash
+        run: cpack
