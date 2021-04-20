@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 3.10)
 project(logpp VERSION 0.1.0 LANGUAGES CXX)
 
+# Determine if logpp is built as a subproject (using add_subdirectory)
+# or if it is the master project.
+if (NOT DEFINED LOGPP_MASTER_PROJECT)
+  set(LOGPP_MASTER_PROJECT OFF)
+  if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    set(LOGPP_MASTER_PROJECT ON)
+  endif()
+endif()
+
 if (EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
   message(STATUS "[Deps] Using conan")
   include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
@@ -21,6 +30,7 @@ endif()
 
 set(CMAKE_DEBUG_POSTFIX d)
 
+option(LOGPP_INSTAL "Generate install target" ${LOGPP_MASTER_PROJECT})
 option(LOGPP_SHARED "Build logpp as a shared library" ON)
 
 option(BUILD_TESTS "Build tests" OFF)
