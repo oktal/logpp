@@ -58,8 +58,10 @@ namespace logpp::sink
                         SinkBase::raiseConfigurationError("strategy: invalid `duration` {}", intervalIt->second);
                 }
             }
-
-            SinkBase::raiseConfigurationError("strategy: invalid strategy options");
+            else
+            {
+                SinkBase::raiseConfigurationError("strategy: invalid strategy options");
+            }
         }
 
         template <typename Func>
@@ -108,8 +110,10 @@ namespace logpp::sink
                         SinkBase::raiseConfigurationError("archive: invalid `tz` {}", tz);
                 }
             }
-
-            SinkBase::raiseConfigurationError("archive: invalid archive options");
+            else
+            {
+                SinkBase::raiseConfigurationError("archive: invalid archive options");
+            }
         }
 
         template <typename Func>
