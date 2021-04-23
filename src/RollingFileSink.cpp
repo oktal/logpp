@@ -246,6 +246,7 @@ namespace logpp::sink
 
         parseRollingAndArchive(options, [&](auto rollingStrategy, auto archiveStrategy) {
             m_file.reset(new FileImpl(env_utils::expandEnvironmentVariables(*file), std::ios_base::out | std::ios_base::app, rollingStrategy, archiveStrategy));
+            onAfterOpened(m_file);
         });
     }
 
