@@ -5,9 +5,15 @@
 - **sinks:** Do not spuriously throw configuration error for `RollingFileSink` ([f8c5944](https://github.com/oktal/logpp/commit/f8c5944416528fe6e5980585a8a3319348b52066))
 - Fix possible invalid iterator usage in string_utils::iequals ([11c444a](https://github.com/oktal/logpp/commit/11c444a2859274c02f4e534697b72db137d26af9))
 
+### Chore
+- **CMake:** Print message when copying file next to binary ([2a231e1](https://github.com/oktal/logpp/commit/2a231e17171a78e0e41c1eaafd76b3b591d5a554))
+
 ### Enhancement
 - **CMake:** Link back with stdc++fs for gcc ([8d72114](https://github.com/oktal/logpp/commit/8d72114582ac6aef0a08a3e9a8a75b7dbeada334))
 - **CMake:** Only generate install target by default when logpp is not included as a subdirectory ([89d703e](https://github.com/oktal/logpp/commit/89d703eebf00776d11cdb445c602c18a31b995dd))
+
+### Features
+- **sinks:** Add `ColoredConsole` TOML theme configuration ([cc523b5](https://github.com/oktal/logpp/commit/cc523b5cca85e745b0887bf7bc671d8d7fcb60f4))
 
 
 <a name="v0.1.0"></a>
