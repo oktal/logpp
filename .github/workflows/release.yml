@@ -1,9 +1,11 @@
-name: Release
+name: Create release
 
 on:
-  push:
-    tags:
-      - v0.*
+  workflow_dispatch:
+    inputs:
+      versionName:
+        description: 'Name of version following SemVer e.g 0.1.0'
+        required: true
 
 jobs:
   build-linux:
@@ -78,13 +80,20 @@ jobs:
         working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
         shell: bash
         run: |
-            echo "RELEASE_TARGET_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
             echo "LOGPP_VERSION=`bash ${{ github.workspace }}/tools/version.sh`" >> $GITHUB_ENV
 
       - name: Check version
         working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
         shell: bash
-        run: ${{ github.workspace }}/tools/check-version.sh ${{ env.RELEASE_TARGET_VERSION }}
+        run: ${{ github.workspace }}/tools/check-version.sh ${{ github.event.inputs.versionName }}
+
+      - name: Initialize mandatory git config
+        run: |
+           git config user.name "GitHub Actions"
+           git config user.email noreply@github.com
+
+      - name: Create release tag
+        run: git tag v${{ env.LOGPP_VERSION }} -m "Release v${{ env.LOGPP_VERSION }}"
 
       - name: Package
         working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
@@ -103,6 +112,9 @@ jobs:
           files: "${{ github.workspace }}/build-${{ matrix.artifact }}/package/${{ matrix.artifact }}-${{ env.LOGPP_VERSION }}.tar.gz"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push release tag
+        run: git push origin v${{ env.LOGPP_VERSION }}
 
 
   build-windows:
@@ -133,16 +145,14 @@ jobs:
         working-directory: ${{ github.workspace }}/build-windows-msvc
         run: cpack
 
-      # TODO: get version
-
       - uses: actions/upload-artifact@v1
         with:
-          name: logpp-windows-msvc-0.1.0.zip
-          path: "${{ github.workspace }}/build-windows-msvc/package/logpp-windows-msvc-static-0.1.0.zip"
+          name: logpp-windows-msvc-${{ github.event.inputs.versionName }}.zip
+          path: "${{ github.workspace }}/build-windows-msvc/package/logpp-windows-msvc-static-${{ github.event.inputs.versionName }}.zip"
 
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: "${{ github.workspace }}/build-windows-msvc/package/logpp-windows-msvc-static-0.1.0.zip"
+          files: "${{ github.workspace }}/build-windows-msvc/package/logpp-windows-msvc-static-${{ github.event.inputs.versionName }}.zip"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
