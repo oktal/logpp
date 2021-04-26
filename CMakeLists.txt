@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(logpp VERSION 0.1.0 LANGUAGES CXX)
+project(logpp VERSION 0.1.1 LANGUAGES CXX)
 
 # Determine if logpp is built as a subproject (using add_subdirectory)
 # or if it is the master project.
