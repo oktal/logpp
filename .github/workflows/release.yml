@@ -8,6 +8,36 @@ on:
         required: true
 
 jobs:
+  create-release-tag:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Create Build Environment
+        run: cmake -E make_directory ${{ github.workspace }}/build-config
+
+      - name: Run CMake
+        run: cmake ..
+        working-directory: ${{ github.workspace }}/build-config      
+        shell: bash
+
+      - name: Check version
+        working-directory: ${{ github.workspace }}/build-config
+        shell: bash
+        run: ${{ github.workspace }}/tools/check-version.sh ${{ github.event.inputs.versionName }}
+
+      - name: Initialize mandatory git config
+        run: |
+           git config user.name "GitHub Actions"
+           git config user.email noreply@github.com
+
+      - name: Create release tag
+        run: git tag v${{ github.event.inputs.versionName }} -m "Release v${{ github.event.inputs.versionName }}"
+
+      - name: Push release tag
+        run: git push origin v${{ github.event.inputs.versionName }}
+
   build-linux:
     strategy:
       matrix:
@@ -76,28 +106,6 @@ jobs:
         shell: bash
         run: conan build ..
 
-      - name: Setup release environment
-        working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
-        shell: bash
-        run: |
-            echo "LOGPP_VERSION=`bash ${{ github.workspace }}/tools/version.sh`" >> $GITHUB_ENV
-
-      - name: Check version
-        working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
-        shell: bash
-        run: ${{ github.workspace }}/tools/check-version.sh ${{ github.event.inputs.versionName }}
-
-      - name: Initialize mandatory git config
-        run: |
-           git config user.name "GitHub Actions"
-           git config user.email noreply@github.com
-
-      - name: Create release tag
-        run: git tag v${{ env.LOGPP_VERSION }} -m "Release v${{ env.LOGPP_VERSION }}"
-
-      - name: Push release tag
-        run: git push origin v${{ env.LOGPP_VERSION }}
-
       - name: Package
         working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
         shell: bash
@@ -106,14 +114,14 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v1
         with:
-          name: ${{ matrix.artifact }}-${{ env.LOGPP_VERSION }}.tar.gz
-          path: "${{ github.workspace }}/build-${{ matrix.artifact }}/package/${{ matrix.artifact }}-${{ env.LOGPP_VERSION }}.tar.gz"
+          name: ${{ matrix.artifact }}-${{ github.event.inputs.versionName }}.tar.gz
+          path: "${{ github.workspace }}/build-${{ matrix.artifact }}/package/${{ matrix.artifact }}-${{ github.event.inputs.versionName }}.tar.gz"
 
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: "${{ github.workspace }}/build-${{ matrix.artifact }}/package/${{ matrix.artifact }}-${{ env.LOGPP_VERSION }}.tar.gz"
-          tag_name: v${{ env.LOGPP_VERSION }}
+          files: "${{ github.workspace }}/build-${{ matrix.artifact }}/package/${{ matrix.artifact }}-${{ github.event.inputs.versionName }}.tar.gz"
+          tag_name: v${{ github.event.inputs.versionName }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
