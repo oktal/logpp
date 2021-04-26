@@ -2,6 +2,7 @@
 
 #include "logpp/sinks/AsyncSink.h"
 #include "logpp/sinks/ColoredConsole.h"
+#include "logpp/sinks/Console.h"
 #include "logpp/sinks/file/FileSink.h"
 #include "logpp/sinks/file/RollingFileSink.h"
 
@@ -17,6 +18,8 @@ namespace logpp
         registerSinkFactory<sink::AsyncSink>();
         registerSinkFactory<sink::ColoredOutputConsole>();
         registerSinkFactory<sink::ColoredErrorConsole>();
+        registerSinkFactory<sink::OutputConsole>();
+        registerSinkFactory<sink::ErrorConsole>();
         registerSinkFactory<sink::FileSink>();
         registerSinkFactory<sink::RollingFileSink>();
     }

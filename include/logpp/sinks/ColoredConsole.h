@@ -1,7 +1,6 @@
 #include "logpp/sinks/FormatSink.h"
 
 #include "logpp/format/PatternFormatter.h"
-#include "logpp/format/flag/LevelFormatter.h"
 
 #include "logpp/utils/rang.hpp"
 

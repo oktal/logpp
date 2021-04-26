@@ -5,8 +5,8 @@
 # Section that configures the sinks that will be used by the loggers
 
 [sinks]
-# Sink that outputs content to console
-[sinks.console]
+# Sink that outputs content to console with colors
+[sinks.color_console]
    ## The type of the sink
    type = "ColoredOutputConsole"
    ## Write to stdout and enable colors
@@ -18,7 +18,7 @@
    # level = "info"
 
    ## The options of the sink
-   [sinks.console.options]
+   [sinks.color_console.options]
        format = "logfmt"
        ## Will use the `logfmt` formatter.
        ## See https://www.brandur.org/logfmt for more information on logfmt
@@ -44,6 +44,20 @@
        # theme = { trace = "gray", debug = "green", info = "cyan", warn = "yellow", error = "red" }
        ## The theme to use. You can affect a color to every log level.
        ## Supported colors are `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `gray`
+
+# Sink that outputs content to console, with no color
+# [sinks.console]
+#    ## The type of the sink
+#    type = "OutputConsole"
+#    ## Write to stdout
+#    # type = "ErrorConsole"
+#    ## Write to stderr
+# 
+#    ## The level of the sink.
+#    ## If no level is specified, the sink will accept any message level.
+#    # level = "info"
+# 
+#    # options = { format = "logfmt" }
 
 # Sink that outputs content to a file
 # [sinks.file]
@@ -144,7 +158,7 @@
     name = "main"
 
     ## Array of sinks
-    sinks = [ "console" ]
+    sinks = [ "color_console" ]
 
     ## Level of the logger
     level = "debug"
