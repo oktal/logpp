@@ -29,6 +29,7 @@ else()
 endif()
 
 set(CMAKE_DEBUG_POSTFIX d)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 option(LOGPP_INSTAL "Generate install target" ${LOGPP_MASTER_PROJECT})
 option(LOGPP_SHARED "Build logpp as a shared library" ON)
