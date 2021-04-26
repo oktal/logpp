@@ -1,4 +1,5 @@
-## Unreleased
+<a name="v0.1.1"></a>
+## [v0.1.1](https://github.com/oktal/logpp/compare/v0.1.0...v0.1.1) (2021-04-26)
 
 ### Bug Fixes
 - **sinks:** Correctly call `onAfterOpened` for `RollingFileSink` ([76f22af](https://github.com/oktal/logpp/commit/76f22af228c07435abac5d8904bf9c686cc1f6f5))
@@ -6,7 +7,9 @@
 - Fix possible invalid iterator usage in string_utils::iequals ([11c444a](https://github.com/oktal/logpp/commit/11c444a2859274c02f4e534697b72db137d26af9))
 
 ### Chore
+- **CMake:** Add Filesystem script to correctly link with stdc++fs if needed ([211017f](https://github.com/oktal/logpp/commit/211017f0c9fddc1c3eda9810c03803c284630afa))
 - **CMake:** Print message when copying file next to binary ([2a231e1](https://github.com/oktal/logpp/commit/2a231e17171a78e0e41c1eaafd76b3b591d5a554))
+- Bump patch version number to 0.1.1 ([d56f21e](https://github.com/oktal/logpp/commit/d56f21e05bf4768b5acb80653b5de774d59aeebe))
 
 ### Enhancement
 - **CMake:** Link back with stdc++fs for gcc ([8d72114](https://github.com/oktal/logpp/commit/8d72114582ac6aef0a08a3e9a8a75b7dbeada334))
@@ -14,6 +17,10 @@
 
 ### Features
 - **sinks:** Add `ColoredConsole` TOML theme configuration ([cc523b5](https://github.com/oktal/logpp/commit/cc523b5cca85e745b0887bf7bc671d8d7fcb60f4))
+- **sinks:** Add `Console` sink ([9ed96a6](https://github.com/oktal/logpp/commit/9ed96a60bb2dfbf92a30bba96b51bd2c283a94b7)), related to [#19](https://github.com/oktal/logpp/issues/19)
+
+### Style
+- format code ([0884115](https://github.com/oktal/logpp/commit/08841155fc9ae06fef9d4f0c289b98838962888a))
 
 
 <a name="v0.1.0"></a>
