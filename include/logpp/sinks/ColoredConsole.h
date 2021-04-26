@@ -121,7 +121,7 @@ namespace logpp::sink
         explicit ColoredConsole(std::ostream& os, const std::shared_ptr<Formatter>& formatter)
             : FormatSink(formatter)
             , m_os(os)
-            , m_theme(DefaultTheme{})
+            , m_theme(DefaultTheme {})
         {
         }
 

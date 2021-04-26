@@ -22,7 +22,7 @@ namespace logpp
                 std::begin(rhs), std::end(rhs),
                 [](char c1, char c2) {
                     return std::tolower(c1) == std::tolower(c2);
-            });
+                });
         }
 
         inline std::optional<size_t> parseSize(std::string_view str)
