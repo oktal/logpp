@@ -8,24 +8,39 @@ endfunction()
 
 function(logpp_copy_file)
     set(prefix LOGPP_COPY)
+    set(options VERBOSE)
     set(singleValues TARGET FILE)
     set(multiValues)
 
     include(CMakeParseArguments)
     cmake_parse_arguments(
         ${prefix}
-        ""
+        "${options}"
         "${singleValues}"
         "${multiValues}"
         ${ARGN}
     )
 
-    get_target_property(LOGPP_TARGET_OUTPUT_DIRECTORY ${LOGPP_COPY_TARGET} RUNTIME_OUTPUT_DIRECTORY)
+    set(LOGPP_COPY_TARGET sample_${LOGPP_COPY_TARGET})
+
+    set(LOGPP_TARGET_FILE_DIR $<TARGET_FILE_DIR:${LOGPP_COPY_TARGET}>)
+
+    if (LOGPP_COPY_VERBOSE)
+        add_custom_command(
+            TARGET ${LOGPP_COPY_TARGET}
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan --bold
+            "[${LOGPP_COPY_TARGET}] Copying file ${LOGPP_COPY_FILE} to ${LOGPP_TARGET_FILE_DIR} ..."
+        )
+    endif()
+
+
     add_custom_command(
-        TARGET ${LOGPP_COPY_TARGET} POST_BUILD
+        TARGET ${LOGPP_COPY_TARGET}
+        POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
             ${CMAKE_CURRENT_SOURCE_DIR}/${LOGPP_COPY_FILE}
-            ${LOGPP_TARGET_OUTPUT_DIRECTORY}/${LOGPP_COPY_FILE}
+            ${LOGPP_TARGET_FILE_DIR}/${LOGPP_COPY_FILE}
     )
 
 endfunction()
@@ -37,10 +52,13 @@ logpp_sample(TomlConfig)
 logpp_sample(TomlCustomSinkConfig)
 
 logpp_copy_file(
-    TARGET sample_TomlConfig
+    TARGET TomlConfig
     FILE logpp.toml
+    VERBOSE
 )
+
 logpp_copy_file(
-    TARGET sample_TomlConfig
+    TARGET TomlCustomSinkConfig
     FILE logpp.file.custom.toml
+    VERBOSE
 )
