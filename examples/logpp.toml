@@ -18,27 +18,32 @@
    # level = "info"
 
    ## The options of the sink
-   options = { format = "logfmt" }
-   ## Will use the `logfmt` formatter.
-   ## See https://www.brandur.org/logfmt for more information on logfmt
-   # options = { format = "pattern", pattern = "%+" }
-   ## Will use the `pattern` formatter.
-   ## `pattern` will control the format that the formatter will use.
-   ## Here is a list of currently supported format flags:
-   ## %Y     Writes year as a decimal number, e.g 2017 
-   ## %m     Writes month as a decimal number (range [01, 12])
-   ## %d     Writes day of the month as a decimal number (range [01, 31])
-   ## %H     Writes hour as a decimal number, 24 hour clock (range [00, 23])
-   ## %M     Writes minute as a decimal number (range [00, 59])
-   ## %S     Writes second as a decimal number (range [00, 60])
-   ## %i     Writes millisecond as a decimal number (range [000, 999])
-   ## %u     Writes microsecond as a decimal number (range [000, 999])
-   ## %t     Thread id
-   ## %v     Log message
-   ## %l     Log level
-   ## %n     Logger name
-   ## %f[]   Structured fields. If fields are not empty, prefix with characters between []
-   ## %+     Equivalent to %Y-%m-%d %H:%M:%S [%l] (%n) %v%f[ - ]
+   [sinks.console.options]
+       format = "logfmt"
+       ## Will use the `logfmt` formatter.
+       ## See https://www.brandur.org/logfmt for more information on logfmt
+       # options = { format = "pattern", pattern = "%+" }
+       ## Will use the `pattern` formatter.
+       ## `pattern` will control the format that the formatter will use.
+       ## Here is a list of currently supported format flags:
+       ## %Y     Writes year as a decimal number, e.g 2017 
+       ## %m     Writes month as a decimal number (range [01, 12])
+       ## %d     Writes day of the month as a decimal number (range [01, 31])
+       ## %H     Writes hour as a decimal number, 24 hour clock (range [00, 23])
+       ## %M     Writes minute as a decimal number (range [00, 59])
+       ## %S     Writes second as a decimal number (range [00, 60])
+       ## %i     Writes millisecond as a decimal number (range [000, 999])
+       ## %u     Writes microsecond as a decimal number (range [000, 999])
+       ## %t     Thread id
+       ## %v     Log message
+       ## %l     Log level
+       ## %n     Logger name
+       ## %f[]   Structured fields. If fields are not empty, prefix with characters between []
+       ## %+     Equivalent to %Y-%m-%d %H:%M:%S [%l] (%n) %v%f[ - ]
+
+       # theme = { trace = "gray", debug = "green", info = "cyan", warn = "yellow", error = "red" }
+       ## The theme to use. You can affect a color to every log level.
+       ## Supported colors are `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `gray`
 
 # Sink that outputs content to a file
 # [sinks.file]
