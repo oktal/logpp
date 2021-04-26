@@ -95,6 +95,9 @@ jobs:
       - name: Create release tag
         run: git tag v${{ env.LOGPP_VERSION }} -m "Release v${{ env.LOGPP_VERSION }}"
 
+      - name: Push release tag
+        run: git push origin v${{ env.LOGPP_VERSION }}
+
       - name: Package
         working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
         shell: bash
@@ -110,12 +113,9 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: "${{ github.workspace }}/build-${{ matrix.artifact }}/package/${{ matrix.artifact }}-${{ env.LOGPP_VERSION }}.tar.gz"
+          tag_name: v${{ env.LOGPP_VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Push release tag
-        run: git push origin v${{ env.LOGPP_VERSION }}
-
 
   build-windows:
     runs-on: windows-latest
@@ -154,5 +154,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: "${{ github.workspace }}/build-windows-msvc/package/logpp-windows-msvc-static-${{ github.event.inputs.versionName }}.zip"
+          tag_name: v${{ github.event.inputs.versionName }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
