@@ -12,7 +12,8 @@ namespace logpp
         Debug,
         Info,
         Warning,
-        Error
+        Error,
+        Off
     };
 
     constexpr inline std::string_view levelString(LogLevel level)
@@ -21,6 +22,8 @@ namespace logpp
 
         switch (level)
         {
+        case LogLevel::Off:
+            return "off"sv;
         case LogLevel::Trace:
             return "trace"sv;
         case LogLevel::Debug:
@@ -38,15 +41,17 @@ namespace logpp
 
     inline std::optional<LogLevel> parseLevel(std::string_view level)
     {
+        if (string_utils::iequals(level, "off"))
+            return LogLevel::Off;
         if (string_utils::iequals(level, "trace"))
             return LogLevel::Trace;
-        else if (string_utils::iequals(level, "debug"))
+        if (string_utils::iequals(level, "debug"))
             return LogLevel::Debug;
-        else if (string_utils::iequals(level, "info"))
+        if (string_utils::iequals(level, "info"))
             return LogLevel::Info;
-        else if (string_utils::iequals(level, "warn"))
+        if (string_utils::iequals(level, "warn"))
             return LogLevel::Warning;
-        else if (string_utils::iequals(level, "error"))
+        if (string_utils::iequals(level, "error"))
             return LogLevel::Error;
 
         return std::nullopt;
