@@ -68,7 +68,8 @@ namespace logpp
             buffer.writeText(text);
             buffer.writeFields(std::forward<Fields>(fields)...);
 
-            m_sink->sink(name(), level, buffer);
+            auto sink = std::atomic_load_explicit(&m_sink, std::memory_order_acquire);
+            sink->sink(name(), level, buffer);
         }
 
         template <typename Str, typename... Fields>
@@ -85,7 +86,8 @@ namespace logpp
             buffer.writeSourceLocation(location);
             buffer.writeFields(std::forward<Fields>(fields)...);
 
-            m_sink->sink(name(), level, buffer);
+            auto sink = std::atomic_load_explicit(&m_sink, std::memory_order_acquire);
+            sink->sink(name(), level, buffer);
         }
 
         template <typename Str, typename... Args>
@@ -120,7 +122,7 @@ namespace logpp
 
         std::shared_ptr<sink::Sink> sink() const
         {
-            return m_sink;
+            return std::atomic_load_explicit(&m_sink, std::memory_order_acquire);
         }
 
         std::string_view name() const
@@ -136,6 +138,11 @@ namespace logpp
         void setLevel(LogLevel level)
         {
             m_level.store(level, std::memory_order_relaxed);
+        }
+
+        void setSink(std::shared_ptr<sink::Sink> sink)
+        {
+            std::atomic_exchange(&m_sink, std::move(sink));
         }
 
         bool is(LogLevel lvl) const

@@ -10,6 +10,21 @@
 
 namespace logpp
 {
+    class NoopSink : public sink::Sink
+    {
+    public:
+        void activateOptions(const sink::Options&) override
+        { }
+
+        void sink(std::string_view, LogLevel, const EventLogBuffer&) override
+        { }
+    };
+
+    std::shared_ptr<Logger> LoggerRegistry::LoggerInstantiator::createInstance(const std::string& name)
+    {
+        return std::make_shared<Logger>(name, LogLevel::Off, std::make_shared<NoopSink>());
+    }
+
     LoggerRegistry::LoggerRegistry()
     {
         auto defaultSink = std::make_shared<sink::ColoredOutputConsole>();
@@ -22,6 +37,10 @@ namespace logpp
         registerSinkFactory<sink::ErrorConsole>();
         registerSinkFactory<sink::FileSink>();
         registerSinkFactory<sink::RollingFileSink>();
+
+        m_defaultLoggerFactory = [&](std::string name) {
+            return m_loggerInstantiator.create(name);
+        };
     }
 
     bool LoggerRegistry::matches(const LoggerKey& key, std::string_view name)
@@ -55,7 +74,18 @@ namespace logpp
         std::lock_guard guard(m_mutex);
 
         if (isDefault)
+        {
+            if (m_loggerInstantiator.totalInstances() > 0)
+            {
+                auto tmpLogger = factory("");
+                m_loggerInstantiator.forEachInstance(
+                    [&](const std::shared_ptr<Logger>& instance) {
+                        instance->setSink(tmpLogger->sink());
+                        instance->setLevel(tmpLogger->level());
+                    });
+            }
             m_defaultLoggerFactory = factory;
+        }
 
         auto it = m_loggerFactories.insert(std::make_pair(std::move(name), std::move(factory)));
         return it.second;

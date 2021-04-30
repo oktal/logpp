@@ -209,6 +209,40 @@ namespace logpp
         static LoggerRegistry& defaultRegistry();
 
     private:
+        template<typename T, typename... Args>
+        class Instantiator
+        {
+        public:
+            std::shared_ptr<T> create(const Args& ...args)
+            {
+                auto instance = createInstance(args...);
+                m_instances.push_back(instance);
+                return instance;
+            }
+
+            size_t totalInstances() const
+            {
+                return m_instances.size();
+            }
+
+            template<typename Func>
+            void forEachInstance(Func func) const
+            {
+                std::for_each(std::begin(m_instances), std::end(m_instances), func);
+            }
+
+        private:
+            virtual std::shared_ptr<T> createInstance(const Args& ...args) = 0;
+
+            std::vector<std::shared_ptr<T>> m_instances;
+        };
+
+        class LoggerInstantiator : public Instantiator<Logger, std::string>
+        {
+        private:
+            std::shared_ptr<Logger> createInstance(const std::string& name) override;
+        };
+
         mutable std::mutex m_mutex;
 
         // Default logger used by logpp::info(), logpp::debug(), ... free functions
@@ -218,6 +252,10 @@ namespace logpp
         // Default factory logger used as a fallback when attempting to get a
         // non-registered logger. Fallback to default logger if null
         LoggerFactory m_defaultLoggerFactory;
+        // Logger instances that have been created by the default factory.
+        // This is used to update loggers that have been created before loading
+        // a configuration file or filling a registry
+        LoggerInstantiator m_loggerInstantiator;
 
         // note: We are explicitely using std::less<> as a comparator
         // to benefit from the c++14 is_transparent heterogenous feature
