@@ -11,7 +11,8 @@
 
 namespace logpp::sink
 {
-    class AsyncSink : public SinkBase
+    class AsyncSink : public SinkBase,
+                      public std::enable_shared_from_this<AsyncSink>
     {
     public:
         static constexpr std::string_view Name = "Async";
@@ -23,9 +24,7 @@ namespace logpp::sink
             , m_queue(std::make_shared<BoundedTypedConcurrentAsyncQueue<Entry>>(512))
             , m_innerSink(std::move(innerSink))
 
-        {
-            configureQueue(m_queue);
-        }
+        { }
 
         void activateOptions(const Options& options) override
         {
@@ -106,6 +105,7 @@ namespace logpp::sink
 
         void start()
         {
+            configureQueue(m_queue);
             m_queuePoller->addQueue(m_queue);
         }
 
@@ -138,8 +138,8 @@ namespace logpp::sink
 
         void configureQueue(const std::shared_ptr<ITypedAsyncQueue<Entry>>& queue)
         {
-            queue->setHandler([=](const Entry& entry) {
-                handleEntry(entry);
+            queue->setHandler([self = shared_from_this()](const Entry& entry) {
+                self->handleEntry(entry);
             });
         }
 

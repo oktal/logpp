@@ -209,11 +209,11 @@ namespace logpp
         static LoggerRegistry& defaultRegistry();
 
     private:
-        template<typename T, typename... Args>
+        template <typename T, typename... Args>
         class Instantiator
         {
         public:
-            std::shared_ptr<T> create(const Args& ...args)
+            std::shared_ptr<T> create(const Args&... args)
             {
                 auto instance = createInstance(args...);
                 m_instances.push_back(instance);
@@ -225,14 +225,14 @@ namespace logpp
                 return m_instances.size();
             }
 
-            template<typename Func>
+            template <typename Func>
             void forEachInstance(Func func) const
             {
                 std::for_each(std::begin(m_instances), std::end(m_instances), func);
             }
 
         private:
-            virtual std::shared_ptr<T> createInstance(const Args& ...args) = 0;
+            virtual std::shared_ptr<T> createInstance(const Args&... args) = 0;
 
             std::vector<std::shared_ptr<T>> m_instances;
         };

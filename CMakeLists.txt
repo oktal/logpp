@@ -36,6 +36,7 @@ option(LOGPP_SHARED "Build logpp as a shared library" ON)
 
 option(BUILD_TESTS "Build tests" OFF)
 option(BUILD_BENCHES "Build benches" OFF)
+option(ENABLE_LLVM_FUZZ_TESTS "Enable fuzz-testing through LLVM libFuzzer" OFF)
 
 enable_testing()
 add_subdirectory(src)
@@ -44,6 +45,9 @@ if (BUILD_TESTS)
 endif()
 if (BUILD_BENCHES)
   add_subdirectory(benches)
+endif()
+if (ENABLE_LLVM_FUZZ_TESTS)
+  add_subdirectory(fuzz)
 endif()
 add_subdirectory(examples)
 

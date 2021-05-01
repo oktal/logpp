@@ -179,20 +179,25 @@ static void LoggerBench_FormatSink_FormatStr_3(benchmark::State& state)
 
 static void LoggerBench_AsyncNoopSink_FormatStr_3(benchmark::State& state)
 {
-    auto poller   = logpp::AsyncQueuePoller::create();
-    auto noopSink = std::make_shared<NoopSink>();
-    auto logger   = create<logpp::sink::AsyncSink>("BM_BenchAsyncLoggerNoopSink", logpp::LogLevel::Debug, poller, noopSink);
+    auto poller    = logpp::AsyncQueuePoller::create();
+    auto asyncSink = std::make_shared<logpp::sink::AsyncSink>(poller, std::make_shared<NoopSink>());
+
+    auto logger = std::make_shared<logpp::Logger>("LoggerBench_AsyncNoopSink_FormatStr_3", logpp::LogLevel::Debug, asyncSink);
 
     poller->start();
+    asyncSink->start();
 
     const std::string& loggerType = "async";
 
+    size_t i = 0;
+
     for (auto _ : state)
     {
-        logger->debug(logpp::format("This is a log-formatted message {} {}", 0xBAD, loggerType),
-                      logpp::field("IntField", 0xBAD),
+        logger->debug(logpp::format("This is a log-formatted message {} {}", i, loggerType),
+                      logpp::field("IntField", i),
                       logpp::field("FloatField", M_PI),
                       logpp::field("StrField", loggerType));
+        ++i;
     }
 }
 

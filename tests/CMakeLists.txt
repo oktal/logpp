@@ -9,6 +9,7 @@ function(logpp_test test_name)
     gtest_discover_tests(${TEST_EXECUTABLE})
 endfunction()
 
+logpp_test(AsyncSinkTests)
 logpp_test(EnvironmentTests)
 logpp_test(LogBufferTests)
 logpp_test(LogFmtFormatterTests)

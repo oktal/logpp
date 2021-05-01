@@ -1,7 +1,7 @@
 #pragma once
 
 #include "logpp/queue/ITypedAsyncQueue.h"
-#include "logpp/queue/impl/ConcurrentBoundedQueue.h"
+#include "logpp/queue/impl/MPMCQueue.h"
 
 #include <climits>
 
@@ -25,7 +25,7 @@ namespace logpp
             for (;;)
             {
                 Entry entry;
-                auto res = m_queue.dequeue(entry);
+                auto res = m_queue.try_pop(entry);
                 if (!res)
                     break;
 
@@ -39,7 +39,7 @@ namespace logpp
         size_t pollOne() override
         {
             Entry entry;
-            if (m_queue.dequeue(entry))
+            if (m_queue.try_pop(entry))
             {
                 handleEntry(entry);
                 return 1;
@@ -55,16 +55,16 @@ namespace logpp
 
         void push(const Entry& entry) override
         {
-            m_queue.enqueue(entry);
+            m_queue.push(entry);
         }
 
         void push(Entry&& entry) override
         {
-            m_queue.enqueue(std::move(entry));
+            m_queue.push(std::move(entry));
         }
 
     private:
-        using Queue = impl::ConcurrentBoundedQueue<Entry>;
+        using Queue = rigtorp::MPMCQueue<Entry>;
         Queue m_queue;
 
         Handler m_handler;

@@ -107,7 +107,7 @@ namespace logpp
             }
         }
 
-        LogBuffer(const LogBuffer& other)
+        LogBuffer(const LogBuffer& other) noexcept
             : m_data(&m_inlineData[0])
         {
             *this = other;
@@ -119,13 +119,13 @@ namespace logpp
             *this = std::move(other);
         }
 
-        LogBuffer& operator=(const LogBuffer& other)
+        LogBuffer& operator=(const LogBuffer& other) noexcept
         {
-            reserve(other.m_capacity);
+            reserve(other.size());
             std::memcpy(m_data, other.m_data, other.size());
 
-            m_capacity = other.m_capacity;
             advance(other.cursor());
+            m_capacity = other.m_capacity;
 
             return *this;
         }
@@ -182,15 +182,15 @@ namespace logpp
 
             auto* data = static_cast<char*>(malloc(newCapacity * sizeof(char)));
             if (data == nullptr)
-                throw std::bad_alloc();
+                return;
 
             if (isSmall())
             {
-                std::memcpy(data, m_inlineData.data(), m_inlineData.size());
+                std::memcpy(data, m_inlineData.data(), size());
             }
             else
             {
-                std::memcpy(data, m_data, this->cursor());
+                std::memcpy(data, m_data, size());
                 free(m_data);
             }
 
