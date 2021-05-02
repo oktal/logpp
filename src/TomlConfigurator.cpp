@@ -138,7 +138,7 @@ namespace logpp
                         if (LoggerRegistry::matches(key, name))
                         {
                             if (logger->level() != loggerConfig.level)
-                                logger->setLevel(loggerConfig.level);
+                                logger->setLevel(*loggerConfig.level);
                         }
                     });
                 }
@@ -271,13 +271,17 @@ namespace logpp
         if (err1)
             return error(*err1);
 
-        auto [levelStr, err2] = tryRead<std::string>(table, "level", "logger.level: expected string");
-        if (err2)
-            return error(*err2);
+        std::optional<LogLevel> level;
+        if (table.contains("level"))
+        {
+            auto [levelStr, err2] = tryRead<std::string>(table, "level", "logger.level: expected string");
+            if (err2)
+                return error(*err2);
 
-        auto level = parseLevel(*levelStr);
-        if (!level)
-            return error(Error { "logger: unknown level", table["level"].as_string()->source() });
+            level = parseLevel(*levelStr);
+            if (!level)
+                return error(Error { "logger: unknown level", table["level"].as_string()->source() });
+        }
 
         auto [isDefault, err3] = tryReadOr<bool>(table, "default", "logger.default: expected bool", false);
         if (err3)
@@ -285,28 +289,87 @@ namespace logpp
 
         auto sinksNode  = table["sinks"];
         auto sinksArray = sinksNode.as_array();
-        if (!sinksArray)
-            return error(Error { "logger: expected sinks", table.source() });
 
         std::vector<Sink> loggerSinks;
-        for (const auto& sinkNode : *sinksArray)
+        if (sinksArray)
         {
-            auto sinkName = sinkNode.value<std::string>();
-            if (!sinkName)
-                return error(Error { "sink: expected string", sinkNode.source() });
+            for (const auto& sinkNode : *sinksArray)
+            {
+                auto sinkName = sinkNode.value<std::string>();
+                if (!sinkName)
+                    return error(Error { "sink: expected string", sinkNode.source() });
 
-            auto it = std::find_if(std::begin(sinks), std::end(sinks), [&](const auto& sink) {
-                return sink.name == *sinkName;
-            });
+                auto it = std::find_if(std::begin(sinks), std::end(sinks), [&](const auto& sink) {
+                    return sink.name == *sinkName;
+                });
 
-            if (it == std::end(sinks))
-                return error(Error { "logger: unknown sink reference", sinkNode.source() });
+                if (it == std::end(sinks))
+                    return error(Error { "logger: unknown sink reference", sinkNode.source() });
 
-            const auto& sink = *it;
-            loggerSinks.push_back(sink);
+                const auto& sink = *it;
+                loggerSinks.push_back(sink);
+            }
         }
 
-        return std::make_pair(Logger { *name, *level, std::move(loggerSinks), *isDefault, table.source() }, std::nullopt);
+        return std::make_pair(Logger { *name, level, std::move(loggerSinks), *isDefault, table.source() }, std::nullopt);
+    }
+
+    std::optional<TomlConfigurator::Logger>
+    TomlConfigurator::findParent(const TomlConfigurator::Logger& srcLogger, const std::vector<TomlConfigurator::Logger>& loggers)
+    {
+        LoggerKey key(srcLogger.name);
+        for (auto fragmentIt = key.rbegin(); fragmentIt != key.rend(); ++fragmentIt)
+        {
+            auto fragment = *fragmentIt;
+            if (string_utils::iequals(fragment, srcLogger.name))
+                continue;
+
+            auto loggerIt = std::find_if(std::begin(loggers), std::end(loggers), [&](const auto& logger) {
+                return string_utils::iequals(logger.name, fragment);
+            });
+
+            if (loggerIt != std::end(loggers))
+                return *loggerIt;
+        }
+
+        auto loggerIt = std::find_if(std::begin(loggers), std::end(loggers), [&](const auto& logger) {
+            return logger.isDefault;
+        });
+
+        if (loggerIt != std::end(loggers))
+            return *loggerIt;
+
+        return std::nullopt;
+    }
+
+    std::optional<TomlConfigurator::Error>
+    TomlConfigurator::prepareLoggers(std::vector<TomlConfigurator::Logger>& loggers)
+    {
+        for (auto& logger : loggers)
+        {
+            if (logger.hasMissing())
+            {
+                auto parentLogger = logger;
+                for (;;)
+                {
+                    auto parent = findParent(parentLogger, loggers);
+                    if (!parent)
+                        return TomlConfigurator::Error { "logger: invalid hierarchy: failed to find parent logger", logger.sourceRegion };
+
+                    if (logger.sinks.empty())
+                        logger.sinks = parent->sinks;
+                    if (!logger.level.has_value() && parent->level.has_value())
+                        logger.level = parent->level;
+
+                    if (!logger.hasMissing())
+                        break;
+
+                    parentLogger = *parent;
+                }
+            }
+        }
+
+        return std::nullopt;
     }
 
     std::optional<TomlConfigurator::Error>
@@ -347,9 +410,11 @@ namespace logpp
     std::optional<TomlConfigurator::Error>
     TomlConfigurator::configureLoggers(LoggerRegistry& registry, const std::vector<TomlConfigurator::Logger>& loggers)
     {
-
         for (const auto& logger : loggers)
         {
+            if (!logger.level)
+                return Error { "logger: missing level", logger.sourceRegion };
+
             std::vector<std::shared_ptr<sink::Sink>> sinks;
             for (const auto& sinkConfig : logger.sinks)
             {
@@ -360,10 +425,13 @@ namespace logpp
                 sinks.push_back(std::move(sink));
             }
 
+            if (sinks.empty())
+                return Error { "logger: missing sinks", logger.sourceRegion };
+
             auto sink = sinks.size() > 1 ? std::make_shared<sink::MultiSink>(sinks) : sinks[0];
             auto res  = registry.registerLoggerFunc(
-                logger.name, [=](std::string name) {
-                    return std::make_shared<logpp::Logger>(std::move(name), logger.level, sink);
+                logger.name, [level = *logger.level, sink](std::string name) {
+                    return std::make_shared<logpp::Logger>(std::move(name), level, sink);
                 },
                 logger.isDefault);
 

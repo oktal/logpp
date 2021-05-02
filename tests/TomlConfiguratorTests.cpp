@@ -1,9 +1,51 @@
 #include <gtest/gtest.h>
 
 #include "logpp/config/TomlConfigurator.h"
+#include "logpp/sinks/ColoredConsole.h"
+#include "logpp/sinks/file/FileSink.h"
 
 using namespace std::string_view_literals;
 using namespace logpp;
+
+namespace
+{
+    struct HasLevel
+    {
+        explicit HasLevel(LogLevel level)
+            : level(level)
+        { }
+
+        LogLevel level;
+
+        void operator()(const std::shared_ptr<Logger>& logger)
+        {
+            ASSERT_EQ(logger->level(), level)
+                << "expected " << levelString(level) << "but got " << levelString(logger->level());
+        }
+    };
+
+    template <typename Sink>
+    struct HasSink
+    {
+        static_assert(sink::concepts::IsSink<Sink>, "Sink type does not satisfy Sink concept");
+
+        void operator()(const std::shared_ptr<Logger>& logger)
+        {
+            auto targetSink = std::dynamic_pointer_cast<Sink>(logger->sink());
+            ASSERT_TRUE(targetSink) << "expected sink of type " << Sink::Name;
+        }
+    };
+
+    template <typename... Checks>
+    void checkLogger(LoggerRegistry& registry, std::string_view name, Checks&&... checks)
+    {
+        auto logger = registry.get(name);
+        EXPECT_TRUE(logger);
+        ASSERT_EQ(logger->name(), name);
+
+        (std::invoke(std::forward<Checks>(checks), logger), ...);
+    }
+}
 
 TEST(TomlConfigurator, should_error_on_empty_logger_name)
 {
@@ -136,9 +178,7 @@ TEST(TomlConfigurator, should_configure_and_register_logger)
     auto err = TomlConfigurator::configure(Config, registry);
     ASSERT_FALSE(err) << *err;
 
-    auto logger = registry.get("My.Namespace.Class");
-    ASSERT_EQ(std::string(logger->name()), "My.Namespace.Class");
-    ASSERT_EQ(logger->level(), LogLevel::Info);
+    checkLogger(registry, "My.Namespace.Class", HasLevel(LogLevel::Info));
 }
 
 TEST(TomlConfigurator, should_configure_and_register_hierarchical_logger)
@@ -165,9 +205,7 @@ TEST(TomlConfigurator, should_configure_and_register_hierarchical_logger)
     auto err = TomlConfigurator::configure(Config, registry);
     ASSERT_FALSE(err) << *err;
 
-    auto logger = registry.get("My.Namespace.Class");
-    ASSERT_EQ(std::string(logger->name()), "My.Namespace.Class");
-    ASSERT_EQ(logger->level(), LogLevel::Debug);
+    checkLogger(registry, "My.Namespace.Class", HasLevel(LogLevel::Debug));
 }
 
 TEST(TomlConfigurator, should_error_on_loggers_with_same_name)
@@ -220,13 +258,79 @@ TEST(TomlConfigurator, should_register_default_logger)
     auto err = TomlConfigurator::configure(Config, registry);
     ASSERT_FALSE(err) << *err;
 
-    auto unregisteredLogger = registry.get("UnregisteredLogger");
-    ASSERT_TRUE(unregisteredLogger);
-    ASSERT_EQ(unregisteredLogger->name(), "UnregisteredLogger");
-    ASSERT_EQ(unregisteredLogger->level(), LogLevel::Info);
+    checkLogger(registry, "UnregisteredLogger", HasLevel(LogLevel::Info));
+    checkLogger(registry, "TomlConfiguratorTests", HasLevel(LogLevel::Debug));
+}
 
-    auto registeredLogger = registry.get("TomlConfiguratorTests");
-    ASSERT_TRUE(registeredLogger);
-    ASSERT_EQ(registeredLogger->name(), "TomlConfiguratorTests");
-    ASSERT_EQ(registeredLogger->level(), LogLevel::Debug);
+TEST(TomlConfigurator, should_configure_hierarichal_loggers_and_use_sink_level_parent_properties_if_empty)
+{
+    static constexpr auto Config = R"TOML(
+        [sinks]
+        [sinks.console]
+           type = "ColoredOutputConsole" 
+           options = { pattern = "%+" }
+
+        [sinks.file]
+           type = "File"
+           options = { file = "test.log" }
+
+        [loggers]
+        [loggers.default]
+           name = "default"
+           sinks = [ "console" ]
+           level = "info"
+           default = true
+
+        [loggers.Namespace]
+           name = "My.Namespace"
+           sinks = [ "file" ]
+
+        [loggers.Class]
+           name = "My.Namespace.Class"
+           level = "debug"
+
+        [loggers.Other]
+           name = "My.Other"
+           level = "debug"
+    )TOML"sv;
+
+    LoggerRegistry registry;
+    auto err = TomlConfigurator::configure(Config, registry);
+    ASSERT_FALSE(err) << *err;
+
+    checkLogger(registry, "My.Namespace", HasLevel(LogLevel::Info), HasSink<sink::FileSink>());
+    checkLogger(registry, "My.Namespace.Class", HasLevel(LogLevel::Debug), HasSink<sink::FileSink>());
+    checkLogger(registry, "My.Other", HasLevel(LogLevel::Debug), HasSink<sink::ColoredOutputConsole>());
+}
+
+TEST(TomlConfigurator, should_error_when_configuring_hierarchical_loggers_with_missing_parents)
+{
+    static constexpr auto Config = R"TOML(
+        [sinks]
+        [sinks.console]
+           type = "ColoredOutputConsole" 
+           options = { pattern = "%+" }
+
+        [sinks.file]
+           type = "File"
+           options = { file = "test.log" }
+
+        [loggers]
+        [loggers.Namespace]
+           name = "My.Namespace"
+           sinks = [ "file" ]
+           level = "info"
+
+        [loggers.Class]
+           name = "My.Namespace.Class"
+           level = "debug"
+
+        [loggers.Other]
+           name = "My.Other"
+           level = "debug"
+    )TOML"sv;
+
+    LoggerRegistry registry;
+    auto err = TomlConfigurator::configure(Config, registry);
+    ASSERT_TRUE(err);
 }

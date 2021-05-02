@@ -57,13 +57,19 @@ namespace logpp
                 if (err)
                     return err;
 
-                err = configureSinks(registry, result.sinks);
-                if (err)
-                    return err;
+#define TRY(...)                 \
+    do                           \
+    {                            \
+        auto _err = __VA_ARGS__; \
+        if (_err)                \
+            return _err;         \
+    } while (0)
 
-                err = configureLoggers(registry, result.loggers);
-                if (err)
-                    return err;
+                TRY(prepareLoggers(result.loggers));
+                TRY(configureSinks(registry, result.sinks));
+                TRY(configureLoggers(registry, result.loggers));
+
+#undef TRY
             }
             catch (const toml::parse_error& e)
             {
@@ -86,12 +92,18 @@ namespace logpp
         struct Logger
         {
             std::string name;
-            LogLevel level;
+
+            std::optional<LogLevel> level { std::nullopt };
             std::vector<Sink> sinks;
 
-            bool isDefault;
+            bool isDefault { false };
 
             toml::source_region sourceRegion;
+
+            bool hasMissing() const
+            {
+                return !level.has_value() || sinks.empty();
+            }
         };
 
         struct ParseResult
@@ -127,6 +139,9 @@ namespace logpp
 
         static std::pair<std::vector<Logger>, std::optional<Error>> parseLoggers(const toml::table& table, const std::vector<Sink>& sinks);
         static std::pair<std::optional<Logger>, std::optional<Error>> parseLogger(std::string tableName, const toml::table& table, const std::vector<Sink>& sinks);
+
+        static std::optional<Logger> findParent(const Logger& logger, const std::vector<Logger>& loggers);
+        static std::optional<Error> prepareLoggers(std::vector<Logger>& loggers);
 
         static std::optional<TomlConfigurator::Error> configureSinks(LoggerRegistry& registry, std::vector<Sink> sinks);
         static std::optional<Error> configureLoggers(LoggerRegistry& registry, const std::vector<Logger>& loggers);
