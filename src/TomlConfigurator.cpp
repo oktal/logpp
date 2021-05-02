@@ -347,25 +347,19 @@ namespace logpp
     {
         for (auto& logger : loggers)
         {
-            if (logger.hasMissing())
+            auto current = logger;
+            while (logger.hasMissing())
             {
-                auto parentLogger = logger;
-                for (;;)
-                {
-                    auto parent = findParent(parentLogger, loggers);
-                    if (!parent)
-                        return TomlConfigurator::Error { "logger: invalid hierarchy: failed to find parent logger", logger.sourceRegion };
+                auto parent = findParent(current, loggers);
+                if (!parent)
+                    return TomlConfigurator::Error { "logger: invalid hierarchy: failed to find parent logger", logger.sourceRegion };
 
-                    if (logger.sinks.empty())
-                        logger.sinks = parent->sinks;
-                    if (!logger.level.has_value() && parent->level.has_value())
-                        logger.level = parent->level;
+                if (logger.sinks.empty())
+                    logger.sinks = parent->sinks;
+                if (!logger.level.has_value() && parent->level.has_value())
+                    logger.level = parent->level;
 
-                    if (!logger.hasMissing())
-                        break;
-
-                    parentLogger = *parent;
-                }
+                current = *parent;
             }
         }
 
