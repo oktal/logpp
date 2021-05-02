@@ -29,7 +29,7 @@ int main(int argc, const char* argv[])
     }
 
     // Get a logger.
-    auto logger = logpp::getLogger("main");
+    auto logger = logpp::getLogger("My.Namespace.Main");
 
     // Log something.
     logger->info("This is an informational message",

@@ -153,9 +153,9 @@
 # Section that configures loggers
 
 [loggers]
-[loggers.main]
+[loggers.default]
     ## Name of the logger
-    name = "main"
+    name = "default"
 
     ## Array of sinks
     sinks = [ "color_console" ]
@@ -165,3 +165,15 @@
 
     ## If set to true, this logger will be used as a default logger
     # default = true
+
+[loggers.MyNamespace]
+   name = "My.Namespace"
+   sinks = [ "color_console" ]
+   level = "info"
+
+## You can define loggers with partial configuration. Any missing field from
+## a logger will inherit fields from its parent. The example below will inherit
+## the `sinks` field from its parent (`MyNamespace`)
+[loggers.MyComponent]
+   name = "My.Namespace.Component"
+   level = "debug"
