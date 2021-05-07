@@ -1,7 +1,10 @@
 #pragma once
 
 #include "logpp/core/Clock.h"
+#include "logpp/core/config.h"
 #include "logpp/date/date.h"
+
+#include <time.h>
 
 namespace logpp
 {
@@ -48,33 +51,88 @@ namespace logpp
             return time(tp).seconds().count();
         }
 
+        inline void gmtime(std::time_t* time, std::tm* out)
+        {
+#if defined(LOGPP_PLATFORM_LINUX)
+            ::gmtime_r(time, out);
+#elif defined(LOGPP_PLATFORM_WINDOWS)
+            gmtime_s(out, time);
+#else
+#error "Unknown platform"
+#endif
+        }
+
+        inline void localtime(std::time_t* time, std::tm* out)
+        {
+#if defined(LOGPP_PLATFORM_LINUX)
+            ::localtime_r(time, out);
+#elif defined(LOGPP_PLATFORM_WINDOWS)
+            localtime_s(out, time);
+#else
+#error "Unknown platform"
+#endif
+        }
+
+        inline time_t timegm(std::tm* tm)
+        {
+#if defined(LOGPP_PLATFORM_LINUX)
+            return ::timegm(tm);
+#elif defined(LOGPP_PLATFORM_WINDOWS)
+            return _mkgmtime(tm);
+#else
+#error "Unknown platform"
+#endif
+        }
+
+        namespace details
+        {
+            template<typename Duration>
+            using period = typename Duration::period;
+
+            template<typename D1, typename D2>
+            using is_duration_equal =
+                std::ratio_equal<period<D1>, period<D2>>;
+
+            template<typename D1, typename D2>
+            inline constexpr bool is_duration_equal_v
+                = is_duration_equal<D1, D2>::value;
+
         template <typename Clock, typename Dur>
-        constexpr auto ceil_month(const std::chrono::time_point<Clock, Dur>& tp)
+        constexpr std::chrono::time_point<Clock, Dur> floor_month(const std::chrono::time_point<Clock, Dur>& tp)
         {
             auto r = std::chrono::floor<date::days>(tp);
             date::year_month_day ymd { r };
 
-            auto month = ymd.month();
-            if (month == date::December)
-                month = date::January;
-            else
-                ++month;
-
-            date::year_month_day firstOfNextMonth { ymd.year(), month, date::day { 1 } };
-            return static_cast<date::sys_days>(firstOfNextMonth);
+            date::year_month_day firstOfMonth { ymd.year(), ymd.month(), date::day { 1 } };
+            return static_cast<date::sys_days>(firstOfMonth);
         }
 
         template <typename Clock, typename Dur>
-        constexpr auto ceil_year(const std::chrono::time_point<Clock, Dur>& tp)
+        constexpr std::chrono::time_point<Clock, Dur> floor_year(const std::chrono::time_point<Clock, Dur>& tp)
         {
             auto r = std::chrono::floor<date::days>(tp);
             date::year_month_day ymd { r };
 
-            auto year = ymd.year();
-            ++year;
+            date::year_month_day firstOfYear { ymd.year(), date::January, date::day { 1 } };
+            return static_cast<date::sys_days>(firstOfYear);
+        }
+        }
 
-            date::year_month_day firstOfNextYear { year, date::January, date::day { 1 } };
-            return static_cast<date::sys_days>(firstOfNextYear);
+        template <class ToDuration, class Clock, class Duration>
+        constexpr auto floor(const std::chrono::time_point<Clock, Duration>& tp)
+        {
+            if constexpr (details::is_duration_equal_v<ToDuration, date::months>)
+            {
+                return details::floor_month(tp);
+            }
+            else if constexpr (details::is_duration_equal_v<ToDuration, date::years>)
+            {
+                return details::floor_year(tp);
+            }
+            else
+            {
+                return std::chrono::floor<ToDuration>(tp);
+            }
         }
     }
 }

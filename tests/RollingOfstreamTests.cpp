@@ -97,6 +97,7 @@ struct FrozenClockBase
     static time_point now() { return frozenNow; }
 
     static std::time_t to_time_t(time_point tp) { return Clock::to_time_t(tp); }
+    static time_point from_time_t(std::time_t time) { return Clock::from_time_t(time); }
 
     static time_point frozenNow;
 };
@@ -114,10 +115,10 @@ struct FrozenTimeBase
 
     static void setNow(time_point now) { frozenNow = now; }
 
-    static std::tm* now()
+    static void now(std::tm* out)
     {
         auto time = Clock::to_time_t(frozenNow);
-        return std::gmtime(&time);
+        date_utils::gmtime(&time, out);
     }
 
     static time_point frozenNow;
@@ -182,7 +183,7 @@ struct RollingTestCase : TestCase
 
             ASSERT_EQ(strategy.apply(&buf), testCase.expected)
                 << " RollingStrategy did not apply as expected."
-                << " name=\"" << this->name << " date=" << testCase.ymd
+                << " name=\"" << this->name << "\" date=" << testCase.ymd
                 << " time=" << time;
         }
     }

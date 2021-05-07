@@ -1,5 +1,7 @@
 #pragma once
 
+#include "logpp/utils/date.h"
+
 #include <chrono>
 
 #include <filesystem>
@@ -303,12 +305,21 @@ namespace logpp
     template <typename Duration>
     struct PreciseInterval
     {
+        using Rep    = typename Duration::rep;
+        using Period = typename Duration::period;
+
         Duration value;
 
         template <typename TimePoint>
         TimePoint next(TimePoint tp) const
         {
             return tp + value;
+        }
+
+        template <typename Clock>
+        static TimePoint offsetUtc(TimePoint tp)
+        {
+            return tp;
         }
     };
 
@@ -331,20 +342,61 @@ namespace logpp
         template <typename TimePoint>
         TimePoint next(TimePoint tp) const
         {
-            return std::chrono::floor<std::chrono::duration<Rep, Period>>(tp + value);
+            return date_utils::floor<std::chrono::duration<Rep, Period>>(tp + value);
+        }
+
+        template <typename Clock>
+        static TimePoint offsetUtc(TimePoint tp)
+        {
+            // Let's suppose that the time point returned by Clock::now() is
+            // YYYY:MM:dd 14:39:00. If we ask for the next rolling time point,
+            // rounded by day, we will get back YYYY:MM:(dd+1) 00:00:00, that
+            // is midnight. However, here, we "lose" the time zone when rounding
+            // the time point, since rounding a duration does not care about time
+            // and offset at all.
+            //
+            // Now, let's suppose that our current time-zone is UTC +02:00, e.g (Europe/Paris).
+            // YYYY:MM:(dd+1) 00:00:00 UTC is actually YYYY:MM:(dd+1) 02:00:00 local time, which
+            // means that we will roll our file at 02:00 AM local time, and not midnight.
+            // If we want to roll our file at midnight local-time, we actually need to roll it
+            // at YYYY:MM:dd 22:00:00 UTC and not YYYY:MM:(dd+1) 00:00:00 UTC
+            //
+            // That is why we adjust the resulting timestamp back to UTC, as if it was
+            // actually expressed as local-time.
+            //
+            // We only do that for periods > 1 day.
+            static constexpr auto HasOffset
+                = std::ratio_greater_equal_v<Period, date::days::period>;
+
+            if constexpr (HasOffset)
+            {
+                auto tt = Clock::to_time_t(tp);
+                std::tm tm;
+                date_utils::gmtime(&tt, &tm);
+                tm.tm_isdst = -1;
+
+                auto utcTime = std::mktime(&tm);
+                std::tm utcTm;
+                date_utils::gmtime(&utcTime, &utcTm);
+                return Clock::from_time_t(date_utils::timegm(&utcTm));
+            }
+            else
+            {
+                return tp;
+            }
         }
     };
 
     template <typename Rep, typename Period>
     RoundInterval(std::chrono::duration<Rep, Period>) -> RoundInterval<std::chrono::duration<Rep, Period>>;
 
-    template <typename RollInterval, typename Clock = std::chrono::system_clock>
+    template <typename Interval, typename Clock = std::chrono::system_clock>
     struct RollEvery
     {
-        RollInterval interval;
+        Interval interval;
         std::optional<std::chrono::system_clock::time_point> nextRollPoint;
 
-        explicit RollEvery(const RollInterval& interval, Clock = Clock {})
+        explicit RollEvery(Interval interval, Clock = Clock {})
             : interval(interval)
         {
         }
@@ -363,17 +415,27 @@ namespace logpp
         bool apply(std::basic_filebuf<CharT>*)
         {
             auto now = Clock::now();
-
             if (!nextRollPoint)
-                nextRollPoint = interval.next(now);
+                nextRollPoint = next(now);
 
             if (now >= *nextRollPoint)
             {
-                nextRollPoint = interval.next(now);
+                nextRollPoint = next(now);
                 return true;
             }
 
             return false;
+        }
+
+    private:
+        TimePoint next(TimePoint tp)
+        {
+            return offsetUtc(interval.next(tp));
+        }
+
+        static TimePoint offsetUtc(TimePoint tp)
+        {
+            return Interval::template offsetUtc<Clock>(tp);
         }
     };
 
@@ -427,23 +489,23 @@ namespace logpp
 
     struct UTCTime
     {
-        static std::tm* now()
+        static void now(std::tm* out)
         {
             auto tp   = std::chrono::system_clock::now();
             auto time = std::chrono::system_clock::to_time_t(tp);
 
-            return std::gmtime(&time);
+            date_utils::gmtime(&time, out);
         }
     };
 
     struct LocalTime
     {
-        static std::tm* now()
+        static void now(std::tm* out)
         {
             auto tp   = std::chrono::system_clock::now();
             auto time = std::chrono::system_clock::to_time_t(tp);
 
-            return std::localtime(&time);
+            date_utils::localtime(&time, out);
         }
     };
 
@@ -467,9 +529,10 @@ namespace logpp
 
             buf->close();
 
-            auto tm = Time::now();
+            std::tm tm;
+            Time::now(&tm);
             char timeBuf[MAX_BUF];
-            auto len = std::strftime(timeBuf, sizeof(timeBuf), pattern.c_str(), tm);
+            auto len = std::strftime(timeBuf, sizeof(timeBuf), pattern.c_str(), &tm);
 
             auto newPath = std::string(basePath);
             newPath.push_back('.');
