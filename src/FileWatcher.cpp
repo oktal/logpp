@@ -26,14 +26,16 @@ namespace logpp
     {
         if (m_internalPoller)
             m_internalPoller->start();
+
         m_impl->start();
     }
 
     void FileWatcher::stop()
     {
+        m_impl->stop();
+
         if (m_internalPoller)
             m_internalPoller->stop();
-        m_impl->stop();
     }
 
     std::optional<FileWatcher::WatchId> FileWatcher::addWatch(std::string_view path, FileWatcher::OnEvent onEvent)
