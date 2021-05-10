@@ -311,13 +311,19 @@ namespace logpp
         Duration value;
 
         template <typename TimePoint>
-        TimePoint next(TimePoint tp) const
+        TimePoint next(TimePoint now) const
         {
-            return tp + value;
+            return now + value;
         }
 
         template <typename Clock>
         static TimePoint offsetUtc(TimePoint tp)
+        {
+            return tp;
+        }
+
+        template <typename Clock>
+        static TimePoint local(TimePoint tp)
         {
             return tp;
         }
@@ -340,9 +346,9 @@ namespace logpp
         }
 
         template <typename TimePoint>
-        TimePoint next(TimePoint tp) const
+        TimePoint next(TimePoint now) const
         {
-            return date_utils::floor<std::chrono::duration<Rep, Period>>(tp + value);
+            return date_utils::floor<std::chrono::duration<Rep, Period>>(now + value);
         }
 
         template <typename Clock>
@@ -379,6 +385,25 @@ namespace logpp
                 std::tm utcTm;
                 date_utils::gmtime(&utcTime, &utcTm);
                 return Clock::from_time_t(date_utils::timegm(&utcTm));
+            }
+            else
+            {
+                return tp;
+            }
+        }
+
+        template <typename Clock>
+        static TimePoint local(TimePoint tp)
+        {
+            static constexpr auto HasOffset
+                = std::ratio_greater_equal_v<Period, date::days::period>;
+
+            if constexpr (HasOffset)
+            {
+                auto tt = Clock::to_time_t(tp);
+                std::tm tm;
+                date_utils::localtime(&tt, &tm);
+                return Clock::from_time_t(date_utils::timegm(&tm));
             }
             else
             {
@@ -430,12 +455,17 @@ namespace logpp
     private:
         TimePoint next(TimePoint tp)
         {
-            return offsetUtc(interval.next(tp));
+            return offsetUtc(interval.next(local(tp)));
         }
 
         static TimePoint offsetUtc(TimePoint tp)
         {
             return Interval::template offsetUtc<Clock>(tp);
+        }
+
+        static TimePoint local(TimePoint tp)
+        {
+            return Interval::template local<Clock>(tp);
         }
     };
 
