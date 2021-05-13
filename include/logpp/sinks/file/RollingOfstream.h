@@ -519,32 +519,75 @@ namespace logpp
 
     struct UTCTime
     {
-        static void now(std::tm* out)
-        {
-            auto tp   = std::chrono::system_clock::now();
-            auto time = std::chrono::system_clock::to_time_t(tp);
+        using Clock = std::chrono::system_clock;
 
+        static void toTm(time_t time, std::tm* out)
+        {
             date_utils::gmtime(&time, out);
         }
     };
 
     struct LocalTime
     {
-        static void now(std::tm* out)
-        {
-            auto tp   = std::chrono::system_clock::now();
-            auto time = std::chrono::system_clock::to_time_t(tp);
+        using Clock = std::chrono::system_clock;
 
+        static void toTm(time_t time, std::tm* out)
+        {
             date_utils::localtime(&time, out);
         }
     };
 
-    template <typename Time>
+    namespace offset
+    {
+        struct None
+        {
+            template <typename TimePoint>
+            static TimePoint apply(TimePoint tp)
+            {
+                return tp;
+            }
+        };
+
+        template <typename Duration>
+        struct Fixed
+        {
+            Duration duration;
+
+            explicit Fixed(Duration duration)
+                : duration(duration)
+            { }
+
+            template <typename TimePoint>
+            TimePoint apply(TimePoint tp) const
+            {
+                return tp + duration;
+            }
+        };
+
+        template <typename Rep, typename Period>
+        Fixed(std::chrono::duration<Rep, Period>) -> Fixed<std::chrono::duration<Rep, Period>>;
+    }
+
+    template <typename Time, typename Offset = offset::None>
     struct ArchiveTimestamp
     {
+        using Clock = typename Time::Clock;
+
         static constexpr auto DefaultPattern = std::string_view("%Y%m%d");
 
         std::string pattern { DefaultPattern };
+        Offset offset;
+
+        ArchiveTimestamp(std::string_view pattern = DefaultPattern, Offset offset = Offset())
+            : pattern(pattern)
+            , offset(offset)
+        { }
+
+        template <typename... OffsetArgs>
+        ArchiveTimestamp(std::string_view pattern, OffsetArgs&&... args)
+            : pattern(pattern)
+            , offset(std::forward<OffsetArgs>(args)...)
+        { }
 
         template <typename CharT>
         bool apply(rolling_filebuf_base<CharT>* buf) const
@@ -559,8 +602,11 @@ namespace logpp
 
             buf->close();
 
+            auto now  = offset.apply(Clock::now());
+            auto time = Clock::to_time_t(now);
+
             std::tm tm;
-            Time::now(&tm);
+            Time::toTm(time, &tm);
             char timeBuf[MAX_BUF];
             auto len = std::strftime(timeBuf, sizeof(timeBuf), pattern.c_str(), &tm);
 

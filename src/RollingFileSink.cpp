@@ -64,6 +64,24 @@ namespace logpp::sink
             }
         }
 
+        template<typename Time, typename Func>
+        void parseArchiveTimestampOffset(const Options::Dict& options, std::string pattern, Func&& onParsed)
+        {
+            auto offsetIt = options.find("offset");
+            if (offsetIt == std::end(options))
+            {
+                onParsed(ArchiveTimestamp<Time> { std::move(pattern) });
+                return;
+            }
+
+            auto ok = string_utils::parseDuration(offsetIt->second, [&](auto duration) {
+                onParsed(ArchiveTimestamp<Time, offset::Fixed<decltype(duration)>> { std::move(pattern), duration });
+            });
+
+            if (!ok)
+                SinkBase::raiseConfigurationError("archive: invalid `offset` {}", offsetIt->second);
+        }
+
         template <typename Func>
         void parseArchive(const Options::Value& options, Func&& onParsed)
         {
@@ -97,15 +115,15 @@ namespace logpp::sink
                     auto tzIt = opts->find("tz");
                     if (tzIt == std::end(*opts))
                     {
-                        onParsed(ArchiveTimestamp<UTCTime> { std::move(pattern) });
+                        parseArchiveTimestampOffset<UTCTime>(*opts, std::move(pattern), std::forward<Func>(onParsed));
                         return;
                     }
 
                     auto tz = tzIt->second;
                     if (string_utils::iequals(tz, "utc"))
-                        onParsed(ArchiveTimestamp<UTCTime> { std::move(pattern) });
+                        parseArchiveTimestampOffset<UTCTime>(*opts, std::move(pattern), std::forward<Func>(onParsed));
                     else if (string_utils::iequals(tz, "local"))
-                        onParsed(ArchiveTimestamp<LocalTime> { std::move(pattern) });
+                        parseArchiveTimestampOffset<LocalTime>(*opts, std::move(pattern), std::forward<Func>(onParsed));
                     else
                         SinkBase::raiseConfigurationError("archive: invalid `tz` {}", tz);
                 }

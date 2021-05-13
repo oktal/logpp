@@ -107,30 +107,25 @@ typename FrozenClockBase<Clock>::time_point
     FrozenClockBase<Clock>::frozenNow
     = time_point(duration(0));
 
-template <typename Clock>
+using FrozenClock = FrozenClockBase<std::chrono::system_clock>;
+
+template <typename ClockT>
 struct FrozenTimeBase
 {
+    using Clock = ClockT;
+
     using time_point = typename Clock::time_point;
     using duration   = typename Clock::duration;
 
-    static void setNow(time_point now) { frozenNow = now; }
+    static void setNow(time_point now) { Clock::setNow(now); }
 
-    static void now(std::tm* out)
+    static void toTm(time_t time, std::tm* out)
     {
-        auto time = Clock::to_time_t(frozenNow);
         date_utils::gmtime(&time, out);
     }
-
-    static time_point frozenNow;
 };
 
-template <typename Clock>
-typename FrozenTimeBase<Clock>::time_point
-    FrozenTimeBase<Clock>::frozenNow
-    = time_point(duration(0));
-
-using FrozenClock = FrozenClockBase<std::chrono::system_clock>;
-using FrozenTime  = FrozenTimeBase<std::chrono::system_clock>;
+using FrozenTime  = FrozenTimeBase<FrozenClock>;
 
 struct TestCase
 {
@@ -505,6 +500,60 @@ TEST(RollingOfstreamTests, should_archive_with_timestamp)
     });
 
     check(basePath, "20210123", [](const std::string& s) {
+        ASSERT_EQ(s, "File0");
+    });
+}
+
+TEST(RollingOfstreamTests, should_archive_with_timestamp_and_fixed_offset)
+{
+    ArchiveTimestamp<FrozenTime, offset::Fixed<date::days>> archive { "%Y%m%d", date::days(-1) };
+    temporary_rolling_filebuf fileBuf(std::ios_base::out, "logpptestfile", ".log");
+
+    auto basePath = fileBuf.path();
+
+    RemoveDirectoryOnExit rmDir(fileBuf.directory());
+
+    auto write = [&](std::string_view str) {
+        fileBuf.sputn(str.data(), str.size());
+    };
+
+    auto flush = [&] {
+        fileBuf.pubsync();
+    };
+
+    auto ymd = may / 13 / 2021;
+    auto now = date::sys_days { ymd } + hours { 9 } + minutes { 54 } + seconds { 35 };
+    FrozenTime::setNow(now);
+
+    write("File0"sv);
+    flush();
+
+    archive.apply(&fileBuf);
+
+    write("File1"sv);
+    flush();
+
+    auto check = [](std::string_view baseFileName, std::optional<std::string> suffix, std::function<void(const std::string&)> assertFunc) {
+        auto fileName = std::string(baseFileName);
+        if (suffix)
+        {
+            fileName.push_back('.');
+            fileName.append(*suffix);
+        }
+
+        ASSERT_TRUE(file_utils::exists(fileName)) << "File " << fileName << " does not exist";
+        std::ifstream in(fileName);
+        ASSERT_TRUE(in) << "Failed to open file: " << fileName;
+        std::string str((std::istreambuf_iterator<char>(in)),
+                        (std::istreambuf_iterator<char>()));
+        assertFunc(str);
+    };
+
+    check(basePath, std::nullopt, [](const std::string& s) {
+        ASSERT_EQ(s, "File1");
+    });
+
+    check(basePath, "20210512", [](const std::string& s) {
         ASSERT_EQ(s, "File0");
     });
 }

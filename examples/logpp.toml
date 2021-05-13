@@ -116,7 +116,7 @@
 #      ## Will name the file by appending an increasing number, e.g
 #      ##     sample.rolling_file.0.log
 #      ##     sample.rolling_file.1.log
-#      # archive = { type = "timestamp", tz = "local", pattern = "%Y%m%d" }
+#      # archive = { type = "timestamp", tz = "local", pattern = "%Y%m%d", offset = "-1d" }
 #      ## Will name the file by appending a timestamp, e.g
 #      ##     sample.rolling_file.20210301.log
 #      ##     sample.rolling_file.20210302.log
@@ -127,6 +127,9 @@
 #      ## expressed in local time. `utc` will used a timestamp expressed in UTC
 #      ## `pattern` is the format specification of the timestamp that will
 #      ## will be appended to the file name, in the `strftime` format
+#      ## The `offset` parameter will shift the current time with the specified value.
+#      ## For example, this parameter can be used to ensure that the time suffix appended
+#      ## to the file name matches the file content, e.g for a daily rolling configuration.
 
 # Sink that logs events asynchronously
 # [sinks.async]
