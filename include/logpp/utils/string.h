@@ -58,29 +58,27 @@ namespace logpp
             const char* end = str.data() + str.size();
 
             auto value = std::strtoll(str.data(), &endptr, 10);
-            if (value <= 0)
-                return false;
             if (endptr == nullptr || endptr == end)
                 return false;
 
             while (std::isspace(*endptr))
                 ++endptr;
 
-            switch (std::tolower(*endptr))
+            switch (*endptr)
             {
-            case 'S':
+            case 's':
                 onParsed(std::chrono::seconds(value));
                 break;
-            case 'M':
+            case 'm':
                 onParsed(std::chrono::minutes(value));
                 break;
-            case 'H':
+            case 'h':
                 onParsed(std::chrono::hours(value));
                 break;
             case 'd':
                 onParsed(date::days(value));
                 break;
-            case 'm':
+            case 'M':
                 onParsed(date::months(value));
                 break;
             case 'y':
