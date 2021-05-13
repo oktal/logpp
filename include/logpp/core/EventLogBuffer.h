@@ -267,7 +267,7 @@ namespace logpp
             auto blockOffset = this->encode(block);
 
             auto* header                     = overlayAt<Header>(HeaderOffset);
-            header->sourceLocationBlockIndex = blockOffset;
+            header->sourceLocationBlockIndex = static_cast<int16_t>(blockOffset);
         }
 
         template <typename... Fields>
