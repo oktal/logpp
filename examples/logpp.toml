@@ -22,7 +22,7 @@
        format = "logfmt"
        ## Will use the `logfmt` formatter.
        ## See https://www.brandur.org/logfmt for more information on logfmt
-       # options = { format = "pattern", pattern = "%+" }
+       # format = { type = "pattern", pattern = "%+" }
        ## Will use the `pattern` formatter.
        ## `pattern` will control the format that the formatter will use.
        ## Here is a list of currently supported format flags:
