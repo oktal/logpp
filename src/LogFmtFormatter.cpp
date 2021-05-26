@@ -7,6 +7,7 @@
 #include "logpp/format/flag/NameFormatter.h"
 #include "logpp/format/flag/SourceLocationFormatter.h"
 #include "logpp/format/flag/TextFormatter.h"
+#include "logpp/format/flag/TimeZone.h"
 #include "logpp/format/flag/ThreadFormatter.h"
 #include "logpp/format/flag/TimeFormatter.h"
 
@@ -142,6 +143,15 @@ namespace logpp
         std::string m_separator;
     };
 
+    template<template<typename Tz> typename FormatterT>
+    void addZonedFormatter(tz::ZoneId zoneId, std::shared_ptr<MultiFlagFormatter>& formatter)
+    {
+        if (zoneId == tz::ZoneId::Local)
+            formatter->add<FormatterT<tz::Local>>();
+        else
+            formatter->add<FormatterT<tz::Utc>>();
+    }
+
     struct ParseContext
     {
         static constexpr int Eof = -1;
@@ -245,6 +255,15 @@ namespace logpp
         std::string_view::const_iterator it;
     };
 
+    struct PatternParseContext : ParseContext
+    {
+        PatternParseContext(std::string_view data)
+            : ParseContext(data)
+        {}
+
+        tz::ZoneId zoneId = tz::ZoneId::Utc;
+    };
+
     template <typename... Args>
     void throwParseError(ParseContext& context, const char* formatStr, Args&&... args)
     {
@@ -288,7 +307,7 @@ namespace logpp
 
     std::shared_ptr<FlagFormatter> matchPattern(std::string_view pattern);
 
-    std::shared_ptr<FlagFormatter> matchFlag(ParseContext& context)
+    std::shared_ptr<FlagFormatter> matchFlag(PatternParseContext& context)
     {
         auto formatter = std::make_shared<MultiFlagFormatter>();
 
@@ -324,16 +343,17 @@ namespace logpp
                 // -----------------------------
 
                 // Writes year as a decimal number, e.g. 2017
-                case 'Y':
-                    formatter->add<YearFormatter>();
+                case 'Y': {
+                    addZonedFormatter<YearFormatter>(context.zoneId, formatter);
                     break;
+                }
                 // Writes month as a decimal number (range [01,12])
                 case 'm': {
-                    formatter->add<MonthDecimalFormatter>();
+                    addZonedFormatter<MonthDecimalFormatter>(context.zoneId, formatter);
                     break;
                 // Writes day of the month as a decimal number (range [01,31])
                 case 'd': {
-                    formatter->add<DayDecimalFormatter>();
+                    addZonedFormatter<DayDecimalFormatter>(context.zoneId, formatter);
                     break;
                 }
 
@@ -342,27 +362,33 @@ namespace logpp
                 // -----------------------------
                 // Writes hour as a decimal number, 24 hour clock (range [00-23])
                 case 'H': {
-                    formatter->add<HoursFormatter>();
+                    addZonedFormatter<HoursFormatter>(context.zoneId, formatter);
                     break;
                 }
                 // Writes minute as a decimal number (range [00,59])
                 case 'M': {
-                    formatter->add<MinutesFormatter>();
+                    addZonedFormatter<MinutesFormatter>(context.zoneId, formatter);
                     break;
                 }
                 // Writes second as a decimal number (range [00,60])
                 case 'S': {
-                    formatter->add<SecondsFormatter>();
+                    addZonedFormatter<SecondsFormatter>(context.zoneId, formatter);
                     break;
                 }
                 // Writes millisecond as a decimal number (range [000, 999])
                 case 'i': {
-                    formatter->add<MillisecondsFormatter>();
+                    addZonedFormatter<MillisecondsFormatter>(context.zoneId, formatter);
                     break;
                 }
                 // Writes microsecond as a decimal number (range [000, 999])
                 case 'u': {
-                    formatter->add<MicrosecondsFormatter>();
+                    addZonedFormatter<MicrosecondsFormatter>(context.zoneId, formatter);
+                    break;
+                }
+
+                // Format following date and time as localtime
+                case 'L': {
+                    context.zoneId = tz::ZoneId::Local;
                     break;
                 }
 
@@ -424,7 +450,8 @@ namespace logpp
 
     std::shared_ptr<FlagFormatter> matchPattern(std::string_view pattern)
     {
-        ParseContext context(pattern);
+        PatternParseContext context(pattern);
+
         if (matchString(context, "%+"))
             return matchPattern(LogFmtFormatter::DefaultPattern);
 

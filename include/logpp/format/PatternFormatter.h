@@ -2,6 +2,8 @@
 
 #include "logpp/format/Formatter.h"
 #include "logpp/format/flag/Formatter.h"
+#include "logpp/format/flag/TimeZone.h"
+
 #include <type_traits>
 
 namespace logpp
@@ -48,17 +50,42 @@ namespace logpp
         }
 
     private:
+        struct FlagParseResult
+        {
+            std::string::const_iterator it;
+
+            bool result;
+            std::shared_ptr<FlagFormatter> formatter;
+
+            static FlagParseResult ok(std::string::const_iterator it, std::shared_ptr<FlagFormatter> formatter)
+            {
+                return { it, true, std::move(formatter) };
+            }
+
+            static FlagParseResult error(std::string::const_iterator it)
+            {
+                return  { it, false, nullptr };
+            }
+
+            bool isOk() const
+            {
+                return result;
+            }
+        };
+
         using FlagFormatterFactory = std::function<std::shared_ptr<FlagFormatter>(std::string)>;
         static std::unordered_map<char, FlagFormatterFactory> m_customFormatters;
 
         std::string m_pattern;
         std::vector<std::shared_ptr<FlagFormatter>> m_formatters;
 
+        tz::ZoneId m_zoneId;
+
         void doFormat(std::string_view name, LogLevel level, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override;
 
-        static std::vector<std::shared_ptr<FlagFormatter>> parsePattern(const std::string& pattern);
-        static std::pair<std::string::const_iterator, std::shared_ptr<FlagFormatter>> parseFlag(std::string::const_iterator it);
-        static std::pair<std::string::const_iterator, std::string>
+        std::vector<std::shared_ptr<FlagFormatter>> parsePattern(const std::string& pattern);
+        FlagParseResult parseFlag(std::string::const_iterator it);
+        std::pair<std::string::const_iterator, std::string>
         parseFlagParameter(std::string::const_iterator it);
     };
 }

@@ -12,6 +12,18 @@
 
 namespace logpp
 {
+    namespace
+    {
+        template <template <typename Tz> typename FormatterT>
+        std::shared_ptr<FlagFormatter> makeZonedFormatter(tz::ZoneId zoneId)
+        {
+            if (zoneId == tz::ZoneId::Local)
+                return std::make_shared<FormatterT<tz::Local>>();
+
+            return std::make_shared<FormatterT<tz::Utc>>();
+        }
+    }
+
     std::unordered_map<char, PatternFormatter::FlagFormatterFactory>
         PatternFormatter::m_customFormatters;
 
@@ -43,8 +55,9 @@ namespace logpp
     {
         auto it = pattern.begin(), end = pattern.end();
 
-        std::vector<std::shared_ptr<FlagFormatter>> formatters;
+        m_zoneId = tz::ZoneId::Utc;
 
+        std::vector<std::shared_ptr<FlagFormatter>> formatters;
         std::string literalStr;
 
         while (it != end)
@@ -65,12 +78,14 @@ namespace logpp
                     }
                     else
                     {
-                        std::shared_ptr<FlagFormatter> formatter;
-                        auto flag               = *it;
-                        std::tie(it, formatter) = parseFlag(it);
-                        if (!formatter)
+                        auto flag   = *it;
+                        auto result = parseFlag(it);
+                        if (!result.isOk())
                             throw std::runtime_error(fmt::format("Unknown flag formatter '%{}'", flag));
-                        formatters.push_back(std::move(formatter));
+                        if (result.formatter)
+                            formatters.push_back(std::move(result.formatter));
+
+                        it = result.it;
                     }
                 }
             }
@@ -87,8 +102,7 @@ namespace logpp
         return formatters;
     }
 
-    std::pair<std::string::const_iterator, std::shared_ptr<FlagFormatter>>
-    PatternFormatter::parseFlag(std::string::const_iterator it)
+    PatternFormatter::FlagParseResult PatternFormatter::parseFlag(std::string::const_iterator it)
     {
         std::shared_ptr<FlagFormatter> formatter;
 
@@ -101,19 +115,19 @@ namespace logpp
         // Writes year as a decimal number, e.g. 2017
         case 'Y': {
             ++it;
-            formatter = std::make_shared<YearFormatter>();
+            formatter = makeZonedFormatter<YearFormatter>(m_zoneId);
             break;
         }
         // Writes month as a decimal number (range [01,12])
         case 'm': {
             ++it;
-            formatter = std::make_shared<MonthDecimalFormatter>();
+            formatter = makeZonedFormatter<MonthDecimalFormatter>(m_zoneId);
             break;
         }
         // Writes day of the month as a decimal number (range [01,31])
         case 'd': {
             ++it;
-            formatter = std::make_shared<DayDecimalFormatter>();
+            formatter = makeZonedFormatter<DayDecimalFormatter>(m_zoneId);
             break;
         }
 
@@ -124,31 +138,38 @@ namespace logpp
         // Writes hour as a decimal number, 24 hour clock (range [00-23])
         case 'H': {
             ++it;
-            formatter = std::make_shared<HoursFormatter>();
+            formatter = makeZonedFormatter<HoursFormatter>(m_zoneId);
             break;
         }
         // Writes minute as a decimal number (range [00,59])
         case 'M': {
             ++it;
-            formatter = std::make_shared<MinutesFormatter>();
+            formatter = makeZonedFormatter<MinutesFormatter>(m_zoneId);
             break;
         }
         // Writes second as a decimal number (range [00,60])
         case 'S': {
             ++it;
-            formatter = std::make_shared<SecondsFormatter>();
+            formatter = makeZonedFormatter<SecondsFormatter>(m_zoneId);
             break;
         }
         // Writes millisecond as a decimal number (range [000, 999])
         case 'i': {
             ++it;
-            formatter = std::make_shared<MillisecondsFormatter>();
+            formatter = makeZonedFormatter<MillisecondsFormatter>(m_zoneId);
             break;
         }
         // Writes microsecond as a decimal number (range [000, 999])
         case 'u': {
             ++it;
-            formatter = std::make_shared<MicrosecondsFormatter>();
+            formatter = makeZonedFormatter<MicrosecondsFormatter>(m_zoneId);
+            break;
+        }
+
+        // Format following date and time as localtime
+        case 'L': {
+            ++it;
+            m_zoneId = tz::ZoneId::Local;
             break;
         }
 
@@ -208,10 +229,14 @@ namespace logpp
                 auto factory        = customIt->second;
                 formatter           = factory(std::move(param));
             }
+            else
+            {
+                return FlagParseResult::error(it);
+            }
         }
         }
 
-        return std::make_pair(it, std::move(formatter));
+        return FlagParseResult::ok(it, std::move(formatter));
     }
 
     std::pair<std::string::const_iterator, std::string>

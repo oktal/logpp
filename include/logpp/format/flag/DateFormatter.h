@@ -5,30 +5,36 @@
 
 namespace logpp
 {
+    template<typename Tz>
     class YearFormatter : public FlagFormatter
     {
     public:
         void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
-            fmt::format_to(out, "{:04}", date_utils::year(buffer.time()));
+            auto time = Tz::apply(buffer.time());
+            fmt::format_to(out, "{:04}", date_utils::year(time));
         }
     };
 
+    template<typename Tz>
     class MonthDecimalFormatter : public FlagFormatter
     {
     public:
         void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
-            fmt::format_to(out, "{:02}", date_utils::month(buffer.time()));
+            auto time = Tz::apply(buffer.time());
+            fmt::format_to(out, "{:02}", date_utils::month(time));
         }
     };
 
+    template<typename Tz>
     class DayDecimalFormatter : public FlagFormatter
     {
     public:
         void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
-            fmt::format_to(out, "{:02}", date_utils::day(buffer.time()));
+            auto time = Tz::apply(buffer.time());
+            fmt::format_to(out, "{:02}", date_utils::day(time));
         }
     };
 }

@@ -5,35 +5,42 @@
 
 namespace logpp
 {
+    template<typename Tz>
     class HoursFormatter : public FlagFormatter
     {
         void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
-            fmt::format_to(out, "{:02}", date_utils::hours(buffer.time()));
+            auto time = Tz::apply(buffer.time());
+            fmt::format_to(out, "{:02}", date_utils::hours(time));
         }
     };
 
+    template<typename Tz>
     class MinutesFormatter : public FlagFormatter
     {
         void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
-            fmt::format_to(out, "{:02}", date_utils::minutes(buffer.time()));
+            auto time = Tz::apply(buffer.time());
+            fmt::format_to(out, "{:02}", date_utils::minutes(time));
         }
     };
 
+    template<typename Tz>
     class SecondsFormatter : public FlagFormatter
     {
         void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
-            fmt::format_to(out, "{:02}", date_utils::seconds(buffer.time()));
+            auto time = Tz::apply(buffer.time());
+            fmt::format_to(out, "{:02}", date_utils::seconds(time));
         }
     };
 
+    template<typename Tz>
     class MillisecondsFormatter : public FlagFormatter
     {
         void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
-            auto time  = buffer.time();
+            auto time  = Tz::apply(buffer.time());
             auto epoch = time.time_since_epoch();
 
             epoch -= std::chrono::duration_cast<std::chrono::seconds>(epoch);
@@ -42,11 +49,12 @@ namespace logpp
         }
     };
 
+    template<typename Tz>
     class MicrosecondsFormatter : public FlagFormatter
     {
         void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
-            auto time  = buffer.time();
+            auto time  = Tz::apply(buffer.time());
             auto epoch = time.time_since_epoch();
 
             epoch -= std::chrono::duration_cast<std::chrono::seconds>(epoch);

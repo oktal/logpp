@@ -34,6 +34,7 @@
        ## %S     Writes second as a decimal number (range [00, 60])
        ## %i     Writes millisecond as a decimal number (range [000, 999])
        ## %u     Writes microsecond as a decimal number (range [000, 999])
+       ## %L     Converts time to local time (must be specified before any time or date specifier)
        ## %t     Thread id
        ## %v     Log message
        ## %l     Log level
