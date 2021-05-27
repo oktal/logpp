@@ -1,7 +1,15 @@
 #pragma once
 
 #include "logpp/queue/ITypedAsyncQueue.h"
+// Disable structure padding warning C4324
+#if defined(LOGPP_COMPILER_MSVC)
+  #pragma warning( push )
+  #pragma warning( disable: 4324 )
+#endif
 #include "logpp/queue/impl/MPMCQueue.h"
+#if defined (LOGPP_COMPILER_MSVC)
+  #pragma warning( pop )
+#endif
 
 #include <climits>
 
