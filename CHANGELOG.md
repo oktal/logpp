@@ -1,3 +1,29 @@
+<a name="v0.1.2"></a>
+## [v0.1.2](https://github.com/oktal/logpp/compare/v0.1.1...v0.1.2) (2021-05-27)
+
+### Bug Fixes
+- **core:** add LLVM libFuzzer-based fuzz tests and fix ASAN-detected memory issues ([f385876](https://github.com/oktal/logpp/commit/f385876e39e2642fdc1372ae201e70c0d3d2614f))
+- **sinks:** Add missing localtime conversion when rolling with a `RoundInterval` ([73c8f4b](https://github.com/oktal/logpp/commit/73c8f4b8ab8d6f0ab18a9e4aafd3c6548bbf5ca5))
+- **sinks:** Correctly parse `FormatSink` formatter options ([91db685](https://github.com/oktal/logpp/commit/91db68574a9dddf97d21623c65506b3963b0968a))
+- **sinks:** Update `rolling_ofstream` `RollEvery` logic when rolling with a round interval. ([91a4e3d](https://github.com/oktal/logpp/commit/91a4e3d02e423700256541a0158df92a9314fe0a))
+- Correctly parse time durations and allow negative durations ([8b8f3ec](https://github.com/oktal/logpp/commit/8b8f3eca8320b6292f02f333721281ea1ced5118))
+- Update stop sequence order of `FileWatcher` to avoid deadlocking. ([fa0f3d5](https://github.com/oktal/logpp/commit/fa0f3d5e2459b7f749559f99b7bbe47f65ae2aad))
+
+### Chore
+- **CMake:** Use `set_property` instead of `target_*` functions in FindFilesystem to support older versions of CMake. ([d17babe](https://github.com/oktal/logpp/commit/d17babecc6897b2c338acb7240627f9062639daa))
+- **config:** Simplify `TomlConfigurator` logger missing fields filling ([d98d695](https://github.com/oktal/logpp/commit/d98d6955a26ed230be0df30c8ff4d673d352a565))
+- **core:** Fix implicit type conversion warning ([10e307e](https://github.com/oktal/logpp/commit/10e307e68f5a8c9f3cf6811bf2318b45ff5e1087))
+- **core:** Move `SimpleTypedBlockingQueue` to its own header file. ([160d2c3](https://github.com/oktal/logpp/commit/160d2c31c5cb0e21e916655a1c345a9a2ca26fdd))
+- **queue:** disable structure alignment padding warning on msvc ([17f6305](https://github.com/oktal/logpp/commit/17f6305f09ae3bb94c91a06795e87b0dc277c61b))
+
+### Features
+- **config:** Add time shifting configuration option to timestamp archive policy ([59497c3](https://github.com/oktal/logpp/commit/59497c3d3ba3df93b1f6ec465bd58e02d8e0ecf3))
+- **config:** Make `level` and `sinks` configuration parameters for logger optional ([b1af75d](https://github.com/oktal/logpp/commit/b1af75dd999430da6a1a1638221f0baa4ad0e594))
+- **core:** Add `Off` to `LogLevel` that can be used to disable a logger ([f96bbd2](https://github.com/oktal/logpp/commit/f96bbd21c5a38a9dd91a9a1373d90217ea3414c4))
+- **core:** Keep track of loggers created through the default factory to allow out-of-order initialization of registry. ([7dc6df3](https://github.com/oktal/logpp/commit/7dc6df33f2ac843863af7e555644c668fba50b70))
+- **format:** Add a format specifier to convert time to local time. ([9cc4a23](https://github.com/oktal/logpp/commit/9cc4a2397593f78a106128f7f2edceede5420d30)), related to [#21](https://github.com/oktal/logpp/issues/21)
+
+
 <a name="v0.1.1"></a>
 ## [v0.1.1](https://github.com/oktal/logpp/compare/v0.1.0...v0.1.1) (2021-04-26)
 
