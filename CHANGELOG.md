@@ -1,3 +1,14 @@
+<a name="v0.1.3"></a>
+## [v0.1.3](https://github.com/oktal/logpp/compare/v0.1.2...v0.1.3) (2021-08-05)
+
+### Chore
+- Bump project version ([a3a2d66](https://github.com/oktal/logpp/commit/a3a2d665205fe99c233cb8cdad651abbb6aa0beb))
+- Update CHANGELOG ([6642eef](https://github.com/oktal/logpp/commit/6642eef58ed5535139f2c46350fafc610bbb4beb))
+
+### Features
+- **core:** Add a way to register a default logger factory function ([4990bb6](https://github.com/oktal/logpp/commit/4990bb61f4cbcb2bb9fece5d1167dd8a4dc1e45c))
+
+
 <a name="v0.1.2"></a>
 ## [v0.1.2](https://github.com/oktal/logpp/compare/v0.1.1...v0.1.2) (2021-05-27)
 
