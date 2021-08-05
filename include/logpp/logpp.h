@@ -73,6 +73,11 @@ namespace logpp
         defaultRegistry().setDefaultLogger(std::move(logger));
     }
 
+    inline void setDefaultLoggerFunc(LoggerRegistry::LoggerFactory factory)
+    {
+        defaultRegistry().setDefaultLoggerFunc(std::move(factory));
+    }
+
     inline std::shared_ptr<Logger> defaultLogger()
     {
         return defaultRegistry().defaultLogger();

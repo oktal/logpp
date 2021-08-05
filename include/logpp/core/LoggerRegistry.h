@@ -154,6 +154,7 @@ namespace logpp
 
         std::shared_ptr<Logger> defaultLogger();
         void setDefaultLogger(std::shared_ptr<Logger> logger);
+        void setDefaultLoggerFunc(LoggerFactory factory);
 
         template <typename Sink>
         bool registerSinkFactory()

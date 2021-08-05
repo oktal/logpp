@@ -132,8 +132,22 @@ namespace logpp
 
     void LoggerRegistry::setDefaultLogger(std::shared_ptr<Logger> logger)
     {
+        registerLogger(logger, true);
+    }
+
+    void LoggerRegistry::setDefaultLoggerFunc(LoggerFactory factory)
+    {
         std::lock_guard guard(m_mutex);
-        m_defaultLogger = std::move(logger);
+        if (m_loggerInstantiator.totalInstances() > 0)
+        {
+            auto tmpLogger = factory("");
+            m_loggerInstantiator.forEachInstance(
+                [&](const std::shared_ptr<Logger>& instance) {
+                    instance->setSink(tmpLogger->sink());
+                    instance->setLevel(tmpLogger->level());
+                });
+        }
+        m_defaultLoggerFactory = factory;
     }
 
     std::shared_ptr<sink::Sink> LoggerRegistry::createSink(std::string_view name)
