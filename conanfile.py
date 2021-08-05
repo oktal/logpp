@@ -16,6 +16,10 @@ class LogppConan(ConanFile):
         "shared": False
     }
 
+    exports_sources = "*"
+
+    _cmake = False
+
     def requirements(self):
         if self.options.build_tests:
             self.requires("gtest/1.10.0")
@@ -23,10 +27,22 @@ class LogppConan(ConanFile):
             self.requires("benchmark/1.5.2")
 
     def build(self):
-        cmake = CMake(self)
-        cmake.definitions["BUILD_TESTS"] = self.options.build_tests
-        cmake.definitions["BUILD_BENCHES"] = self.options.build_benches
-        cmake.configure()
+        cmake = self._configure_cmake()
         cmake.build()
         if self.options.build_tests:
             cmake.test()
+
+    def package(self):
+        cmake = self._configure_cmake()
+        cmake.install()
+
+    def _configure_cmake(self):
+        if self._cmake:
+            return self._cmake
+
+        self._cmake = CMake(self)
+        self._cmake.definitions["BUILD_TESTS"] = self.options.build_tests
+        self._cmake.definitions["BUILD_BENCHES"] = self.options.build_benches
+        self._cmake.configure()
+        return self._cmake
+
