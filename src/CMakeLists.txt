@@ -74,6 +74,7 @@ if (LOGPP_INSTAL)
     DESTINATION include
     FILES_MATCHING
     PATTERN "*.h"
+    PATTERN "*.hpp"
   )
 
   install(
