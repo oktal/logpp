@@ -11,6 +11,7 @@ endfunction()
 
 logpp_test(AsyncSinkTests)
 logpp_test(EnvironmentTests)
+logpp_test(FileSinkTests)
 logpp_test(LogBufferTests)
 logpp_test(LogFmtFormatterTests)
 logpp_test(LoggerRegistryTests)

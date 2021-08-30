@@ -4,6 +4,7 @@
 #include "logpp/sinks/file/RollingOfstream.h"
 
 #include "logpp/utils/env.h"
+#include "logpp/utils/file.h"
 #include "logpp/utils/string.h"
 
 #include <cstring>
@@ -166,6 +167,9 @@ namespace logpp::sink
         bool open(std::string_view filePath, std::ios_base::openmode openMode, RollingStrategy rollingStrategy, ArchiveStrategy archiveStrategy)
         {
             if (m_rofs)
+                return false;
+
+            if (!file_utils::createDirectories(filePath))
                 return false;
 
             auto rofs = std::make_unique<rolling_ofstream>(filePath, openMode, rollingStrategy, archiveStrategy, roll_mode::manual);

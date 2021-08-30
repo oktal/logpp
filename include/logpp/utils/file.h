@@ -53,8 +53,22 @@ namespace logpp::file_utils
         return p.filename().string();
     }
 
+    inline bool createDirectories(std::string_view path)
+    {
+        std::filesystem::path p(path);
+        if (p.has_filename())
+        {
+            auto parent = p.parent_path();
+            if (parent.empty())
+                return true;
+        }
+
+        return std::filesystem::create_directories(path);
+    }
+
 #else
 #error "Unknown compiler version for filesystem utilities"
 #endif
+
 
 }

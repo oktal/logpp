@@ -1,7 +1,9 @@
 #include "logpp/sinks/file/FileSink.h"
 
 #include "logpp/format/PatternFormatter.h"
+
 #include "logpp/utils/env.h"
+#include "logpp/utils/file.h"
 
 namespace logpp::sink
 {
@@ -22,6 +24,9 @@ namespace logpp::sink
         bool open(std::string_view filePath, std::ios_base::openmode openMode)
         {
             if (m_ofs)
+                return false;
+
+            if (!file_utils::createDirectories(filePath))
                 return false;
 
             auto ofs = std::make_unique<std::ofstream>(filePath.data(), openMode);

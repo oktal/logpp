@@ -67,25 +67,6 @@ public:
 
 #define GOUT TestCout()
 
-struct RemoveDirectoryOnExit
-{
-public:
-    explicit RemoveDirectoryOnExit(std::string_view dir)
-        : m_dir(dir)
-    { }
-
-    ~RemoveDirectoryOnExit()
-    {
-        // If we fail to remove the directory, print a warning with the path to give
-        // a chance to the user to manually clean it.
-        if (!file_utils::removeAll(m_dir))
-            std::cerr << "WARNING: Failed to remove directory '" << m_dir << "'\n";
-    }
-
-private:
-    std::string m_dir;
-};
-
 template <typename Clock>
 struct FrozenClockBase
 {
