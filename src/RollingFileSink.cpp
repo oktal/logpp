@@ -233,12 +233,13 @@ namespace logpp::sink
 
         bool canRoll() const
         {
-            return m_rofs->can_roll();
+            return m_rofs && m_rofs->can_roll();
         }
 
         void roll()
         {
-            m_rofs->roll();
+            if (m_rofs)
+                m_rofs->roll();
         }
 
     private:
