@@ -61,6 +61,7 @@ namespace logpp::file_utils
             auto parent = p.parent_path();
             if (parent.empty())
                 return true;
+            return std::filesystem::create_directories(parent);
         }
 
         return std::filesystem::create_directories(path);
