@@ -53,17 +53,22 @@ namespace logpp::file_utils
         return p.filename().string();
     }
 
-    inline bool createDirectories(std::string_view path)
+    inline bool createDirectories(std::string_view path, std::error_code& ec)
     {
         std::filesystem::path p(path);
         if (p.has_filename())
         {
             auto parent = p.parent_path();
             if (parent.empty())
+            {
+                ec = std::error_code();
                 return true;
+            }
+
+            return std::filesystem::create_directories(parent, ec);
         }
 
-        return std::filesystem::create_directories(path);
+        return std::filesystem::create_directories(path, ec);
     }
 
 #else

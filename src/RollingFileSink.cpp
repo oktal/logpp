@@ -169,7 +169,9 @@ namespace logpp::sink
             if (m_rofs)
                 return false;
 
-            if (!file_utils::createDirectories(filePath))
+            std::error_code ec;
+            file_utils::createDirectories(filePath, ec);
+            if (ec)
                 return false;
 
             auto rofs = std::make_unique<rolling_ofstream>(filePath, openMode, rollingStrategy, archiveStrategy, roll_mode::manual);

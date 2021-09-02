@@ -26,7 +26,9 @@ namespace logpp::sink
             if (m_ofs)
                 return false;
 
-            if (!file_utils::createDirectories(filePath))
+            std::error_code ec;
+            file_utils::createDirectories(filePath, ec);
+            if (ec)
                 return false;
 
             auto ofs = std::make_unique<std::ofstream>(filePath.data(), openMode);
