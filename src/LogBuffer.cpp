@@ -51,7 +51,7 @@ namespace logpp
 
     size_t LogBufferBase::encodeString(const char* str, size_t size)
     {
-        auto index = encode(static_cast<uint16_t>(size));
+        auto index = encode(static_cast<OffsetType>(size));
         encodeRaw(str, size);
 
         return index;

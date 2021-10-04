@@ -9,6 +9,12 @@
 
 namespace logpp
 {
+#if !defined(LOGPP_OFFSET_TYPE)
+  #define LOGPP_OFFSET_TYPE uint32_t
+#endif
+
+    using OffsetType = LOGPP_OFFSET_TYPE;
+
     template <typename T>
     struct Offset
     {
@@ -16,7 +22,7 @@ namespace logpp
             : offset { 0 }
         { }
 
-        explicit Offset(uint16_t offset)
+        explicit Offset(OffsetType offset)
             : offset { offset }
         { }
 
@@ -26,7 +32,7 @@ namespace logpp
         }
 
     private:
-        uint16_t offset;
+        OffsetType offset;
     };
 
     namespace tag
@@ -52,29 +58,29 @@ namespace logpp
             : offset { 0 }
         { }
 
-        explicit Offset(uint16_t offset)
+        explicit Offset(OffsetType offset)
             : offset { offset }
         { }
 
         std::string_view get(LogBufferView buffer) const
         {
-            auto size        = buffer.readAs<uint16_t>(offset);
-            const char* data = buffer.read(offset + sizeof(uint16_t));
+            auto size        = buffer.readAs<OffsetType>(offset);
+            const char* data = buffer.read(offset + sizeof(OffsetType));
             return std::string_view(data, size);
         }
 
         const char* data(LogBufferView buffer) const
         {
-            return buffer.read(offset + sizeof(uint16_t));
+            return buffer.read(offset + sizeof(OffsetType));
         }
 
         size_t size(LogBufferView buffer) const
         {
-            return buffer.readAs<uint16_t>(offset);
+            return buffer.readAs<OffsetType>(offset);
         }
 
     private:
-        uint16_t offset;
+        OffsetType offset;
     };
 
     template <>
@@ -84,7 +90,7 @@ namespace logpp
             : offset { 0 }
         { }
 
-        explicit Offset(uint16_t offset)
+        explicit Offset(OffsetType offset)
             : offset { offset }
         { }
 
@@ -95,7 +101,7 @@ namespace logpp
         }
 
     private:
-        uint16_t offset;
+        OffsetType offset;
     };
 
     template <typename T>
@@ -105,7 +111,7 @@ namespace logpp
             : offset { 0 }
         { }
 
-        explicit Offset(uint16_t offset)
+        explicit Offset(OffsetType offset)
             : offset { offset }
         { }
 
@@ -115,7 +121,7 @@ namespace logpp
         }
 
     private:
-        uint16_t offset;
+        OffsetType offset;
     };
 
     template <>
@@ -125,7 +131,7 @@ namespace logpp
             : offset { 0 }
         { }
 
-        explicit Offset(uint16_t offset)
+        explicit Offset(OffsetType offset)
             : offset { offset }
         { }
 
@@ -137,7 +143,7 @@ namespace logpp
         }
 
     private:
-        uint16_t offset;
+        OffsetType offset;
     };
 
     template <typename T>

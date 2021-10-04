@@ -68,7 +68,6 @@ namespace logpp
                     DefaultFieldWriter<Key, Value>>>;
 
             auto [keyOffset, valueOffset] = Writer().write(buffer, arg.key, arg.value);
-
             return fieldOffset(keyOffset, valueOffset);
         }
 
@@ -197,8 +196,8 @@ namespace logpp
     class EventLogBuffer : public LogBuffer<256>
     {
     public:
-        using TextFormatFunc  = void (*)(const LogBufferBase& buffer, uint16_t offsetsIndex, fmt::memory_buffer& formatBuf);
-        using FieldsVisitFunc = void (*)(const LogBufferBase& buffer, uint16_t offsetsIndex, LogFieldVisitor& visitor);
+        using TextFormatFunc  = void (*)(const LogBufferBase& buffer, OffsetType offsetsIndex, fmt::memory_buffer& formatBuf);
+        using FieldsVisitFunc = void (*)(const LogBufferBase& buffer, OffsetType offsetsIndex, LogFieldVisitor& visitor);
 
         static constexpr size_t HeaderOffset = 0;
 
@@ -207,20 +206,20 @@ namespace logpp
             TimePoint timePoint;
             thread_utils::id threadId;
 
-            uint16_t textBlockIndex;
+            OffsetType textBlockIndex;
             TextFormatFunc formatFunc;
 
-            int16_t sourceLocationBlockIndex;
+            OffsetType sourceLocationBlockIndex;
 
             uint8_t fieldsCount;
-            uint16_t fieldsBlockIndex;
+            OffsetType fieldsBlockIndex;
             FieldsVisitFunc fieldsVisitFunc;
         };
 
         EventLogBuffer()
         {
             auto* header                     = decodeHeader();
-            header->sourceLocationBlockIndex = -1;
+            header->sourceLocationBlockIndex = 0;
             header->fieldsCount              = 0;
             advance(HeaderOffset + sizeof(Header));
         }
@@ -267,7 +266,7 @@ namespace logpp
             auto blockOffset = this->encode(block);
 
             auto* header                     = overlayAt<Header>(HeaderOffset);
-            header->sourceLocationBlockIndex = static_cast<int16_t>(blockOffset);
+            header->sourceLocationBlockIndex = static_cast<OffsetType>(blockOffset);
         }
 
         template <typename... Fields>
@@ -308,7 +307,7 @@ namespace logpp
         {
             const auto* header = decodeHeader();
             auto index         = header->sourceLocationBlockIndex;
-            if (index < 0)
+            if (index == 0)
                 return std::nullopt;
 
             LogBufferView view { *this };
@@ -325,8 +324,8 @@ namespace logpp
         void encodeTextBlock(const Block&, size_t blockIndex)
         {
             auto* header           = overlayAt<Header>(HeaderOffset);
-            header->textBlockIndex = static_cast<uint16_t>(blockIndex);
-            header->formatFunc     = [](const LogBufferBase& buffer, uint16_t blockIndex, fmt::memory_buffer& formatBuf) {
+            header->textBlockIndex = static_cast<OffsetType>(blockIndex);
+            header->formatFunc     = [](const LogBufferBase& buffer, OffsetType blockIndex, fmt::memory_buffer& formatBuf) {
                 LogBufferView view { buffer };
                 const Block* block = view.overlayAs<Block>(blockIndex);
                 block->formatTo(formatBuf, view);
@@ -338,8 +337,8 @@ namespace logpp
         {
             auto* header             = overlayAt<Header>(HeaderOffset);
             header->fieldsCount      = static_cast<uint8_t>(block.count());
-            header->fieldsBlockIndex = static_cast<uint16_t>(blockIndex);
-            header->fieldsVisitFunc  = [](const LogBufferBase& buffer, uint16_t blockIndex, LogFieldVisitor& visitor) {
+            header->fieldsBlockIndex = static_cast<uint32_t>(blockIndex);
+            header->fieldsVisitFunc  = [](const LogBufferBase& buffer, OffsetType blockIndex, LogFieldVisitor& visitor) {
                 LogBufferView view { buffer };
                 const Block* block = view.overlayAs<Block>(blockIndex);
 

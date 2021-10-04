@@ -86,7 +86,7 @@ namespace logpp
         template <typename T>
         Offset<T> offsetAt(size_t index) const
         {
-            return Offset<T> { static_cast<uint16_t>(index) };
+            return Offset<T> { static_cast<OffsetType>(index) };
         }
     };
 

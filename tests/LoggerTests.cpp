@@ -7,6 +7,8 @@
 
 #include "gtest/gtest.h"
 
+#include <random>
+
 using namespace logpp;
 
 struct Field
@@ -208,6 +210,25 @@ struct LoggerTest : public ::testing::Test
         return field;
     }
 
+    static std::string generateRandomString(size_t size)
+    {
+        static constexpr std::string_view chars = "abcdefghijklmnopqrstuvzxyz";
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+
+        std::uniform_int_distribution<> dist(0, chars.size() - 1);
+
+        std::string str;
+        str.reserve(size);
+
+        for (size_t i = 0; i < size; ++i)
+        {
+            str.push_back(chars[dist(gen)]);
+        }
+
+        return str;
+    }
+
     std::shared_ptr<MemorySink> sink;
     std::shared_ptr<Logger> logger;
 };
@@ -287,4 +308,16 @@ TEST_F(LoggerTest, should_log_message_with_custom_streamable_fields)
     oss << id;
 
     checkField(entry, "test_id", std::string_view(oss.str()));
+}
+
+TEST_F(LoggerTest, should_log_big_message_with_fields)
+{
+    auto message = generateRandomString(1 * 1024 * 1024);
+
+    logger->info(message,
+            logpp::field("message_size", message.size())
+    );
+
+    auto* entry = checkEntry(message, LogLevel::Info);
+    checkField(entry, "message_size",  message.size());
 }
