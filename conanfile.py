@@ -41,8 +41,8 @@ class LogppConan(ConanFile):
             return self._cmake
 
         self._cmake = CMake(self)
-        self._cmake.definitions["BUILD_TESTS"] = self.options.build_tests
-        self._cmake.definitions["BUILD_BENCHES"] = self.options.build_benches
+        self._cmake.definitions["LOGPP_BUILD_TESTS"] = self.options.build_tests
+        self._cmake.definitions["LOGPP_BUILD_BENCHES"] = self.options.build_benches
         self._cmake.configure()
         return self._cmake
 
