@@ -90,6 +90,11 @@ namespace logpp
                 m_writer.write(key, value);
             }
 
+            void visit(std::string_view key, char value) override
+            {
+                m_writer.write(key, value);
+            }
+
             void visit(std::string_view key, uint8_t value) override
             {
 

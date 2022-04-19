@@ -9,9 +9,13 @@ namespace logpp
     class LogFieldVisitor
     {
     public:
+        virtual ~LogFieldVisitor() = default;
+
         virtual void visitStart(size_t count) = 0;
 
         virtual void visit(std::string_view key, std::string_view value) = 0;
+
+        virtual void visit(std::string_view key, char value) = 0;
 
         virtual void visit(std::string_view key, uint8_t value)  = 0;
         virtual void visit(std::string_view key, uint16_t value) = 0;

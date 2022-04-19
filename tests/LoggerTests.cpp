@@ -138,6 +138,7 @@ private:
     }
 
         DEFINE_VISIT(std::string_view)
+        DEFINE_VISIT(char)
         DEFINE_VISIT(uint8_t)
         DEFINE_VISIT(uint16_t)
         DEFINE_VISIT(uint32_t)

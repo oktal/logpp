@@ -57,6 +57,11 @@ private:
             fmt::format_to(out, "{}", value);
         }
 
+        void writeValue(char c)
+        {
+            fmt::format_to(out, "\"{}\"", c);
+        }
+
         void writeValue(std::string_view str)
         {
             fmt::format_to(out, "\"{}\"", str);
@@ -92,6 +97,11 @@ private:
         }
 
         void visit(std::string_view key, std::string_view value) override
+        {
+            writer.write(key, value);
+        }
+
+        void visit(std::string_view key, char value) override
         {
             writer.write(key, value);
         }
