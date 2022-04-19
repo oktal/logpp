@@ -7,6 +7,9 @@
 #endif
 
 #include <cstdlib>
+#include <fstream>
+#include <streambuf>
+#include <string>
 #include <string_view>
 
 namespace logpp::file_utils
@@ -75,5 +78,20 @@ namespace logpp::file_utils
 #error "Unknown compiler version for filesystem utilities"
 #endif
 
+    inline std::string readAll(std::string_view path)
+    {
+        std::ifstream ifs(path.data());
+        if (!ifs)
+            throw std::runtime_error("failed to open file");
+
+        std::string str;
+        
+        ifs.seekg(0, std::ios::end);
+        str.reserve(ifs.tellg());
+        ifs.seekg(0, std::ios::beg);
+
+        str.assign(std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>());
+        return str;
+    }
 
 }

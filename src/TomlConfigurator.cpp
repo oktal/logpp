@@ -3,6 +3,9 @@
 #include "logpp/core/LogLevel.h"
 #include "logpp/core/Logger.h"
 
+#include "logpp/utils/env.h"
+#include "logpp/utils/file.h"
+
 #include "logpp/sinks/LevelSink.h"
 #include "logpp/sinks/MultiSink.h"
 #include "logpp/sinks/Sink.h"
@@ -94,7 +97,15 @@ namespace logpp
 
     std::optional<TomlConfigurator::Error> TomlConfigurator::configure(std::string_view config, LoggerRegistry& registry)
     {
-        return configure([&] { return toml::parse(config); }, registry);
+        return configure(config, registry, Options());
+    }
+
+    std::optional<TomlConfigurator::Error> TomlConfigurator::configure(std::string_view config, LoggerRegistry& registry, const Options& options)
+    {
+        if (options.expandEnvironmentVariables)
+            return configure([&] { return toml::parse(env_utils::expandEnvironmentVariables(config)); }, registry, options);
+
+        return configure([&] { return toml::parse(config); }, registry, options);
     }
 
     std::optional<TomlConfigurator::Error> TomlConfigurator::configureFile(std::string_view path)
@@ -104,7 +115,12 @@ namespace logpp
 
     std::optional<TomlConfigurator::Error> TomlConfigurator::configureFile(std::string_view path, LoggerRegistry& registry)
     {
-        return configure([&] { return toml::parse_file(path); }, registry);
+        return configureFile(path, registry, Options());
+    }
+
+    std::optional<TomlConfigurator::Error> TomlConfigurator::configureFile(std::string_view path, LoggerRegistry& registry, const Options& options)
+    {
+        return configure([&] { return parseFile(path, options); }, registry, options);
     }
 
     std::pair<std::optional<FileWatcher::WatchId>, std::optional<TomlConfigurator::Error>>
@@ -116,14 +132,20 @@ namespace logpp
     std::pair<std::optional<FileWatcher::WatchId>, std::optional<TomlConfigurator::Error>>
     TomlConfigurator::configureFileAndWatch(std::string_view path, std::shared_ptr<FileWatcher> watcher, LoggerRegistry& registry)
     {
-        auto err = configureFile(path, registry);
+        return configureFileAndWatch(path, std::move(watcher), registry, Options());
+    }
+
+    std::pair<std::optional<FileWatcher::WatchId>, std::optional<TomlConfigurator::Error>>
+    TomlConfigurator::configureFileAndWatch(std::string_view path, std::shared_ptr<FileWatcher> watcher, LoggerRegistry& registry, const Options& options)
+    {
+        auto err = configureFile(path, registry, options);
         if (err)
             return std::make_pair(std::nullopt, std::move(err));
 
         auto watchId = watcher->addWatch(path, [=, &registry](std::string_view path) {
             try
             {
-                auto table  = toml::parse_file(path);
+                auto table  = parseFile(path, options);
                 auto result = parseConfiguration(table);
                 if (result.error)
                 {
@@ -433,5 +455,13 @@ namespace logpp
                 return Error { "logger: logger already exists", logger.sourceRegion };
         }
         return std::nullopt;
+    }
+
+    toml::parse_result TomlConfigurator::parseFile(std::string_view path, const Options& options)
+    {
+        if (options.expandEnvironmentVariables)
+            return toml::parse(env_utils::expandEnvironmentVariables(file_utils::readAll(path)));
+
+        return toml::parse_file(path);
     }
 }

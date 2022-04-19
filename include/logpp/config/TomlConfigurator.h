@@ -12,6 +12,11 @@ namespace logpp
     class TomlConfigurator
     {
     public:
+        struct Options
+        {
+            bool expandEnvironmentVariables { false };
+        };
+
         struct Error
         {
             std::string description;
@@ -20,6 +25,11 @@ namespace logpp
             static Error from(const toml::parse_error& e)
             {
                 return { std::string(e.description()), e.source() };
+            }
+
+            static Error from(const std::exception& e)
+            {
+                return { std::string(e.what()), std::nullopt };
             }
 
             friend std::ostream& operator<<(std::ostream& os, const Error& err)
@@ -33,9 +43,11 @@ namespace logpp
 
         static std::optional<Error> configure(std::string_view config);
         static std::optional<Error> configure(std::string_view config, LoggerRegistry& registry);
+        static std::optional<Error> configure(std::string_view config, LoggerRegistry& registry, const Options& options);
 
         static std::optional<Error> configureFile(std::string_view path);
         static std::optional<Error> configureFile(std::string_view path, LoggerRegistry& registry);
+        static std::optional<Error> configureFile(std::string_view path, LoggerRegistry& registry, const Options& options);
 
         static std::pair<std::optional<FileWatcher::WatchId>, std::optional<Error>>
         configureFileAndWatch(std::string_view path, std::shared_ptr<FileWatcher> watcher);
@@ -43,9 +55,12 @@ namespace logpp
         static std::pair<std::optional<FileWatcher::WatchId>, std::optional<Error>>
         configureFileAndWatch(std::string_view path, std::shared_ptr<FileWatcher> watcher, LoggerRegistry& registry);
 
+        static std::pair<std::optional<FileWatcher::WatchId>, std::optional<Error>>
+        configureFileAndWatch(std::string_view path, std::shared_ptr<FileWatcher> watcher, LoggerRegistry& registry, const Options& options);
+
     private:
         template <typename ParseFunc>
-        static std::optional<Error> configure(ParseFunc parseFunc, LoggerRegistry& registry)
+        static std::optional<Error> configure(ParseFunc parseFunc, LoggerRegistry& registry, const Options& /*options*/)
         {
             try
             {
@@ -75,9 +90,15 @@ namespace logpp
             {
                 return Error::from(e);
             }
+            catch (const std::exception& e)
+            {
+                return Error::from(e);
+            }
 
             return std::nullopt;
         }
+
+        static toml::parse_result parseFile(std::string_view path, const Options& options);
 
         struct Sink
         {

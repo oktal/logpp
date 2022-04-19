@@ -3,6 +3,9 @@
 #include "logpp/config/TomlConfigurator.h"
 #include "logpp/sinks/ColoredConsole.h"
 #include "logpp/sinks/file/FileSink.h"
+#include "logpp/utils/env.h"
+
+#include "TemporaryFile.h"
 
 using namespace std::string_view_literals;
 using namespace logpp;
@@ -333,4 +336,96 @@ TEST(TomlConfigurator, should_error_when_configuring_hierarchical_loggers_with_m
     LoggerRegistry registry;
     auto err = TomlConfigurator::configure(Config, registry);
     ASSERT_TRUE(err);
+}
+
+TEST(TomlConfigurator, should_expand_environment_variable)
+{
+    env_utils::setenv("LOGPP_SINK_TYPE", "console", 1);
+    env_utils::setenv("LOGPP_ROOT_LEVEL", "info", 1);
+
+    static constexpr auto Config = R"TOML(
+        [sinks]
+        [sinks.console]
+           type = "ColoredOutputConsole" 
+           options = { pattern = "%+" }
+
+        [sinks.file]
+           type = "File"
+           options = { file = "test.log" }
+
+        [loggers]
+        [loggers.Namespace]
+           name = "My.Namespace"
+           sinks = [ "${LOGPP_SINK_TYPE}" ]
+           level = "${LOGPP_ROOT_LEVEL}"
+           default = true
+
+        [loggers.Class]
+           name = "My.Namespace.Class"
+           level = "debug"
+           sinks = [ "file" ]
+
+        [loggers.Other]
+           name = "My.Other"
+           level = "debug"
+    )TOML"sv;
+
+    LoggerRegistry registry;
+    TomlConfigurator::Options options;
+    options.expandEnvironmentVariables = true;
+    auto err = TomlConfigurator::configure(Config, registry, options);
+    ASSERT_FALSE(err) << *err;
+
+    checkLogger(registry, "My.Namespace", HasLevel(LogLevel::Info), HasSink<sink::ColoredOutputConsole>());
+    checkLogger(registry, "My.Namespace.Class", HasLevel(LogLevel::Debug), HasSink<sink::FileSink>());
+    checkLogger(registry, "My.Other", HasLevel(LogLevel::Debug), HasSink<sink::ColoredOutputConsole>());
+}
+
+TEST(TomlConfigurator, should_expand_environment_variable_from_file)
+{
+    env_utils::setenv("LOGPP_SINK_TYPE", "console", 1);
+    env_utils::setenv("LOGPP_ROOT_LEVEL", "info", 1);
+
+    static constexpr auto Config = R"TOML(
+        [sinks]
+        [sinks.console]
+           type = "ColoredOutputConsole" 
+           options = { pattern = "%+" }
+
+        [sinks.file]
+           type = "File"
+           options = { file = "test.log" }
+
+        [loggers]
+        [loggers.Namespace]
+           name = "My.Namespace"
+           sinks = [ "${LOGPP_SINK_TYPE}" ]
+           level = "${LOGPP_ROOT_LEVEL}"
+           default = true
+
+        [loggers.Class]
+           name = "My.Namespace.Class"
+           level = "debug"
+           sinks = [ "file" ]
+
+        [loggers.Other]
+           name = "My.Other"
+           level = "debug"
+    )TOML"sv;
+
+    temporary_ofstream ofs(std::ios_base::out, "logpptestconfig", ".toml");
+    ofs.write(Config.data(), Config.size());
+    ofs.flush();
+
+    RemoveDirectoryOnExit rmDir(ofs.directory());
+
+    LoggerRegistry registry;
+    TomlConfigurator::Options options;
+    options.expandEnvironmentVariables = true;
+    auto err = TomlConfigurator::configureFile(ofs.path(), registry, options);
+    ASSERT_FALSE(err) << *err;
+
+    checkLogger(registry, "My.Namespace", HasLevel(LogLevel::Info), HasSink<sink::ColoredOutputConsole>());
+    checkLogger(registry, "My.Namespace.Class", HasLevel(LogLevel::Debug), HasSink<sink::FileSink>());
+    checkLogger(registry, "My.Other", HasLevel(LogLevel::Debug), HasSink<sink::ColoredOutputConsole>());
 }

@@ -86,6 +86,39 @@ namespace logpp
         std::string m_name;
     };
 
+    class temporary_ofstream : public std::ofstream
+    {
+    public:
+        temporary_ofstream(std::ios_base::openmode openMode, std::string_view prefix, std::string_view suffix)
+            : m_directory(createTemporaryDirectory())
+            , m_name(createTemporaryFileName(prefix, suffix))
+            , m_path(fmt::format("{}/{}", m_directory, m_name))
+        {
+            open(m_path, openMode);
+            if (!*this)
+                throw std::runtime_error(fmt::format("Failed to open file {}", m_path));
+        }
+
+        std::string_view directory() const
+        {
+            return m_directory;
+        }
+
+        std::string_view name() const
+        {
+            return m_name;
+        }
+
+        std::string_view path() const
+        {
+            return m_path;
+        }
+
+    private:
+        std::string m_directory;
+        std::string m_name;
+        std::string m_path;
+    };
 
     struct RemoveDirectoryOnExit
     {
