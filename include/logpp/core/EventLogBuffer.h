@@ -118,7 +118,7 @@ namespace logpp
             template <size_t... Indexes>
             void formatImpl(LogBufferView view, fmt::memory_buffer& buffer, std::string_view formatStr, std::index_sequence<Indexes...>) const
             {
-                fmt::format_to(buffer, formatStr, getArg<Indexes>(view)...);
+                fmt::format_to(std::back_inserter(buffer), fmt::runtime(formatStr), getArg<Indexes>(view)...);
             }
 
             template <size_t N>

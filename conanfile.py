@@ -2,7 +2,7 @@ from conans import ConanFile, CMake
 
 class LogppConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
-    requires = "fmt/7.1.3", "tomlplusplus/2.3.0"
+    requires = "fmt/8.1.1", "tomlplusplus/2.3.0"
     generators = "cmake"
 
     options = {

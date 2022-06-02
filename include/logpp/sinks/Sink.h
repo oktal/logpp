@@ -135,9 +135,9 @@ namespace logpp::sink
         }
 
         template <typename... Args>
-        static void raiseConfigurationError(const char* formatStr, Args&&... args)
+        static void raiseConfigurationError(fmt::format_string<Args...> format, Args&&... args)
         {
-            throw ConfigurationError(fmt::format(formatStr, std::forward<Args>(args)...));
+            throw ConfigurationError(fmt::format(format, std::forward<Args>(args)...));
         }
     };
 
