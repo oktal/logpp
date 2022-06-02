@@ -22,7 +22,7 @@ namespace logpp
         template <size_t... Indexes>
         void formatToImpl(fmt::memory_buffer& buffer, std::index_sequence<Indexes...>) const
         {
-            fmt::format_to(buffer, formatStr, std::get<Indexes>(args)...);
+            fmt::format_to(std::back_inserter(buffer), fmt::format_string<Args...>(formatStr), std::get<Indexes>(args)...);
         }
     };
 }
