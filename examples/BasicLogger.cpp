@@ -50,6 +50,9 @@ int main(int argc, const char* argv[])
 {
     // Set the global logger level to Debug
     logpp::setLevel(logpp::LogLevel::Debug);
+    auto formatter = std::make_shared<logpp::LogFmtFormatter>();
+    auto consoleOut = std::make_shared<logpp::sink::ColoredOutputConsole>(formatter);
+    logpp::defaultLogger()->setSink(consoleOut);
 
     // Uncomment this line to log lines in logfmt format
     // logpp::setFormatter<logpp::LogFmtFormatter>();

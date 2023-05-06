@@ -127,6 +127,9 @@ namespace logpp
     std::shared_ptr<Logger> LoggerRegistry::defaultLogger()
     {
         std::lock_guard guard(m_mutex);
+        if (m_defaultLogger == nullptr) {
+          m_defaultLogger = m_defaultLoggerFactory("logpp");
+        }
         return m_defaultLogger;
     }
 
