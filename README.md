@@ -115,7 +115,10 @@ To retrieve logpp external dependencies, make sure to install and configure [con
 3. Install dependencies
    ```sh
        cd build
+        # If you're on Linux/Windows
        conan install ..
+        # If you're on MacOS
+       conan install .. --build=fmt
    ```
 4. Build the library
    ```sh

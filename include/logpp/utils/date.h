@@ -53,7 +53,7 @@ namespace logpp
 
         inline void gmtime(std::time_t* time, std::tm* out)
         {
-#if defined(LOGPP_PLATFORM_LINUX)
+#if defined(LOGPP_PLATFORM_LINUX) || defined(LOGPP_PLATFORM_DARWIN)
             ::gmtime_r(time, out);
 #elif defined(LOGPP_PLATFORM_WINDOWS)
             gmtime_s(out, time);
@@ -64,7 +64,7 @@ namespace logpp
 
         inline void localtime(std::time_t* time, std::tm* out)
         {
-#if defined(LOGPP_PLATFORM_LINUX)
+#if defined(LOGPP_PLATFORM_LINUX) || defined(LOGPP_PLATFORM_DARWIN)
             ::localtime_r(time, out);
 #elif defined(LOGPP_PLATFORM_WINDOWS)
             localtime_s(out, time);
@@ -75,7 +75,7 @@ namespace logpp
 
         inline time_t timegm(std::tm* tm)
         {
-#if defined(LOGPP_PLATFORM_LINUX)
+#if defined(LOGPP_PLATFORM_LINUX) || defined(LOGPP_PLATFORM_DARWIN)
             return ::timegm(tm);
 #elif defined(LOGPP_PLATFORM_WINDOWS)
             return _mkgmtime(tm);

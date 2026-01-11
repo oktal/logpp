@@ -9,6 +9,9 @@
 #if defined(LOGPP_PLATFORM_WINDOWS)
 #define NOMINMAX
 #include <Windows.h>
+#elif defined(LOGPP_PLATFORM_LINUX) || defined(LOGPP_PLATFORM_DARWIN)
+#include <sys/time.h>
+#include <time.h>
 #endif
 
 namespace logpp
@@ -105,7 +108,7 @@ namespace logpp
     {
 #if defined(LOGPP_PLATFORM_WINDOWS)
         return static_cast<uint32_t>(GetTickCount());
-#elif defined(LOGPP_PLATFORM_LINUX)
+#elif defined(LOGPP_PLATFORM_LINUX) || defined(LOGPP_PLATFORM_DARWIN)
 #if CLOCK_MONOTONIC
         struct timespec ts;
         clock_gettime(CLOCK_MONOTONIC, &ts);
