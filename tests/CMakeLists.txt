@@ -1,11 +1,15 @@
 include(GoogleTest)
 
+if(NOT TARGET GTest::gtest_main)
+    find_package(GTest CONFIG REQUIRED)
+endif()
+
 function(logpp_test test_name)
     set(TEST_EXECUTABLE test_${test_name})
     set(TEST_SOURCE ${test_name}.cpp)
 
     add_executable(${TEST_EXECUTABLE} ${TEST_SOURCE})
-    target_link_libraries(${TEST_EXECUTABLE} PRIVATE ${CONAN_LIBS_GTEST} logpp::logpp)
+    target_link_libraries(${TEST_EXECUTABLE} PRIVATE GTest::gtest_main logpp::logpp)
     gtest_discover_tests(${TEST_EXECUTABLE})
 endfunction()
 

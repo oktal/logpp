@@ -1,9 +1,11 @@
-from conans import ConanFile, CMake
+from conan import ConanFile
+from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain
+
+required_conan_version = ">=2.1"
 
 class LogppConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
-    requires = "fmt/8.1.1", "tomlplusplus/2.3.0"
-    generators = "cmake"
+    requires = "fmt/12.2.0", "tomlplusplus/2.5.0"
 
     options = {
         "build_tests": [True, False],
@@ -18,31 +20,31 @@ class LogppConan(ConanFile):
 
     exports_sources = "*"
 
-    _cmake = False
-
-    def requirements(self):
+    def build_requirements(self):
         if self.options.build_tests:
-            self.requires("gtest/1.10.0")
+            self.test_requires("gtest/1.10.0")
         if self.options.build_benches:
-            self.requires("benchmark/1.5.2")
+            self.test_requires("benchmark/1.5.6")
+
+    def generate(self):
+        deps = CMakeDeps(self)
+        deps.generate()
+
+        toolchain = CMakeToolchain(self)
+        toolchain.variables["LOGPP_BUILD_TESTS"] = bool(self.options.build_tests)
+        toolchain.variables["LOGPP_BUILD_BENCHES"] = bool(self.options.build_benches)
+        toolchain.variables["LOGPP_SHARED"] = bool(self.options.shared)
+        toolchain.variables["BUILD_SHARED_LIBS"] = bool(self.options.shared)
+        toolchain.generate()
 
     def build(self):
-        cmake = self._configure_cmake()
+        cmake = CMake(self)
+        cmake.configure()
         cmake.build()
         if self.options.build_tests:
             cmake.test()
 
     def package(self):
-        cmake = self._configure_cmake()
+        cmake = CMake(self)
         cmake.install()
-
-    def _configure_cmake(self):
-        if self._cmake:
-            return self._cmake
-
-        self._cmake = CMake(self)
-        self._cmake.definitions["LOGPP_BUILD_TESTS"] = self.options.build_tests
-        self._cmake.definitions["LOGPP_BUILD_BENCHES"] = self.options.build_benches
-        self._cmake.configure()
-        return self._cmake
 

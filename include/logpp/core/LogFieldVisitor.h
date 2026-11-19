@@ -2,6 +2,7 @@
 
 #include "logpp/utils/detect.h"
 
+#include <string>
 #include <string_view>
 
 namespace logpp

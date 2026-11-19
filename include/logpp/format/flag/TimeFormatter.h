@@ -3,6 +3,8 @@
 #include "logpp/format/flag/Formatter.h"
 #include "logpp/utils/date.h"
 
+#include <iterator>
+
 namespace logpp
 {
     template<typename Tz>
@@ -11,7 +13,7 @@ namespace logpp
         void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
             auto time = Tz::apply(buffer.time());
-            fmt::format_to(out, "{:02}", date_utils::hours(time));
+            fmt::format_to(std::back_inserter(out), "{:02}", date_utils::hours(time));
         }
     };
 
@@ -21,7 +23,7 @@ namespace logpp
         void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
             auto time = Tz::apply(buffer.time());
-            fmt::format_to(out, "{:02}", date_utils::minutes(time));
+            fmt::format_to(std::back_inserter(out), "{:02}", date_utils::minutes(time));
         }
     };
 
@@ -31,7 +33,7 @@ namespace logpp
         void format(std::string_view, LogLevel, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
         {
             auto time = Tz::apply(buffer.time());
-            fmt::format_to(out, "{:02}", date_utils::seconds(time));
+            fmt::format_to(std::back_inserter(out), "{:02}", date_utils::seconds(time));
         }
     };
 
@@ -45,7 +47,7 @@ namespace logpp
 
             epoch -= std::chrono::duration_cast<std::chrono::seconds>(epoch);
             auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(epoch);
-            fmt::format_to(out, "{:03}", ms.count());
+            fmt::format_to(std::back_inserter(out), "{:03}", ms.count());
         }
     };
 
@@ -61,7 +63,7 @@ namespace logpp
             epoch -= std::chrono::duration_cast<std::chrono::milliseconds>(epoch);
 
             auto us = std::chrono::duration_cast<std::chrono::microseconds>(epoch);
-            fmt::format_to(out, "{:03}", us.count());
+            fmt::format_to(std::back_inserter(out), "{:03}", us.count());
         }
     };
 }

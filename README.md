@@ -99,7 +99,9 @@ Combined with [asynchronocity](https://github.com/oktal/logpp/blob/master/includ
 
 ### Prerequisites
 
-To retrieve logpp external dependencies, make sure to install and configure [conan](https://conan.io) on your local machine.
+To retrieve logpp external dependencies, install [Conan](https://conan.io)
+2.1 or newer and create a compiler profile with `conan profile detect`.
+The library requires C++17 or newer.
 
 ### Installation
 
@@ -115,11 +117,11 @@ To retrieve logpp external dependencies, make sure to install and configure [con
 3. Install dependencies
    ```sh
        cd build
-       conan install ..
+       conan install .. --output-folder=. --build=missing -s compiler.cppstd=17
    ```
 4. Build the library
    ```sh
-       conan build ..
+       conan build .. --output-folder=. -s compiler.cppstd=17
    ```
 
 

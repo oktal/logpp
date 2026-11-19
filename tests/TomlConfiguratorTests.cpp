@@ -415,7 +415,7 @@ TEST(TomlConfigurator, should_expand_environment_variable_from_file)
 
     temporary_ofstream ofs(std::ios_base::out, "logpptestconfig", ".toml");
     ofs.write(Config.data(), Config.size());
-    ofs.flush();
+    ofs.close();
 
     RemoveDirectoryOnExit rmDir(ofs.directory());
 

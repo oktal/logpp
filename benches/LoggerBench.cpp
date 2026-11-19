@@ -12,6 +12,8 @@
 
 #include <random>
 
+constexpr double pi = 3.14159265358979323846;
+
 class NoopSink : public logpp::sink::Sink
 {
 public:
@@ -172,7 +174,7 @@ static void LoggerBench_FormatSink_FormatStr_3(benchmark::State& state)
     {
         logger->debug(logpp::format("This is a log-formatted message {} {}", 0xBAD, loggerType),
                       logpp::field("IntField", 0xBAD),
-                      logpp::field("FloatField", M_PI),
+                      logpp::field("FloatField", pi),
                       logpp::field("StrField", loggerType));
     }
 }
@@ -195,7 +197,7 @@ static void LoggerBench_AsyncNoopSink_FormatStr_3(benchmark::State& state)
     {
         logger->debug(logpp::format("This is a log-formatted message {} {}", i, loggerType),
                       logpp::field("IntField", i),
-                      logpp::field("FloatField", M_PI),
+                      logpp::field("FloatField", pi),
                       logpp::field("StrField", loggerType));
         ++i;
     }
