@@ -123,6 +123,42 @@ To retrieve logpp external dependencies, make sure to install and configure [con
    ```
 
 
+### Using an external date library
+
+By default, logpp uses its bundled copy of Howard Hinnant's date library. To share
+one version of date with the rest of your application, enable
+`LOGPP_USE_EXTERNAL_DATE`:
+
+```sh
+cmake -S . -B build -DLOGPP_USE_EXTERNAL_DATE=ON -DCMAKE_PREFIX_PATH=/path/to/date-install
+```
+
+Alternatively, set `DATE_ROOT` to an installed date package prefix. This also
+enables external date support:
+
+```sh
+cmake -S . -B build -DDATE_ROOT=/path/to/date-install
+```
+
+The package must provide the `date::date-tz` target. Build date with
+`BUILD_TZ_LIB=ON`. If a parent project already provides this target, logpp reuses
+it without calling `find_package`:
+
+```cmake
+set(BUILD_TZ_LIB ON CACHE BOOL "")
+add_subdirectory(path/to/date)
+set(LOGPP_USE_EXTERNAL_DATE ON CACHE BOOL "")
+add_subdirectory(path/to/logpp)
+```
+
+In external mode, logpp does not compile its bundled `tz.cpp`. The external date
+dependency and `LOGPP_USE_EXTERNAL_DATE=1` are propagated to targets linking
+`logpp::logpp`, so the library and its consumers select the same headers. Rebuild
+logpp and its consumers together when switching modes.
+
+Time zone database configuration remains the responsibility of the application
+and the external date library.
+
 <!-- USAGE EXAMPLES -->
 ## Usage
 

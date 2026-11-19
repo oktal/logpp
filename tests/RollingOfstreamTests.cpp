@@ -1,7 +1,7 @@
 #include "logpp/sinks/file/RollingOfstream.h"
 
 #include "logpp/core/config.h"
-#include "logpp/date/date.h"
+#include "logpp/core/Date.h"
 #include "logpp/utils/file.h"
 
 #include "TemporaryFile.h"

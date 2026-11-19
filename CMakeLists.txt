@@ -34,6 +34,22 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 option(LOGPP_INSTALL "Generate install target" ${LOGPP_MASTER_PROJECT})
 option(LOGPP_SHARED "Build logpp as a shared library" ON)
 
+option(LOGPP_USE_EXTERNAL_DATE "Use an external Howard Hinnant date library instead of the bundled copy" OFF)
+set(DATE_ROOT "" CACHE PATH "Root directory of an external Howard Hinnant date package")
+
+if(DATE_ROOT)
+  set(LOGPP_USE_EXTERNAL_DATE ON)
+endif()
+
+if(LOGPP_USE_EXTERNAL_DATE)
+  if(NOT TARGET date::date-tz)
+    find_package(date CONFIG REQUIRED HINTS "${DATE_ROOT}")
+  endif()
+  if(NOT TARGET date::date-tz)
+    message(FATAL_ERROR "External date must provide date::date-tz. Build date with BUILD_TZ_LIB=ON.")
+  endif()
+endif()
+
 option(LOGPP_BUILD_TESTS "Build tests" OFF)
 option(LOGPP_BUILD_BENCHES "Build benches" OFF)
 option(LOGPP_ENABLE_LLVM_FUZZ_TESTS "Enable fuzz-testing through LLVM libFuzzer" OFF)

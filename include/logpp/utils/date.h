@@ -2,7 +2,7 @@
 
 #include "logpp/core/Clock.h"
 #include "logpp/core/config.h"
-#include "logpp/date/date.h"
+#include "logpp/core/Date.h"
 
 #include <time.h>
 

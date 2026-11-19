@@ -1,6 +1,6 @@
 #pragma once
 
-#include "logpp/date/date.h"
+#include "logpp/core/Date.h"
 
 #include <algorithm>
 #include <chrono>
