@@ -140,24 +140,25 @@ enables external date support:
 cmake -S . -B build -DDATE_ROOT=/path/to/date-install
 ```
 
-The package must provide the `date::date-tz` target. Build date with
-`BUILD_TZ_LIB=ON`. If a parent project already provides this target, logpp reuses
-it without calling `find_package`:
+Only the `date::date` header-only target is required; `BUILD_TZ_LIB` can remain
+`OFF`. If a parent project already provides this target, logpp reuses it without
+calling `find_package`:
 
 ```cmake
-set(BUILD_TZ_LIB ON CACHE BOOL "")
 add_subdirectory(path/to/date)
 set(LOGPP_USE_EXTERNAL_DATE ON CACHE BOOL "")
 add_subdirectory(path/to/logpp)
 ```
 
-In external mode, logpp does not compile its bundled `tz.cpp`. The external date
-dependency and `LOGPP_USE_EXTERNAL_DATE=1` are propagated to targets linking
+Logpp uses only the calendar library and does not compile `tz.cpp` in either
+mode. In external mode, the date dependency and `LOGPP_USE_EXTERNAL_DATE=1` are
+propagated to targets linking
 `logpp::logpp`, so the library and its consumers select the same headers. Rebuild
 logpp and its consumers together when switching modes.
 
-Time zone database configuration remains the responsibility of the application
-and the external date library.
+Logpp does not require an IANA time zone database. Applications using date's
+time zone APIs must include `<date/tz.h>`, link `date::date-tz`, and configure
+their time zone database explicitly.
 
 <!-- USAGE EXAMPLES -->
 ## Usage

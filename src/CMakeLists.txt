@@ -14,16 +14,12 @@ set(SOURCE_FILES
   TomlConfigurator.cpp
 )
 
-if(NOT LOGPP_USE_EXTERNAL_DATE)
-  list(APPEND SOURCE_FILES tz.cpp)
-endif()
-
 add_library(logpp ${SOURCE_FILES})
 add_library(logpp::logpp ALIAS logpp)
 
 if(LOGPP_USE_EXTERNAL_DATE)
   target_compile_definitions(logpp PUBLIC LOGPP_USE_EXTERNAL_DATE=1)
-  target_link_libraries(logpp PUBLIC date::date-tz)
+  target_link_libraries(logpp PUBLIC date::date)
 endif()
 
 include(ProcessorCount)
