@@ -3,6 +3,8 @@
 #include "logpp/format/flag/Formatter.h"
 #include "logpp/utils/file.h"
 
+#include <iterator>
+
 namespace logpp
 {
     class SourceFileFormatter : public FlagFormatter
@@ -28,7 +30,7 @@ namespace logpp
             if (!location)
                 return;
 
-            fmt::format_to(out, "{}", location->line);
+            fmt::format_to(std::back_inserter(out), "{}", location->line);
         }
     };
 }

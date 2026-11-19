@@ -18,11 +18,11 @@ TEST(FileSink, should_raise_configuration_error_when_missing_file_option)
 
 TEST(FileSink, should_create_directory_if_does_not_exist)
 {
-    auto sink = std::make_shared<FileSink>();
-
     auto directory = createTemporaryDirectory();
 
     RemoveDirectoryOnExit rmDir(directory);
+
+    auto sink = std::make_shared<FileSink>();
 
     auto filePath = fmt::format("{}/test.log", directory);
     ASSERT_FALSE(file_utils::exists(filePath));

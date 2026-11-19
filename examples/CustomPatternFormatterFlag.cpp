@@ -5,6 +5,8 @@
 
 #include "logpp/sinks/ColoredConsole.h"
 
+#include <iterator>
+
 using namespace logpp;
 
 // A flag formatter that formats log message fields as JSON
@@ -47,24 +49,24 @@ private:
             if (count > 0)
                 out.append(", "sv);
 
-            fmt::format_to(out, "\"{}\": ", key);
+            fmt::format_to(std::back_inserter(out), "\"{}\": ", key);
             ++count;
         }
 
         template <typename T>
         void writeValue(T&& value)
         {
-            fmt::format_to(out, "{}", value);
+            fmt::format_to(std::back_inserter(out), "{}", value);
         }
 
         void writeValue(char c)
         {
-            fmt::format_to(out, "\"{}\"", c);
+            fmt::format_to(std::back_inserter(out), "\"{}\"", c);
         }
 
         void writeValue(std::string_view str)
         {
-            fmt::format_to(out, "\"{}\"", str);
+            fmt::format_to(std::back_inserter(out), "\"{}\"", str);
         }
 
         void writeValue(bool value)

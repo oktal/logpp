@@ -4,6 +4,7 @@
 
 #include "SpinWait.h"
 
+#include <algorithm>
 
 namespace logpp
 {
@@ -115,7 +116,7 @@ namespace logpp
         }
     }
 
-    void AsyncQueuePoller::run(Options options)
+    void AsyncQueuePoller::run(Options /*options*/)
     {
         // ThreadHelper::setThreadName("AsyncQueuePoller");
         // ThreadHelper::setThreadPriority(options.priority);

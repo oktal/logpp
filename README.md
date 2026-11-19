@@ -99,7 +99,9 @@ Combined with [asynchronocity](https://github.com/oktal/logpp/blob/master/includ
 
 ### Prerequisites
 
-To retrieve logpp external dependencies, make sure to install and configure [conan](https://conan.io) on your local machine.
+To retrieve logpp external dependencies, install [Conan](https://conan.io)
+2.1 or newer and create a compiler profile with `conan profile detect`.
+The library requires C++17 or newer.
 
 ### Installation
 
@@ -115,13 +117,50 @@ To retrieve logpp external dependencies, make sure to install and configure [con
 3. Install dependencies
    ```sh
        cd build
-       conan install ..
+       conan install .. --output-folder=. --build=missing -s compiler.cppstd=17
    ```
 4. Build the library
    ```sh
-       conan build ..
+       conan build .. --output-folder=. -s compiler.cppstd=17
    ```
 
+
+### Using an external date library
+
+By default, logpp uses its bundled copy of Howard Hinnant's date library. To share
+one version of date with the rest of your application, enable
+`LOGPP_USE_EXTERNAL_DATE`:
+
+```sh
+cmake -S . -B build -DLOGPP_USE_EXTERNAL_DATE=ON -DCMAKE_PREFIX_PATH=/path/to/date-install
+```
+
+Alternatively, set `DATE_ROOT` to an installed date package prefix. This also
+enables external date support:
+
+```sh
+cmake -S . -B build -DDATE_ROOT=/path/to/date-install
+```
+
+Only the `date::date` header-only target is required; `BUILD_TZ_LIB` can remain
+`OFF`. If a parent project already provides this target, logpp reuses it without
+calling `find_package`:
+
+```cmake
+add_subdirectory(path/to/date)
+set(LOGPP_USE_EXTERNAL_DATE ON CACHE BOOL "")
+add_subdirectory(path/to/logpp)
+```
+
+Logpp uses only the calendar library and does not compile `tz.cpp` in either
+mode. In external mode, the date dependency and `LOGPP_USE_EXTERNAL_DATE=1` are
+propagated to targets linking
+`logpp::logpp`, so the library and its consumers select the same headers. Rebuild
+logpp and its consumers together when switching modes.
+
+Logpp does not require an IANA time zone database. Applications using date's
+time zone APIs must include `<date/tz.h>`, link `date::date-tz`, and configure
+their time zone database explicitly.
 
 <!-- USAGE EXAMPLES -->
 ## Usage

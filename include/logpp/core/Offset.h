@@ -2,9 +2,9 @@
 
 #include "logpp/core/LogBufferView.h"
 
+#include <cstdint>
 #include <cstring>
 #include <functional>
-
 #include <iostream>
 
 namespace logpp

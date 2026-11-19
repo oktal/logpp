@@ -17,8 +17,18 @@ jobs:
       - name: Create Build Environment
         run: cmake -E make_directory ${{ github.workspace }}/build-config
 
+      - name: Install conan
+        run: python -m pip install "conan>=2.1,<3"
+
+      - name: Create conan profile
+        run: conan profile detect
+
+      - name: Fetch dependencies
+        working-directory: ${{ github.workspace }}/build-config
+        run: conan install .. --output-folder=. -s compiler.cppstd=17 --build=missing
+
       - name: Run CMake
-        run: cmake ..
+        run: cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake
         working-directory: ${{ github.workspace }}/build-config      
         shell: bash
 
@@ -64,17 +74,20 @@ jobs:
             cc: gcc-9
             cxx: g++-9
             packages: gcc-9 g++-9
-            conan_args: -o shared=True
+            conan_args: -o "&:shared=True"
             artifact: logpp-linux-gcc-shared
           - compiler: clang
             cc: clang-10
             cxx: clang++-10
             packages: clang-10
-            conan_args: -o shared=True
+            conan_args: -o "&:shared=True"
             artifact: logpp-linux-clang-shared
 
     runs-on: ubuntu-latest
     name: build-${{ matrix.artifact }}
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
     steps:
       - uses: actions/checkout@v2
 
@@ -82,16 +95,10 @@ jobs:
         run: sudo apt install ${{ matrix.packages }}
 
       - name: Install conan
-        uses: turtlebrowser/get-conan@v1.0
+        run: python -m pip install "conan>=2.1,<3"
 
       - name: Create conan profile
-        run: |
-           conan profile new ${{ matrix.artifact }} --detect
-           conan profile update settings.compiler.libcxx=libstdc++11 ${{ matrix.artifact }}
-           conan profile update env.CXX=${{ matrix.cxx }} ${{ matrix.artifact }}
-        env:
-          CC:  ${{ matrix.cc }}
-          CXX: ${{ matrix.cxx }}
+        run: conan profile detect
 
       - name: Create Build Environment
         run: cmake -E make_directory ${{ github.workspace }}/build-${{ matrix.artifact }}
@@ -99,12 +106,12 @@ jobs:
       - name: Fetch dependencies
         working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
         shell: bash
-        run: conan install .. -o build_tests=True ${{ matrix.conan_args }} -pr=${{ matrix.artifact }} --build=missing
+        run: conan install .. --output-folder=. -o "&:build_tests=True" ${{ matrix.conan_args }} -s compiler.cppstd=17 --build=missing
 
       - name: Build
         working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
         shell: bash
-        run: conan build ..
+        run: conan build .. --output-folder=. -o "&:build_tests=True" ${{ matrix.conan_args }} -s compiler.cppstd=17
 
       - name: Package
         working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
@@ -133,21 +140,21 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install conan
-        uses: turtlebrowser/get-conan@v1.0
+        run: python -m pip install "conan>=2.1,<3"
 
       - name: Create conan profile
-        run: conan profile new msvc --detect
+        run: conan profile detect
 
       - name: Create Build Environment
         run: cmake -E make_directory ${{ github.workspace }}/build-windows-msvc
 
       - name: Fetch dependencies
         working-directory: ${{ github.workspace }}/build-windows-msvc
-        run: conan install .. -o build_tests=True -pr=msvc --build=missing
+        run: conan install .. --output-folder=. -o "&:build_tests=True" -s compiler.cppstd=17 --build=missing
 
       - name: Build
         working-directory: ${{ github.workspace }}/build-windows-msvc
-        run: conan build ..
+        run: conan build .. --output-folder=. -o "&:build_tests=True" -s compiler.cppstd=17
 
       - name: Package
         working-directory: ${{ github.workspace }}/build-windows-msvc

@@ -2,6 +2,8 @@
 
 #include "logpp/format/flag/Formatter.h"
 
+#include <iterator>
+
 namespace logpp
 {
     class FieldsFormatter : public FlagFormatter
@@ -52,7 +54,7 @@ namespace logpp
                 if (m_count > 0)
                     m_buf.push_back(' ');
 
-                fmt::format_to(m_buf, formatStr, std::forward<Args>(args)...);
+                fmt::format_to(std::back_inserter(m_buf), fmt::runtime(formatStr), std::forward<Args>(args)...);
                 ++m_count;
             }
 

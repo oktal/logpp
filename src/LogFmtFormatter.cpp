@@ -267,7 +267,7 @@ namespace logpp
     template <typename... Args>
     void throwParseError(ParseContext& context, const char* formatStr, Args&&... args)
     {
-        auto what = fmt::format(formatStr, std::forward<Args>(args)...);
+        auto what = fmt::format(fmt::runtime(formatStr), std::forward<Args>(args)...);
         throw LogFmtPatternError(std::move(what), context.index());
     }
 
